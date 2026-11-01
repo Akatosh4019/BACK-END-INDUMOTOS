@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: backendIndumotos
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/indumotos}
+    username: ${DB_USER:indumotos}
+    password: ${DB_PASSWORD:}
+  flyway:
+    enabled: true
+server:
+  port: ${PORT:8080}

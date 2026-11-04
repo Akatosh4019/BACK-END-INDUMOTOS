@@ -1,0 +1,143 @@
+{
+  "info": {
+      "name": "Indumotos | Sprint 1 | Registro de usuarios",
+    "description": "Pruebas locales de HU-14 y HU-26. Configurar adminPassword; ejecutar 00, Login administrador y luego 01 antes de 02 y Login ALMACEN antes de 04. Los tokens se guardan solo en variables locales de Postman. No compartir exportaciones con credenciales o tokens.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 - Verificar API",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "noauth" },
+        "url": "{{baseUrl}}/api/health"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "exec": ["pm.test('API activa: 200', () => pm.response.to.have.status(200));", "pm.test('Estado ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"], "type": "text/javascript" }
+      }]
+    },
+    {
+      "name": "Login administrador - Obtener token (200)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Login correcto: 200', () => pm.response.to.have.status(200));", "if (pm.response.code === 200) {", "  const data = pm.response.json();", "  pm.collectionVariables.set('adminToken', data.accessToken);", "  pm.test('Token Bearer de 15 minutos', () => { pm.expect(data.tokenType).to.eql('Bearer'); pm.expect(data.expiresIn).to.eql(900); });", "}"], "type": "text/javascript" } }],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "noauth" },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"nombreUsuario\": \"{{adminUsername}}\",\n  \"clave\": \"{{adminPassword}}\"\n}" },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "01 - Crear cuenta ALMACEN (201)",
+      "event": [
+        { "listen": "prerequest", "script": { "exec": ["pm.collectionVariables.set('testUsername', 'prueba_postman_' + Date.now());"], "type": "text/javascript" } },
+        { "listen": "test", "script": { "exec": ["pm.test('Cuenta creada: 201', () => pm.response.to.have.status(201));", "if (pm.response.code === 201) {", "  const data = pm.response.json();", "  pm.test('Respuesta sin clave ni hash', () => {", "    pm.expect(data.nombreUsuario).to.eql(pm.collectionVariables.get('testUsername'));", "    pm.expect(data).not.to.have.property('clave');", "    pm.expect(data).not.to.have.property('claveHash');", "  });", "}"], "type": "text/javascript" } }
+      ],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"Prueba Postman\",\n  \"nombreUsuario\": \"{{testUsername}}\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}" },
+        "url": "{{baseUrl}}/api/v1/usuarios"
+      }
+    },
+    {
+      "name": "Login ALMACEN - Obtener token (200)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Login ALMACEN: 200', () => pm.response.to.have.status(200));", "if (pm.response.code === 200) pm.collectionVariables.set('almacenToken', pm.response.json().accessToken);"], "type": "text/javascript" } }],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "noauth" },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"nombreUsuario\": \"{{testUsername}}\",\n  \"clave\": \"{{testUserPassword}}\"\n}" },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "Login incorrecto - Rechazar (401)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Credenciales incorrectas: 401', () => pm.response.to.have.status(401));", "pm.test('No emite token', () => pm.expect(pm.response.text()).not.to.include('accessToken'));"], "type": "text/javascript" } }],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "noauth" },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"nombreUsuario\": \"{{adminUsername}}\",\n  \"clave\": \"clave_incorrecta\"\n}" },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "02 - Repetir usuario (409)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Duplicado rechazado: 409', () => pm.response.to.have.status(409));"], "type": "text/javascript" } }],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"Prueba Postman\",\n  \"nombreUsuario\": \"{{testUsername}}\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}" },
+        "url": "{{baseUrl}}/api/v1/usuarios"
+      }
+    },
+    {
+      "name": "03 - Sin autenticación (401)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Sin autenticación: 401', () => pm.response.to.have.status(401));"], "type": "text/javascript" } }],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "noauth" },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"Prueba sin acceso\",\n  \"nombreUsuario\": \"sin_acceso\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}" },
+        "url": "{{baseUrl}}/api/v1/usuarios"
+      }
+    },
+    {
+      "name": "04 - ALMACEN no puede crear cuentas (403)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Rol sin permiso: 403', () => pm.response.to.have.status(403));"], "type": "text/javascript" } }],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{almacenToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"No autorizado\",\n  \"nombreUsuario\": \"no_autorizado\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}" },
+        "url": "{{baseUrl}}/api/v1/usuarios"
+      }
+    },
+    {
+      "name": "05 - Nombre vacío (400)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Nombre vacío: 400', () => pm.response.to.have.status(400));", "pm.test('Identifica el campo', () => pm.expect(pm.response.json().campos).to.include('nombreCompleto'));"], "type": "text/javascript" } }],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"\",\n  \"nombreUsuario\": \"prueba_nombre_vacio\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}" },
+        "url": "{{baseUrl}}/api/v1/usuarios"
+      }
+    },
+    {
+      "name": "06 - Contraseña corta (400)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Contraseña corta: 400', () => pm.response.to.have.status(400));", "pm.test('Identifica el campo sin mostrar el valor', () => pm.expect(pm.response.json().campos).to.include('clave'));"], "type": "text/javascript" } }],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"Prueba clave corta\",\n  \"nombreUsuario\": \"prueba_clave_corta\",\n  \"clave\": \"123\",\n  \"rolCodigo\": \"ALMACEN\"\n}" },
+        "url": "{{baseUrl}}/api/v1/usuarios"
+      }
+    },
+    {
+      "name": "07 - Rol inexistente (400)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Rol inexistente: 400', () => pm.response.to.have.status(400));", "pm.test('Mensaje de rol inválido', () => pm.expect(pm.response.json().error).to.include('Rol'));"], "type": "text/javascript" } }],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"Prueba rol\",\n  \"nombreUsuario\": \"prueba_rol_invalido\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"INEXISTENTE\"\n}" },
+        "url": "{{baseUrl}}/api/v1/usuarios"
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8080" },
+    { "key": "adminUsername", "value": "admin" },
+    { "key": "adminPassword", "value": "", "type": "secret" },
+    { "key": "adminToken", "value": "", "type": "secret" },
+    { "key": "almacenToken", "value": "", "type": "secret" },
+    { "key": "testUserPassword", "value": "ClaveDePrueba_2026!", "type": "secret" },
+    { "key": "testUsername", "value": "" }
+  ]
+}

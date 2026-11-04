@@ -23,6 +23,9 @@ services:
       DB_URL: jdbc:postgresql://db:5432/indumotos
       DB_USER: ${DB_USER:?Definir DB_USER en .env}
       DB_PASSWORD: ${DB_PASSWORD:?Definir DB_PASSWORD en .env}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?Definir ADMIN_USERNAME en .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Definir ADMIN_PASSWORD en .env}
+      JWT_SECRET_BASE64: ${JWT_SECRET_BASE64:?Definir JWT_SECRET_BASE64 en .env}
     ports:
       - "127.0.0.1:8080:8080"
 volumes:

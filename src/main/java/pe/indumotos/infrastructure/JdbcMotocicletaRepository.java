@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import pe.indumotos.application.MotocicletaRepository;
@@ -21,6 +22,13 @@ public class JdbcMotocicletaRepository implements MotocicletaRepository {
     public boolean existeLlegada(long llegadaId) {
         return Boolean.TRUE.equals(jdbc.queryForObject(
             "SELECT EXISTS(SELECT 1 FROM llegada WHERE id_llegada = ?)", Boolean.class, llegadaId));
+    }
+
+    @Override
+    public Optional<Long> buscarIdPorChasis(String chasisCompleto) {
+        return jdbc.query("SELECT id_motocicleta FROM motocicleta " +
+            "WHERE upper(btrim(chasis_completo)) = upper(btrim(?)) ORDER BY id_motocicleta LIMIT 1",
+            rs -> rs.next() ? Optional.of(rs.getLong(1)) : Optional.empty(), chasisCompleto);
     }
 
     @Override

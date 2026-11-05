@@ -10,8 +10,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import pe.indumotos.infrastructure.JdbcTokenRevocationRepository;
 
 @Configuration
 public class JwtConfig {
@@ -30,7 +32,12 @@ public class JwtConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(SecretKey key) {
-        return NimbusJwtDecoder.withSecretKey(key).build();
+    public JwtDecoder jwtDecoder(SecretKey key, JdbcTokenRevocationRepository revocados) {
+        JwtDecoder firmado = NimbusJwtDecoder.withSecretKey(key).build();
+        return token -> {
+            var jwt = firmado.decode(token);
+            if (revocados.revocado(token)) throw new BadJwtException("Token revocado");
+            return jwt;
+        };
     }
 }

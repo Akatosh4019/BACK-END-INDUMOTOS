@@ -1,0 +1,68 @@
+{
+  "info": {
+    "name": "Indumotos | HU-26-T06 | Ciclo de sesión",
+    "description": "Configurar username y password de una cuenta ficticia. Ejecutar en orden; no guardar tokens reales en el archivo exportado.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8030" },
+    { "key": "username", "value": "" },
+    { "key": "password", "value": "" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 Login válido — 200",
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"nombreUsuario\":\"{{username}}\",\"clave\":\"{{password}}\"}" },
+        "url": "{{baseUrl}}/api/v1/auth/login" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Login 200', () => pm.response.to.have.status(200));",
+        "if (pm.response.code === 200) pm.collectionVariables.set('token', pm.response.json().accessToken);"
+      ] } }]
+    },
+    {
+      "name": "02 Token vigente — 200",
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/api/v1/auth/me" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Token vigente 200', () => pm.response.to.have.status(200));"] } }]
+    },
+    {
+      "name": "03 Cerrar sesión — 204",
+      "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/api/v1/auth/logout" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Logout 204', () => pm.response.to.have.status(204));"] } }]
+    },
+    {
+      "name": "04 Reutilizar el mismo token — 401",
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/api/v1/auth/me" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Token revocado 401', () => pm.response.to.have.status(401));"] } }]
+    },
+    {
+      "name": "05 Acceso sin token — 401",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/auth/me" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Sin token 401', () => pm.response.to.have.status(401));"] } }]
+    },
+    {
+      "name": "06 Clave incorrecta — 401",
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"nombreUsuario\":\"{{username}}\",\"clave\":\"clave-incorrecta\"}" },
+        "url": "{{baseUrl}}/api/v1/auth/login" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Clave incorrecta 401', () => pm.response.to.have.status(401));"] } }]
+    },
+    {
+      "name": "07 Campos vacíos — 400",
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"nombreUsuario\":\"\",\"clave\":\"\"}" },
+        "url": "{{baseUrl}}/api/v1/auth/login" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Campos vacíos 400', () => pm.response.to.have.status(400));"] } }]
+    },
+    {
+      "name": "08 Token falso — 401",
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer token-falso" }],
+        "url": "{{baseUrl}}/api/v1/auth/me" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Token falso 401', () => pm.response.to.have.status(401));"] } }]
+    }
+  ]
+}

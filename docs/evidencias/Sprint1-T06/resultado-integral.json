@@ -1,0 +1,306 @@
+{
+  "fecha": "2026-11-05T15:48:53.052Z",
+  "gateway": "http://127.0.0.1:8030",
+  "casos": 42,
+  "aprobados": 42,
+  "fallidos": 0,
+  "fichasValidas": 3,
+  "fichasInvalidas": 0,
+  "duplicadosDemoArchivados": 2,
+  "resultados": [
+    {
+      "area": "HU-26-T06",
+      "caso": "Login válido ADMIN",
+      "esperado": 200,
+      "obtenido": 200,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Login válido ALMACEN",
+      "esperado": 200,
+      "obtenido": 200,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Login válido INVENTARIOS",
+      "esperado": 200,
+      "obtenido": 200,
+      "paso": true
+    },
+    {
+      "area": "HU-04-T06",
+      "caso": "Registrar llegada",
+      "esperado": 201,
+      "obtenido": 201,
+      "paso": true
+    },
+    {
+      "area": "HU-04-T06",
+      "caso": "Detalle inicial sin fichas",
+      "esperado": 200,
+      "obtenido": 200,
+      "paso": true
+    },
+    {
+      "area": "HU-04-T06",
+      "caso": "Guía incompleta",
+      "esperado": 400,
+      "obtenido": 400,
+      "paso": true
+    },
+    {
+      "area": "HU-04-T06",
+      "caso": "INVENTARIOS no registra llegada",
+      "esperado": 403,
+      "obtenido": 403,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Primera ficha válida",
+      "esperado": 201,
+      "obtenido": 201,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Segundo chasis con mismo sufijo",
+      "esperado": 201,
+      "obtenido": 201,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Chasis completo duplicado sin distinguir mayúsculas",
+      "esperado": 409,
+      "obtenido": 409,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Consultar ficha existente",
+      "esperado": 200,
+      "obtenido": 200,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Falta marca",
+      "esperado": 400,
+      "obtenido": 400,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Falta modelo",
+      "esperado": 400,
+      "obtenido": 400,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Falta color",
+      "esperado": 400,
+      "obtenido": 400,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Falta chasisCompleto",
+      "esperado": 400,
+      "obtenido": 400,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Falta numeroMotor",
+      "esperado": 400,
+      "obtenido": 400,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Falta dua",
+      "esperado": 400,
+      "obtenido": 400,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Falta itemDua",
+      "esperado": 400,
+      "obtenido": 400,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Llegada inexistente",
+      "esperado": 404,
+      "obtenido": 404,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "ALMACEN no registra ficha",
+      "esperado": 403,
+      "obtenido": 403,
+      "paso": true
+    },
+    {
+      "area": "HU-04-T06",
+      "caso": "Detalle con dos fichas",
+      "esperado": 200,
+      "obtenido": 200,
+      "paso": true
+    },
+    {
+      "area": "HU-04/HU-02-T06",
+      "caso": "Persistencia sin unidades fantasma",
+      "esperado": 2,
+      "obtenido": 2,
+      "paso": true
+    },
+    {
+      "area": "HU-04-T06",
+      "caso": "Llegada para concurrencia",
+      "esperado": 201,
+      "obtenido": 201,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Dos solicitudes simultáneas mismo chasis",
+      "esperado": "201,409 y 1 ficha",
+      "obtenido": "201,409 y 1 ficha",
+      "paso": true
+    },
+    {
+      "area": "HU-04-T06",
+      "caso": "Detalle conservado tras reiniciar API",
+      "esperado": 200,
+      "obtenido": 200,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Retirar permiso de consulta para prueba",
+      "esperado": 200,
+      "obtenido": 200,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Conflicto sin revelar ficha a quien no puede consultarla",
+      "esperado": 409,
+      "obtenido": 409,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Ficha existente protegida",
+      "esperado": 403,
+      "obtenido": 403,
+      "paso": true
+    },
+    {
+      "area": "HU-02-T06",
+      "caso": "Restaurar permiso de consulta",
+      "esperado": 200,
+      "obtenido": 200,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Clave incorrecta",
+      "esperado": 401,
+      "obtenido": 401,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Campos vacíos",
+      "esperado": 400,
+      "obtenido": 400,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Sin token",
+      "esperado": 401,
+      "obtenido": 401,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Token falso",
+      "esperado": 401,
+      "obtenido": 401,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Token vencido",
+      "esperado": 401,
+      "obtenido": 401,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Token vigente antes de salir",
+      "esperado": 200,
+      "obtenido": 200,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Cerrar sesión",
+      "esperado": 204,
+      "obtenido": 204,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Mismo token revocado",
+      "esperado": 401,
+      "obtenido": 401,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Mismo token no registra ficha",
+      "esperado": 401,
+      "obtenido": 401,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Token revocado sigue inválido tras reiniciar API",
+      "esperado": 401,
+      "obtenido": 401,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Logout sin token",
+      "esperado": 401,
+      "obtenido": 401,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Nuevo login tras salir",
+      "esperado": 200,
+      "obtenido": 200,
+      "paso": true
+    },
+    {
+      "area": "HU-26-T06",
+      "caso": "Cuenta inactiva",
+      "esperado": 401,
+      "obtenido": 401,
+      "paso": true
+    }
+  ]
+}

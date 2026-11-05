@@ -3,12 +3,24 @@ package pe.indumotos.application;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import pe.indumotos.domain.Motocicleta;
 
 @Service
 public class RegistrarMotocicleta {
+    public static class ChasisDuplicado extends IllegalArgumentException {
+        private final long fichaExistenteId;
+
+        public ChasisDuplicado(long fichaExistenteId) {
+            super("El chasis completo ya está registrado.");
+            this.fichaExistenteId = fichaExistenteId;
+        }
+
+        public long fichaExistenteId() { return fichaExistenteId; }
+    }
+
     public static class DatosInvalidos extends IllegalArgumentException {
         private final Map<String, String> errores;
 
@@ -44,8 +56,15 @@ public class RegistrarMotocicleta {
         if (!repository.existeLlegada(llegadaId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Llegada no encontrada");
         }
-        return repository.guardar(llegadaId, marca.trim(), modelo.trim(), color.trim(),
-            chasisCompleto.trim(), numeroMotor.trim(), dua.trim(), itemDua.trim(), creadorUsuario);
+        String chasis = chasisCompleto.trim();
+        repository.buscarIdPorChasis(chasis).ifPresent(id -> { throw new ChasisDuplicado(id); });
+        try {
+            return repository.guardar(llegadaId, marca.trim(), modelo.trim(), color.trim(),
+                chasis, numeroMotor.trim(), dua.trim(), itemDua.trim(), creadorUsuario);
+        } catch (DuplicateKeyException ex) {
+            long id = repository.buscarIdPorChasis(chasis).orElseThrow(() -> ex);
+            throw new ChasisDuplicado(id);
+        }
     }
 
     private void campoObligatorio(Map<String, String> errores, String codigo, String valor,

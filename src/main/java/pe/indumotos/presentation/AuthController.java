@@ -12,6 +12,9 @@ import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.http.ResponseEntity;
+import pe.indumotos.infrastructure.JdbcTokenRevocationRepository;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,12 +28,15 @@ public class AuthController {
     private final AuthenticationManager authentication;
     private final JwtEncoder encoder;
     private final pe.indumotos.application.PermisoService permisos;
+    private final JdbcTokenRevocationRepository revocados;
 
     public AuthController(AuthenticationManager authentication, JwtEncoder encoder,
-        pe.indumotos.application.PermisoService permisos) {
+        pe.indumotos.application.PermisoService permisos,
+        JdbcTokenRevocationRepository revocados) {
         this.authentication = authentication;
         this.encoder = encoder;
         this.permisos = permisos;
+        this.revocados = revocados;
     }
 
     public record LoginRequest(@NotBlank String nombreUsuario, @NotBlank String clave) {}
@@ -40,6 +46,13 @@ public class AuthController {
     public pe.indumotos.application.PermisoService.Accesos me(
         org.springframework.security.core.Authentication authentication) {
         return permisos.consultarPropios(authentication.getName());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(JwtAuthenticationToken authentication) {
+        revocados.revocar(authentication.getToken().getTokenValue(),
+            authentication.getToken().getExpiresAt());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/login")

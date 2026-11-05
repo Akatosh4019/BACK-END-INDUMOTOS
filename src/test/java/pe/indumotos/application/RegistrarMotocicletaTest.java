@@ -7,8 +7,37 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.dao.DuplicateKeyException;
 
 class RegistrarMotocicletaTest {
+    @Test
+    void rechazaChasisExistenteAntesDeGuardar() {
+        var repository = mock(MotocicletaRepository.class);
+        when(repository.existeLlegada(2L)).thenReturn(true);
+        when(repository.buscarIdPorChasis("DEMO-A-0042")).thenReturn(java.util.Optional.of(8L));
+        var registrar = new RegistrarMotocicleta(repository);
+        var error = assertThrows(RegistrarMotocicleta.ChasisDuplicado.class,
+            () -> registrar.ejecutar(2L, "RONCO", "RZ 250", "ROJO", "DEMO-A-0042",
+                "MOTOR-0001", "000123", "004", "inventarios"));
+        assertEquals(8L, error.fichaExistenteId());
+        verify(repository, never()).guardar(anyLong(), any(), any(), any(), any(),
+            any(), any(), any(), any());
+    }
+
+    @Test
+    void traduceConflictoDeSolicitudesSimultaneas() {
+        var repository = mock(MotocicletaRepository.class);
+        when(repository.existeLlegada(2L)).thenReturn(true);
+        when(repository.buscarIdPorChasis("DEMO-A-0042"))
+            .thenReturn(java.util.Optional.empty(), java.util.Optional.of(8L));
+        when(repository.guardar(anyLong(), any(), any(), any(), any(), any(), any(), any(), any()))
+            .thenThrow(new DuplicateKeyException("chasis duplicado"));
+        var registrar = new RegistrarMotocicleta(repository);
+        var error = assertThrows(RegistrarMotocicleta.ChasisDuplicado.class,
+            () -> registrar.ejecutar(2L, "RONCO", "RZ 250", "ROJO", "DEMO-A-0042",
+                "MOTOR-0001", "000123", "004", "inventarios"));
+        assertEquals(8L, error.fichaExistenteId());
+    }
     @ParameterizedTest
     @ValueSource(strings = {"marca", "modelo", "color", "chasisCompleto",
         "numeroMotor", "dua", "itemDua"})

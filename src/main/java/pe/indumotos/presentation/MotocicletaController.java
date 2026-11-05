@@ -25,14 +25,17 @@ import tools.jackson.core.JacksonException;
 import org.springframework.web.server.ResponseStatusException;
 import pe.indumotos.application.RegistrarMotocicleta;
 import pe.indumotos.domain.Motocicleta;
+import pe.indumotos.application.PermisoService;
 
 @RestController
 @RequestMapping("/api/v1/motocicletas")
 public class MotocicletaController {
     private final RegistrarMotocicleta registrar;
+    private final PermisoService permisos;
 
-    public MotocicletaController(RegistrarMotocicleta registrar) {
+    public MotocicletaController(RegistrarMotocicleta registrar, PermisoService permisos) {
         this.registrar = registrar;
+        this.permisos = permisos;
     }
 
     public record NuevaFicha(@NotNull @Positive Long llegadaId,
@@ -57,6 +60,17 @@ public class MotocicletaController {
     @GetMapping("/{id}")
     public Motocicleta consultar(@PathVariable long id) {
         return registrar.consultar(id);
+    }
+
+    @ExceptionHandler(RegistrarMotocicleta.ChasisDuplicado.class)
+    public ResponseEntity<Map<String, Object>> chasisDuplicado(
+        RegistrarMotocicleta.ChasisDuplicado ex, Authentication authentication) {
+        Map<String, Object> respuesta = new LinkedHashMap<>();
+        respuesta.put("error", "El chasis completo ya está registrado.");
+        respuesta.put("campo", "chasisCompleto");
+        if (permisos.permitido(authentication.getName(), "INVENTARIO_CONSULTAR"))
+            respuesta.put("fichaExistenteId", ex.fichaExistenteId());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(respuesta);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

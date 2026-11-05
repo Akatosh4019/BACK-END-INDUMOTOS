@@ -16,7 +16,8 @@ class MotocicletaControllerTest {
             "MOTOR-0001", "000123", "004", "admin", OffsetDateTime.now());
         when(registrar.ejecutar(2L, "RONCO", "RZ 250", "ROJO", "DEMO-A-0042",
             "MOTOR-0001", "000123", "004", "admin")).thenReturn(moto);
-        var controller = new MotocicletaController(registrar);
+        var controller = new MotocicletaController(registrar,
+            mock(pe.indumotos.application.PermisoService.class));
         var auth = UsernamePasswordAuthenticationToken.authenticated(
             "admin", null, java.util.List.of());
 

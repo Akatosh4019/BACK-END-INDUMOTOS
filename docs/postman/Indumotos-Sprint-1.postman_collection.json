@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Indumotos | Sprint 1 | Acceso, llegadas y fichas",
-    "description": "Pruebas locales de HU-14, HU-26, HU-04 T03 y HU-02 T03. Configurar adminPassword; ejecutar 00 y Login administrador. Para HU-04 usar 08-09. Para HU-02 usar 10-13 en orden: 10 crea llegada de dos unidades, 11-12 crean fichas y 13 consulta la primera. Los tokens se guardan solo en variables locales de Postman. No compartir exportaciones con credenciales o tokens.",
+    "description": "HU-14, HU-26, HU-04, HU-02 y HU-15. Ejecutar en orden. La colección crea cuentas ficticias y verifica permisos por rol y excepciones; usar solo en entorno local. Tokens y contraseñas quedan en variables locales de Postman.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -9,258 +9,1238 @@
       "name": "00 - Verificar API",
       "request": {
         "method": "GET",
-        "auth": { "type": "noauth" },
+        "auth": {
+          "type": "noauth"
+        },
         "url": "{{baseUrl}}/api/health"
       },
-      "event": [{
-        "listen": "test",
-        "script": { "exec": ["pm.test('API activa: 200', () => pm.response.to.have.status(200));", "pm.test('Estado ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"], "type": "text/javascript" }
-      }]
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('API activa: 200', () => pm.response.to.have.status(200));",
+              "pm.test('Estado ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
     },
     {
       "name": "Login administrador - Obtener token (200)",
-      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Login correcto: 200', () => pm.response.to.have.status(200));", "if (pm.response.code === 200) {", "  const data = pm.response.json();", "  pm.collectionVariables.set('adminToken', data.accessToken);", "  pm.test('Token Bearer de 15 minutos', () => { pm.expect(data.tokenType).to.eql('Bearer'); pm.expect(data.expiresIn).to.eql(900); });", "}"], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Login correcto: 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "  const data = pm.response.json();",
+              "  pm.collectionVariables.set('adminToken', data.accessToken);",
+              "  pm.test('Token Bearer de 15 minutos', () => { pm.expect(data.tokenType).to.eql('Bearer'); pm.expect(data.expiresIn).to.eql(900); });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "POST",
-        "auth": { "type": "noauth" },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"nombreUsuario\": \"{{adminUsername}}\",\n  \"clave\": \"{{adminPassword}}\"\n}" },
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombreUsuario\": \"{{adminUsername}}\",\n  \"clave\": \"{{adminPassword}}\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/auth/login"
       }
     },
     {
       "name": "01 - Crear cuenta ALMACEN (201)",
       "event": [
-        { "listen": "prerequest", "script": { "exec": ["pm.collectionVariables.set('testUsername', 'prueba_postman_' + Date.now());"], "type": "text/javascript" } },
-        { "listen": "test", "script": { "exec": ["pm.test('Cuenta creada: 201', () => pm.response.to.have.status(201));", "if (pm.response.code === 201) {", "  const data = pm.response.json();", "  pm.test('Respuesta sin clave ni hash', () => {", "    pm.expect(data.nombreUsuario).to.eql(pm.collectionVariables.get('testUsername'));", "    pm.expect(data).not.to.have.property('clave');", "    pm.expect(data).not.to.have.property('claveHash');", "  });", "}"], "type": "text/javascript" } }
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set('testUsername', 'prueba_postman_' + Date.now());"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Cuenta creada: 201', () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "  const data = pm.response.json();",
+              "  pm.test('Respuesta sin clave ni hash', () => {",
+              "    pm.expect(data.nombreUsuario).to.eql(pm.collectionVariables.get('testUsername'));",
+              "    pm.expect(data).not.to.have.property('clave');",
+              "    pm.expect(data).not.to.have.property('claveHash');",
+              "  });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
       ],
       "request": {
         "method": "POST",
-        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"Prueba Postman\",\n  \"nombreUsuario\": \"{{testUsername}}\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}" },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombreCompleto\": \"Prueba Postman\",\n  \"nombreUsuario\": \"{{testUsername}}\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/usuarios"
       }
     },
     {
       "name": "Login ALMACEN - Obtener token (200)",
-      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Login ALMACEN: 200', () => pm.response.to.have.status(200));", "if (pm.response.code === 200) pm.collectionVariables.set('almacenToken', pm.response.json().accessToken);"], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Login ALMACEN: 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) pm.collectionVariables.set('almacenToken', pm.response.json().accessToken);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "POST",
-        "auth": { "type": "noauth" },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"nombreUsuario\": \"{{testUsername}}\",\n  \"clave\": \"{{testUserPassword}}\"\n}" },
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombreUsuario\": \"{{testUsername}}\",\n  \"clave\": \"{{testUserPassword}}\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/auth/login"
       }
     },
     {
       "name": "Login incorrecto - Rechazar (401)",
-      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Credenciales incorrectas: 401', () => pm.response.to.have.status(401));", "pm.test('No emite token', () => pm.expect(pm.response.text()).not.to.include('accessToken'));"], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Credenciales incorrectas: 401', () => pm.response.to.have.status(401));",
+              "pm.test('No emite token', () => pm.expect(pm.response.text()).not.to.include('accessToken'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "POST",
-        "auth": { "type": "noauth" },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"nombreUsuario\": \"{{adminUsername}}\",\n  \"clave\": \"clave_incorrecta\"\n}" },
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombreUsuario\": \"{{adminUsername}}\",\n  \"clave\": \"clave_incorrecta\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/auth/login"
       }
     },
     {
       "name": "02 - Repetir usuario (409)",
-      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Duplicado rechazado: 409', () => pm.response.to.have.status(409));"], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Duplicado rechazado: 409', () => pm.response.to.have.status(409));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "POST",
-        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"Prueba Postman\",\n  \"nombreUsuario\": \"{{testUsername}}\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}" },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombreCompleto\": \"Prueba Postman\",\n  \"nombreUsuario\": \"{{testUsername}}\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/usuarios"
       }
     },
     {
       "name": "03 - Sin autenticación (401)",
-      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Sin autenticación: 401', () => pm.response.to.have.status(401));"], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Sin autenticación: 401', () => pm.response.to.have.status(401));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "POST",
-        "auth": { "type": "noauth" },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"Prueba sin acceso\",\n  \"nombreUsuario\": \"sin_acceso\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}" },
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombreCompleto\": \"Prueba sin acceso\",\n  \"nombreUsuario\": \"sin_acceso\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/usuarios"
       }
     },
     {
       "name": "04 - ALMACEN no puede crear cuentas (403)",
-      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Rol sin permiso: 403', () => pm.response.to.have.status(403));"], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Rol sin permiso: 403', () => pm.response.to.have.status(403));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "POST",
-        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{almacenToken}}", "type": "string" }] },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"No autorizado\",\n  \"nombreUsuario\": \"no_autorizado\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}" },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{almacenToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombreCompleto\": \"No autorizado\",\n  \"nombreUsuario\": \"no_autorizado\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/usuarios"
       }
     },
     {
       "name": "05 - Nombre vacío (400)",
-      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Nombre vacío: 400', () => pm.response.to.have.status(400));", "pm.test('Identifica el campo', () => pm.expect(pm.response.json().campos).to.include('nombreCompleto'));"], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Nombre vacío: 400', () => pm.response.to.have.status(400));",
+              "pm.test('Identifica el campo', () => pm.expect(pm.response.json().campos).to.include('nombreCompleto'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "POST",
-        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"\",\n  \"nombreUsuario\": \"prueba_nombre_vacio\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}" },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombreCompleto\": \"\",\n  \"nombreUsuario\": \"prueba_nombre_vacio\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"ALMACEN\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/usuarios"
       }
     },
     {
       "name": "06 - Contraseña corta (400)",
-      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Contraseña corta: 400', () => pm.response.to.have.status(400));", "pm.test('Identifica el campo sin mostrar el valor', () => pm.expect(pm.response.json().campos).to.include('clave'));"], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Contraseña corta: 400', () => pm.response.to.have.status(400));",
+              "pm.test('Identifica el campo sin mostrar el valor', () => pm.expect(pm.response.json().campos).to.include('clave'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "POST",
-        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"Prueba clave corta\",\n  \"nombreUsuario\": \"prueba_clave_corta\",\n  \"clave\": \"123\",\n  \"rolCodigo\": \"ALMACEN\"\n}" },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombreCompleto\": \"Prueba clave corta\",\n  \"nombreUsuario\": \"prueba_clave_corta\",\n  \"clave\": \"123\",\n  \"rolCodigo\": \"ALMACEN\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/usuarios"
       }
     },
     {
       "name": "07 - Rol inexistente (400)",
-      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Rol inexistente: 400', () => pm.response.to.have.status(400));", "pm.test('Mensaje de rol inválido', () => pm.expect(pm.response.json().error).to.include('Rol'));"], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Rol inexistente: 400', () => pm.response.to.have.status(400));",
+              "pm.test('Mensaje de rol inválido', () => pm.expect(pm.response.json().error).to.include('Rol'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "POST",
-        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"Prueba rol\",\n  \"nombreUsuario\": \"prueba_rol_invalido\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"INEXISTENTE\"\n}" },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombreCompleto\": \"Prueba rol\",\n  \"nombreUsuario\": \"prueba_rol_invalido\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"INEXISTENTE\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/usuarios"
       }
     },
     {
-      "name": "08 - HU-04 T03 Registrar llegada (201)",
-      "event": [{ "listen": "test", "script": { "exec": [
-        "pm.test('Llegada creada: 201', () => pm.response.to.have.status(201));",
-        "if (pm.response.code === 201) {",
-        "  const data = pm.response.json();",
-        "  pm.collectionVariables.set('llegadaId', String(data.id));",
-        "  pm.test('Guía y cantidades guardadas', () => {",
-        "    pm.expect(data.numeroGuia).to.eql('GR-PRUEBA-HU04-POSTMAN');",
-        "    pm.expect(data.cantidadDeclarada).to.eql(2);",
-        "    pm.expect(data.cantidadRecibida).to.eql(1);",
-        "    pm.expect(data.receptorUsuario).to.eql(pm.collectionVariables.get('adminUsername'));",
-        "  });",
-        "}"
-      ], "type": "text/javascript" } }],
       "request": {
         "method": "POST",
-        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"numeroGuia\": \"GR-PRUEBA-HU04-POSTMAN\",\n  \"cantidadDeclarada\": 2,\n  \"cantidadRecibida\": 1,\n  \"observacion\": \"Datos ficticios para prueba de persistencia\"\n}" },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreCompleto\":\"Inventarios de prueba\",\"nombreUsuario\":\"{{inventoryUsername}}\",\"clave\":\"{{testUserPassword}}\",\"rolCodigo\":\"INVENTARIOS\"}"
+        },
+        "url": "{{baseUrl}}/api/v1/usuarios",
+        "auth": {
+          "bearer": [
+            {
+              "value": "{{adminToken}}",
+              "key": "token",
+              "type": "string"
+            }
+          ],
+          "type": "bearer"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "name": "HU-15 Crear cuenta INVENTARIOS",
+      "event": [
+        {
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('inventoryUsername', 'inventarios_postman_' + Date.now());"
+            ]
+          },
+          "listen": "prerequest"
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 Crear cuenta INVENTARIOS : 201', () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set('inventoryUserId', String(pm.response.json().id));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"{{inventoryUsername}}\",\"clave\":\"{{testUserPassword}}\"}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "name": "HU-15 Login INVENTARIOS",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 Login INVENTARIOS : 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) pm.collectionVariables.set('inventoryToken', pm.response.json().accessToken);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - HU-04 T03 Registrar llegada (201)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Llegada creada: 201', () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "  const data = pm.response.json();",
+              "  pm.collectionVariables.set('llegadaId', String(data.id));",
+              "  pm.test('Guía y cantidades guardadas', () => {",
+              "    pm.expect(data.numeroGuia).to.eql('GR-PRUEBA-HU04-POSTMAN');",
+              "    pm.expect(data.cantidadDeclarada).to.eql(2);",
+              "    pm.expect(data.cantidadRecibida).to.eql(1);",
+              "    pm.expect(data.receptorUsuario).to.eql(pm.collectionVariables.get('adminUsername'));",
+              "  });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{almacenToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"numeroGuia\": \"GR-PRUEBA-HU04-POSTMAN\",\n  \"cantidadDeclarada\": 2,\n  \"cantidadRecibida\": 1,\n  \"observacion\": \"Datos ficticios para prueba de persistencia\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/llegadas"
       }
     },
     {
       "name": "09 - HU-04 T03 Consultar llegada (200)",
-      "event": [{ "listen": "test", "script": { "exec": [
-        "pm.test('Llegada consultada: 200', () => pm.response.to.have.status(200));",
-        "if (pm.response.code === 200) {",
-        "  const data = pm.response.json();",
-        "  pm.test('Mismo registro persistido', () => {",
-        "    pm.expect(String(data.id)).to.eql(pm.collectionVariables.get('llegadaId'));",
-        "    pm.expect(data.numeroGuia).to.eql('GR-PRUEBA-HU04-POSTMAN');",
-        "    pm.expect(data.cantidadDeclarada).to.eql(2);",
-        "    pm.expect(data.cantidadRecibida).to.eql(1);",
-        "  });",
-        "}"
-      ], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Llegada consultada: 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "  const data = pm.response.json();",
+              "  pm.test('Mismo registro persistido', () => {",
+              "    pm.expect(String(data.id)).to.eql(pm.collectionVariables.get('llegadaId'));",
+              "    pm.expect(data.numeroGuia).to.eql('GR-PRUEBA-HU04-POSTMAN');",
+              "    pm.expect(data.cantidadDeclarada).to.eql(2);",
+              "    pm.expect(data.cantidadRecibida).to.eql(1);",
+              "  });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
-        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{almacenToken}}",
+              "type": "string"
+            }
+          ]
+        },
         "url": "{{baseUrl}}/api/v1/llegadas/{{llegadaId}}"
       }
     },
     {
       "name": "10 - HU-02 T03 Crear llegada de dos motos (201)",
-      "event": [{ "listen": "test", "script": { "exec": [
-        "pm.test('Llegada para fichas: 201', () => pm.response.to.have.status(201));",
-        "if (pm.response.code === 201) pm.collectionVariables.set('llegadaFichasId', String(pm.response.json().id));"
-      ], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Llegada para fichas: 201', () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set('llegadaFichasId', String(pm.response.json().id));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "POST",
-        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"numeroGuia\": \"GR-DEMO-HU02-POSTMAN\",\n  \"cantidadDeclarada\": 2,\n  \"cantidadRecibida\": 2,\n  \"observacion\": \"Prueba ficticia de dos fichas\"\n}" },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{almacenToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"numeroGuia\": \"GR-DEMO-HU02-POSTMAN\",\n  \"cantidadDeclarada\": 2,\n  \"cantidadRecibida\": 2,\n  \"observacion\": \"Prueba ficticia de dos fichas\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/llegadas"
       }
     },
     {
       "name": "11 - HU-02 T03 Guardar ficha RONCO (201)",
-      "event": [{ "listen": "test", "script": { "exec": [
-        "pm.test('Ficha RONCO creada: 201', () => pm.response.to.have.status(201));",
-        "if (pm.response.code === 201) {",
-        "  const data = pm.response.json();",
-        "  pm.collectionVariables.set('fichaId', String(data.id));",
-        "  pm.test('Vínculo y ceros conservados', () => {",
-        "    pm.expect(String(data.llegadaId)).to.eql(pm.collectionVariables.get('llegadaFichasId'));",
-        "    pm.expect(data.dua).to.eql('000123');",
-        "    pm.expect(data.itemDua).to.eql('004');",
-        "  });",
-        "}"
-      ], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Ficha RONCO creada: 201', () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "  const data = pm.response.json();",
+              "  pm.collectionVariables.set('fichaId', String(data.id));",
+              "  pm.test('Vínculo y ceros conservados', () => {",
+              "    pm.expect(String(data.llegadaId)).to.eql(pm.collectionVariables.get('llegadaFichasId'));",
+              "    pm.expect(data.dua).to.eql('000123');",
+              "    pm.expect(data.itemDua).to.eql('004');",
+              "  });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "POST",
-        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"llegadaId\": {{llegadaFichasId}},\n  \"marca\": \"RONCO\",\n  \"modelo\": \"RZ 250\",\n  \"color\": \"ROJO\",\n  \"chasisCompleto\": \"DEMO-A-0042\",\n  \"numeroMotor\": \"MOTOR-0001\",\n  \"dua\": \"000123\",\n  \"itemDua\": \"004\"\n}" },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{inventoryToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"llegadaId\": {{llegadaFichasId}},\n  \"marca\": \"RONCO\",\n  \"modelo\": \"RZ 250\",\n  \"color\": \"ROJO\",\n  \"chasisCompleto\": \"DEMO-A-0042\",\n  \"numeroMotor\": \"MOTOR-0001\",\n  \"dua\": \"000123\",\n  \"itemDua\": \"004\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/motocicletas"
       }
     },
     {
       "name": "12 - HU-02 T03 Guardar ficha WANXIN (201)",
-      "event": [{ "listen": "test", "script": { "exec": [
-        "pm.test('Ficha WANXIN creada: 201', () => pm.response.to.have.status(201));",
-        "if (pm.response.code === 201) {",
-        "  const data = pm.response.json();",
-        "  pm.test('Misma llegada, otra unidad', () => {",
-        "    pm.expect(String(data.llegadaId)).to.eql(pm.collectionVariables.get('llegadaFichasId'));",
-        "    pm.expect(data.chasisCompleto).to.eql('DEMO-B-0042');",
-        "    pm.expect(data.itemDua).to.eql('005');",
-        "  });",
-        "}"
-      ], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Ficha WANXIN creada: 201', () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "  const data = pm.response.json();",
+              "  pm.test('Misma llegada, otra unidad', () => {",
+              "    pm.expect(String(data.llegadaId)).to.eql(pm.collectionVariables.get('llegadaFichasId'));",
+              "    pm.expect(data.chasisCompleto).to.eql('DEMO-B-0042');",
+              "    pm.expect(data.itemDua).to.eql('005');",
+              "  });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "POST",
-        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"llegadaId\": {{llegadaFichasId}},\n  \"marca\": \"WANXIN\",\n  \"modelo\": \"PARKOUR 200\",\n  \"color\": \"NEGRO\",\n  \"chasisCompleto\": \"DEMO-B-0042\",\n  \"numeroMotor\": \"MOTOR-0002\",\n  \"dua\": \"000123\",\n  \"itemDua\": \"005\"\n}" },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{inventoryToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"llegadaId\": {{llegadaFichasId}},\n  \"marca\": \"WANXIN\",\n  \"modelo\": \"PARKOUR 200\",\n  \"color\": \"NEGRO\",\n  \"chasisCompleto\": \"DEMO-B-0042\",\n  \"numeroMotor\": \"MOTOR-0002\",\n  \"dua\": \"000123\",\n  \"itemDua\": \"005\"\n}"
+        },
         "url": "{{baseUrl}}/api/v1/motocicletas"
       }
     },
     {
       "name": "13 - HU-02 T03 Consultar primera ficha (200)",
-      "event": [{ "listen": "test", "script": { "exec": [
-        "pm.test('Ficha consultada: 200', () => pm.response.to.have.status(200));",
-        "if (pm.response.code === 200) {",
-        "  const data = pm.response.json();",
-        "  pm.test('Ficha y llegada correctas', () => {",
-        "    pm.expect(String(data.id)).to.eql(pm.collectionVariables.get('fichaId'));",
-        "    pm.expect(String(data.llegadaId)).to.eql(pm.collectionVariables.get('llegadaFichasId'));",
-        "    pm.expect(data.dua).to.eql('000123');",
-        "    pm.expect(data.itemDua).to.eql('004');",
-        "  });",
-        "}"
-      ], "type": "text/javascript" } }],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Ficha consultada: 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "  const data = pm.response.json();",
+              "  pm.test('Ficha y llegada correctas', () => {",
+              "    pm.expect(String(data.id)).to.eql(pm.collectionVariables.get('fichaId'));",
+              "    pm.expect(String(data.llegadaId)).to.eql(pm.collectionVariables.get('llegadaFichasId'));",
+              "    pm.expect(data.dua).to.eql('000123');",
+              "    pm.expect(data.itemDua).to.eql('004');",
+              "  });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
-        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{inventoryToken}}",
+              "type": "string"
+            }
+          ]
+        },
         "url": "{{baseUrl}}/api/v1/motocicletas/{{fichaId}}"
       }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/usuarios/{{inventoryUserId}}/permisos",
+        "auth": {
+          "bearer": [
+            {
+              "value": "{{adminToken}}",
+              "key": "token",
+              "type": "string"
+            }
+          ],
+          "type": "bearer"
+        }
+      },
+      "name": "HU-15 Consultar permisos iniciales",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 Consultar permisos iniciales : 200', () => pm.response.to.have.status(200));",
+              "pm.test('Rol INVENTARIOS permite fichas', () => pm.expect(pm.response.json().permisos.find(p => p.codigo === 'FICHAS_REGISTRAR').permitido).to.eql(true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"decision\":\"DENEGAR\"}"
+        },
+        "url": "{{baseUrl}}/api/v1/usuarios/{{inventoryUserId}}/permisos/FICHAS_REGISTRAR",
+        "auth": {
+          "bearer": [
+            {
+              "value": "{{adminToken}}",
+              "key": "token",
+              "type": "string"
+            }
+          ],
+          "type": "bearer"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "name": "HU-15 DENEGAR fichas",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 DENEGAR fichas : 200', () => pm.response.to.have.status(200));",
+              "pm.test('DENEGAR prevalece', () => pm.expect(pm.response.json().permisos.find(p => p.codigo === 'FICHAS_REGISTRAR').permitido).to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"llegadaId\": {{llegadaFichasId}},\n  \"marca\": \"RONCO\",\n  \"modelo\": \"RZ 250\",\n  \"color\": \"ROJO\",\n  \"chasisCompleto\": \"DEMO-A-0042\",\n  \"numeroMotor\": \"MOTOR-0001\",\n  \"dua\": \"000123\",\n  \"itemDua\": \"004\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/motocicletas",
+        "auth": {
+          "bearer": [
+            {
+              "value": "{{inventoryToken}}",
+              "key": "token",
+              "type": "string"
+            }
+          ],
+          "type": "bearer"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "name": "HU-15 Ficha denegada por excepcion",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 Ficha denegada por excepcion : 403', () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"decision\":\"PERMITIR\"}"
+        },
+        "url": "{{baseUrl}}/api/v1/usuarios/{{inventoryUserId}}/permisos/LLEGADAS_REGISTRAR",
+        "auth": {
+          "bearer": [
+            {
+              "value": "{{adminToken}}",
+              "key": "token",
+              "type": "string"
+            }
+          ],
+          "type": "bearer"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "name": "HU-15 PERMITIR llegada a Inventarios",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 PERMITIR llegada a Inventarios : 200', () => pm.response.to.have.status(200));",
+              "pm.test('PERMITIR habilita llegada', () => pm.expect(pm.response.json().permisos.find(p => p.codigo === 'LLEGADAS_REGISTRAR').permitido).to.eql(true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"numeroGuia\": \"GR-PRUEBA-HU04-POSTMAN\",\n  \"cantidadDeclarada\": 2,\n  \"cantidadRecibida\": 1,\n  \"observacion\": \"Datos ficticios para prueba de persistencia\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/llegadas",
+        "auth": {
+          "bearer": [
+            {
+              "value": "{{inventoryToken}}",
+              "key": "token",
+              "type": "string"
+            }
+          ],
+          "type": "bearer"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "name": "HU-15 Llegada permitida por excepcion",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 Llegada permitida por excepcion : 201', () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"rolCodigo\":\"ALMACEN\"}"
+        },
+        "url": "{{baseUrl}}/api/v1/usuarios/{{inventoryUserId}}/rol",
+        "auth": {
+          "bearer": [
+            {
+              "value": "{{adminToken}}",
+              "key": "token",
+              "type": "string"
+            }
+          ],
+          "type": "bearer"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "name": "HU-15 Cambiar rol a ALMACEN",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 Cambiar rol a ALMACEN : 200', () => pm.response.to.have.status(200));",
+              "pm.test('Rol vigente ALMACEN', () => pm.expect(pm.response.json().rolCodigo).to.eql('ALMACEN'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"llegadaId\": {{llegadaFichasId}},\n  \"marca\": \"RONCO\",\n  \"modelo\": \"RZ 250\",\n  \"color\": \"ROJO\",\n  \"chasisCompleto\": \"DEMO-A-0042\",\n  \"numeroMotor\": \"MOTOR-0001\",\n  \"dua\": \"000123\",\n  \"itemDua\": \"004\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/motocicletas",
+        "auth": {
+          "bearer": [
+            {
+              "value": "{{inventoryToken}}",
+              "key": "token",
+              "type": "string"
+            }
+          ],
+          "type": "bearer"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "name": "HU-15 Rol ALMACEN no registra ficha",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 Rol ALMACEN no registra ficha : 403', () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/v1/usuarios/{{inventoryUserId}}/permisos/FICHAS_REGISTRAR",
+        "auth": {
+          "bearer": [
+            {
+              "value": "{{adminToken}}",
+              "key": "token",
+              "type": "string"
+            }
+          ],
+          "type": "bearer"
+        }
+      },
+      "name": "HU-15 Retirar DENEGAR fichas",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 Retirar DENEGAR fichas : 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"rolCodigo\":\"INVENTARIOS\"}"
+        },
+        "url": "{{baseUrl}}/api/v1/usuarios/{{inventoryUserId}}/rol",
+        "auth": {
+          "bearer": [
+            {
+              "value": "{{adminToken}}",
+              "key": "token",
+              "type": "string"
+            }
+          ],
+          "type": "bearer"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "name": "HU-15 Volver a rol INVENTARIOS",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 Volver a rol INVENTARIOS : 200', () => pm.response.to.have.status(200));",
+              "pm.test('Permiso de ficha restaurado por rol', () => pm.expect(pm.response.json().permisos.find(p => p.codigo === 'FICHAS_REGISTRAR').permitido).to.eql(true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/v1/usuarios/{{inventoryUserId}}/permisos/LLEGADAS_REGISTRAR",
+        "auth": {
+          "bearer": [
+            {
+              "value": "{{adminToken}}",
+              "key": "token",
+              "type": "string"
+            }
+          ],
+          "type": "bearer"
+        }
+      },
+      "name": "HU-15 Retirar PERMITIR llegada",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 Retirar PERMITIR llegada : 200', () => pm.response.to.have.status(200));",
+              "pm.test('Llegada vuelve a estar denegada', () => pm.expect(pm.response.json().permisos.find(p => p.codigo === 'LLEGADAS_REGISTRAR').permitido).to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"numeroGuia\": \"GR-PRUEBA-HU04-POSTMAN\",\n  \"cantidadDeclarada\": 2,\n  \"cantidadRecibida\": 1,\n  \"observacion\": \"Datos ficticios para prueba de persistencia\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/llegadas",
+        "auth": {
+          "bearer": [
+            {
+              "value": "{{inventoryToken}}",
+              "key": "token",
+              "type": "string"
+            }
+          ],
+          "type": "bearer"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "name": "HU-15 Llegada denegada sin excepcion",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 Llegada denegada sin excepcion : 403', () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/usuarios/{{inventoryUserId}}/permisos",
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "name": "HU-15 Sin token no consulta permisos",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 Sin token no consulta permisos : 401', () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/usuarios/{{inventoryUserId}}/permisos",
+        "auth": {
+          "bearer": [
+            {
+              "value": "{{almacenToken}}",
+              "key": "token",
+              "type": "string"
+            }
+          ],
+          "type": "bearer"
+        }
+      },
+      "name": "HU-15 ALMACEN no asigna permisos",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HU-15 ALMACEN no asigna permisos : 403', () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
     }
   ],
   "variable": [
-    { "key": "baseUrl", "value": "http://127.0.0.1:8080" },
-    { "key": "adminUsername", "value": "admin" },
-    { "key": "adminPassword", "value": "", "type": "secret" },
-    { "key": "adminToken", "value": "", "type": "secret" },
-    { "key": "almacenToken", "value": "", "type": "secret" },
-    { "key": "testUserPassword", "value": "ClaveDePrueba_2026!", "type": "secret" },
-    { "key": "testUsername", "value": "" },
-    { "key": "llegadaId", "value": "" },
-    { "key": "llegadaFichasId", "value": "" },
-    { "key": "fichaId", "value": "" }
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8080"
+    },
+    {
+      "key": "adminUsername",
+      "value": "admin"
+    },
+    {
+      "key": "adminPassword",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "almacenToken",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "testUserPassword",
+      "value": "ClaveDePrueba_2026!",
+      "type": "secret"
+    },
+    {
+      "key": "testUsername",
+      "value": ""
+    },
+    {
+      "key": "llegadaId",
+      "value": ""
+    },
+    {
+      "key": "llegadaFichasId",
+      "value": ""
+    },
+    {
+      "key": "fichaId",
+      "value": ""
+    },
+    {
+      "key": "inventoryUsername",
+      "value": "inventarios_postman_demo"
+    },
+    {
+      "key": "inventoryUserId",
+      "value": ""
+    },
+    {
+      "value": "",
+      "key": "inventoryToken",
+      "type": "secret"
+    }
   ]
 }

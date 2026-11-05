@@ -17,12 +17,20 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
+import pe.indumotos.application.PermisoService;
 
 @Configuration
 public class SecurityConfig {
     private final JdbcTemplate jdbc;
+    private final PermisoService permisos;
 
-    public SecurityConfig(JdbcTemplate jdbc) { this.jdbc = jdbc; }
+    public SecurityConfig(JdbcTemplate jdbc, PermisoService permisos) {
+        this.jdbc = jdbc;
+        this.permisos = permisos;
+    }
     @Bean
     PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(12); }
 
@@ -53,16 +61,27 @@ public class SecurityConfig {
             .authorizeHttpRequests(a -> a
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/v1/llegadas").hasAnyRole("ADMIN", "ALMACEN", "INVENTARIOS")
-                .requestMatchers(HttpMethod.GET, "/api/v1/llegadas/**").hasAnyRole("ADMIN", "ALMACEN", "INVENTARIOS")
-                .requestMatchers(HttpMethod.POST, "/api/v1/motocicletas").hasAnyRole("ADMIN", "INVENTARIOS")
-                .requestMatchers(HttpMethod.GET, "/api/v1/motocicletas/**").hasAnyRole("ADMIN", "INVENTARIOS")
-                .anyRequest().authenticated())
+                .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").access(exige("USUARIOS_CREAR"))
+                .requestMatchers("/api/v1/usuarios/*/rol", "/api/v1/usuarios/*/permisos",
+                    "/api/v1/usuarios/*/permisos/*")
+                    .access(exige("PERMISOS_ASIGNAR"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/llegadas").access(exige("LLEGADAS_REGISTRAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/llegadas/**").access(exige("INVENTARIO_CONSULTAR"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/motocicletas").access(exige("FICHAS_REGISTRAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/motocicletas/**").access(exige("INVENTARIO_CONSULTAR"))
+                .anyRequest().denyAll())
             .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(this::jwtAuthentication)))
             .httpBasic(AbstractHttpConfigurer::disable)
             .formLogin(AbstractHttpConfigurer::disable)
             .build();
+    }
+
+    private AuthorizationManager<RequestAuthorizationContext> exige(String codigo) {
+        return (authentication, context) -> {
+            var actual = authentication.get();
+            return new AuthorizationDecision(actual != null && actual.isAuthenticated()
+                && permisos.permitido(actual.getName(), codigo));
+        };
     }
 
     private JwtAuthenticationToken jwtAuthentication(Jwt jwt) {

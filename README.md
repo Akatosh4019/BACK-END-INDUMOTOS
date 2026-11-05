@@ -1,6 +1,6 @@
 # Backend Indumotos
 
-Backend compartido por la futura web y app móvil de Indumotos. No contiene código ni datos de Pharmamobil. Usa Java 21, Spring Boot, PostgreSQL y Flyway. V1 crea las cinco tablas de usuarios, roles y permisos; V2 registra roles iniciales. Actualmente permite crear cuentas como administrador e iniciar sesión con un token JWT de 15 minutos. Todavía no existen los clientes web/móvil ni la política granular de HU-15.
+Backend compartido por la futura web y app móvil de Indumotos. No contiene código ni datos de Pharmamobil. Usa Java 21, Spring Boot, PostgreSQL y Flyway. V1 crea las cinco tablas de usuarios, roles y permisos; V2 registra roles iniciales; V3/V4 crean llegadas y fichas; V5 carga los cinco permisos del Sprint 1 y sus asignaciones iniciales. Permite crear cuentas, iniciar sesión con un JWT de 15 minutos, registrar llegadas y fichas, y asignar roles y excepciones individuales. Todavía no existen los clientes web/móvil.
 
 **Verificación local 01/11/2026:** `mvn clean verify` pasó (1 prueba); Docker Compose levantó PostgreSQL y la API; `/api/health` respondió `{"status":"ok"}`; Flyway V1 figura aplicada una sola vez y existen las cinco tablas. La prueba SQL de `src/test/resources/sql/verificar_usuarios_roles_permisos.sql` confirmó inserciones relacionadas y rechazo de duplicados/FK inválida, con `ROLLBACK` final y cero usuarios de prueba persistidos. Esto verifica la estructura de HU-14-T03, no el registro de cuentas ni la seguridad funcional.
 
@@ -32,15 +32,15 @@ El volumen de PostgreSQL conserva los datos entre reinicios. No ejecutar `docker
 
 Instalar Java 21 o posterior, Maven y PostgreSQL. Crear una base vacía `indumotos` y un usuario con permisos sobre ella; configurar `DB_URL`, `DB_USER`, `DB_PASSWORD`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` y `JWT_SECRET_BASE64` como variables de entorno y ejecutar `mvn spring-boot:run`. Spring no lee `.env` por sí solo fuera de Docker Compose. La aplicación crea las **tablas**, no el servidor ni la base vacía.
 
-No publicar contraseñas ni tokens en Git. `usuario.clave_hash` almacena BCrypt, nunca texto plano. La política de permisos individuales aún debe implementarse y probarse en HU-15.
+No publicar contraseñas ni tokens en Git. `usuario.clave_hash` almacena BCrypt, nunca texto plano. HU-15-T05 ya aplica permisos por acción desde la base; el expediente técnico y las instrucciones de captura están en `docs/evidencias/HU-15-T05/resultado-pruebas.md`.
 
 ## Seguridad implementada y pendiente
 
 Tomar del backend de Pharmamobil la separación de configuración de seguridad, autenticación, filtros, controladores, servicios y pruebas; no copiar sus cuentas de demostración, claves, permisos de farmacia ni rutas de productos/ventas. Para Indumotos:
 
 1. HU-14: solo un administrador autorizado crea cuentas; contraseña con hash adaptativo; validación de usuario único y datos obligatorios. No habilitar autorregistro público.
-2. HU-15: permisos del rol desde la base de datos, con excepciones individuales `PERMITIR`/`DENEGAR`; `DENEGAR` prevalece. Comprobar la autorización en el backend, no únicamente ocultando botones en la web.
+2. HU-15: permisos del rol desde la base de datos, con excepciones individuales `PERMITIR`/`DENEGAR`; `DENEGAR` prevalece. La API relee los permisos vigentes en cada solicitud y responde 403 ante una cuenta autenticada sin permiso. `GET /api/v1/usuarios/{id}/permisos` consulta accesos; `PUT /api/v1/usuarios/{id}/rol` cambia el rol; `PUT` y `DELETE /api/v1/usuarios/{id}/permisos/{codigo}` guardan y retiran excepciones. Estas rutas requieren `PERMISOS_ASIGNAR`. Los permisos administrativos `USUARIOS_CREAR` y `PERMISOS_ASIGNAR` no pueden concederse por excepción a un rol no administrador. Falta la pantalla HU-15-T04 y la prueba integral de HU-15-T06.
 3. HU-26: `POST /api/v1/auth/login` valida las credenciales, devuelve `accessToken` tipo Bearer con expiración de 900 segundos y acepta ese token en endpoints protegidos. HTTP Basic quedó deshabilitado. El cierre de sesión aún no está implementado: borrar el token del cliente no lo revoca en el servidor. Diseñar almacenamiento seguro y revocación antes de conectar web/móvil.
 4. Probar al menos acceso sin sesión (401), con sesión sin permiso (403), cuenta inactiva y denegación individual. La configuración inicial de Spring Security no sustituye estas pruebas.
 
-La colección vigente para Postman está en `docs/postman/Indumotos-Sprint-1.postman_collection.json`; ejecutar primero «Login administrador» y luego las solicitudes protegidas. No exponer la API fuera del entorno local antes de HTTPS, pruebas integrales y cierre de HU-14, HU-15 y HU-26.
+La colección vigente para Postman está en `docs/postman/Indumotos-Sprint-1.postman_collection.json`; ejecutarla en orden, usando cuentas ficticias ALMACEN e INVENTARIOS para las operaciones correspondientes. El administrador no registra llegadas ni fichas por defecto según la matriz inicial. No exponer la API fuera del entorno local antes de HTTPS, pruebas integrales y cierre de HU-14, HU-15 y HU-26.

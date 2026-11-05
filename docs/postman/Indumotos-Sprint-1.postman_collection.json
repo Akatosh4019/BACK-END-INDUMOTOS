@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Indumotos | Sprint 1 | Usuarios, acceso y llegadas",
-    "description": "Pruebas locales de HU-14, HU-26 y HU-04 T03. Configurar adminPassword; ejecutar 00 y Login administrador antes de crear cuentas o llegadas. Para HU-04 ejecutar 08 y después 09; 08 guarda llegadaId automáticamente. Los tokens se guardan solo en variables locales de Postman. No compartir exportaciones con credenciales o tokens.",
+    "name": "Indumotos | Sprint 1 | Acceso, llegadas y fichas",
+    "description": "Pruebas locales de HU-14, HU-26, HU-04 T03 y HU-02 T03. Configurar adminPassword; ejecutar 00 y Login administrador. Para HU-04 usar 08-09. Para HU-02 usar 10-13 en orden: 10 crea llegada de dos unidades, 11-12 crean fichas y 13 consulta la primera. Los tokens se guardan solo en variables locales de Postman. No compartir exportaciones con credenciales o tokens.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -172,6 +172,83 @@
         "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
         "url": "{{baseUrl}}/api/v1/llegadas/{{llegadaId}}"
       }
+    },
+    {
+      "name": "10 - HU-02 T03 Crear llegada de dos motos (201)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Llegada para fichas: 201', () => pm.response.to.have.status(201));",
+        "if (pm.response.code === 201) pm.collectionVariables.set('llegadaFichasId', String(pm.response.json().id));"
+      ], "type": "text/javascript" } }],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"numeroGuia\": \"GR-DEMO-HU02-POSTMAN\",\n  \"cantidadDeclarada\": 2,\n  \"cantidadRecibida\": 2,\n  \"observacion\": \"Prueba ficticia de dos fichas\"\n}" },
+        "url": "{{baseUrl}}/api/v1/llegadas"
+      }
+    },
+    {
+      "name": "11 - HU-02 T03 Guardar ficha RONCO (201)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Ficha RONCO creada: 201', () => pm.response.to.have.status(201));",
+        "if (pm.response.code === 201) {",
+        "  const data = pm.response.json();",
+        "  pm.collectionVariables.set('fichaId', String(data.id));",
+        "  pm.test('Vínculo y ceros conservados', () => {",
+        "    pm.expect(String(data.llegadaId)).to.eql(pm.collectionVariables.get('llegadaFichasId'));",
+        "    pm.expect(data.dua).to.eql('000123');",
+        "    pm.expect(data.itemDua).to.eql('004');",
+        "  });",
+        "}"
+      ], "type": "text/javascript" } }],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"llegadaId\": {{llegadaFichasId}},\n  \"marca\": \"RONCO\",\n  \"modelo\": \"RZ 250\",\n  \"color\": \"ROJO\",\n  \"chasisCompleto\": \"DEMO-A-0042\",\n  \"numeroMotor\": \"MOTOR-0001\",\n  \"dua\": \"000123\",\n  \"itemDua\": \"004\"\n}" },
+        "url": "{{baseUrl}}/api/v1/motocicletas"
+      }
+    },
+    {
+      "name": "12 - HU-02 T03 Guardar ficha WANXIN (201)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Ficha WANXIN creada: 201', () => pm.response.to.have.status(201));",
+        "if (pm.response.code === 201) {",
+        "  const data = pm.response.json();",
+        "  pm.test('Misma llegada, otra unidad', () => {",
+        "    pm.expect(String(data.llegadaId)).to.eql(pm.collectionVariables.get('llegadaFichasId'));",
+        "    pm.expect(data.chasisCompleto).to.eql('DEMO-B-0042');",
+        "    pm.expect(data.itemDua).to.eql('005');",
+        "  });",
+        "}"
+      ], "type": "text/javascript" } }],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"llegadaId\": {{llegadaFichasId}},\n  \"marca\": \"WANXIN\",\n  \"modelo\": \"PARKOUR 200\",\n  \"color\": \"NEGRO\",\n  \"chasisCompleto\": \"DEMO-B-0042\",\n  \"numeroMotor\": \"MOTOR-0002\",\n  \"dua\": \"000123\",\n  \"itemDua\": \"005\"\n}" },
+        "url": "{{baseUrl}}/api/v1/motocicletas"
+      }
+    },
+    {
+      "name": "13 - HU-02 T03 Consultar primera ficha (200)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Ficha consultada: 200', () => pm.response.to.have.status(200));",
+        "if (pm.response.code === 200) {",
+        "  const data = pm.response.json();",
+        "  pm.test('Ficha y llegada correctas', () => {",
+        "    pm.expect(String(data.id)).to.eql(pm.collectionVariables.get('fichaId'));",
+        "    pm.expect(String(data.llegadaId)).to.eql(pm.collectionVariables.get('llegadaFichasId'));",
+        "    pm.expect(data.dua).to.eql('000123');",
+        "    pm.expect(data.itemDua).to.eql('004');",
+        "  });",
+        "}"
+      ], "type": "text/javascript" } }],
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/api/v1/motocicletas/{{fichaId}}"
+      }
     }
   ],
   "variable": [
@@ -182,6 +259,8 @@
     { "key": "almacenToken", "value": "", "type": "secret" },
     { "key": "testUserPassword", "value": "ClaveDePrueba_2026!", "type": "secret" },
     { "key": "testUsername", "value": "" },
-    { "key": "llegadaId", "value": "" }
+    { "key": "llegadaId", "value": "" },
+    { "key": "llegadaFichasId", "value": "" },
+    { "key": "fichaId", "value": "" }
   ]
 }

@@ -12,6 +12,8 @@ import pe.indumotos.application.MotocicletaRepository;
 import pe.indumotos.application.FiltroMotocicletas;
 import pe.indumotos.application.MotocicletaResumen;
 import pe.indumotos.application.PaginaMotocicletas;
+import pe.indumotos.application.PaginaBusquedaChasis;
+import pe.indumotos.application.ResultadoBusquedaChasis;
 import pe.indumotos.domain.Motocicleta;
 
 @Repository
@@ -33,6 +35,20 @@ public class JdbcMotocicletaRepository implements MotocicletaRepository {
         return jdbc.query("SELECT id_motocicleta FROM motocicleta " +
             "WHERE upper(btrim(chasis_completo)) = upper(btrim(?)) ORDER BY id_motocicleta LIMIT 1",
             rs -> rs.next() ? Optional.of(rs.getLong(1)) : Optional.empty(), chasisCompleto);
+    }
+
+    @Override
+    public PaginaBusquedaChasis buscarPorTerminacion(String ultimosCuatro, int pagina, int tamano) {
+        String where = " WHERE upper(right(btrim(m.chasis_completo), 4)) = upper(?)";
+        Long total = jdbc.queryForObject("SELECT COUNT(*) FROM motocicleta m" + where, Long.class, ultimosCuatro);
+        long cantidad = total == null ? 0 : total;
+        var items = jdbc.query("SELECT m.id_motocicleta, m.marca, m.modelo, m.color, m.chasis_completo " +
+            "FROM motocicleta m" + where + " ORDER BY m.id_motocicleta ASC LIMIT ? OFFSET ?",
+            (rs, row) -> new ResultadoBusquedaChasis(rs.getLong("id_motocicleta"), rs.getString("marca"),
+                rs.getString("modelo"), rs.getString("color"), rs.getString("chasis_completo")),
+            ultimosCuatro, tamano, (long) pagina * tamano);
+        return new PaginaBusquedaChasis(items, pagina, tamano, cantidad,
+            cantidad == 0 ? 0 : (int) Math.ceil((double) cantidad / tamano));
     }
 
     @Override

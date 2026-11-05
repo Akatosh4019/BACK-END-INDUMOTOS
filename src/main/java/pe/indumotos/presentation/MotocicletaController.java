@@ -19,11 +19,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import tools.jackson.core.JacksonException;
 import org.springframework.web.server.ResponseStatusException;
 import pe.indumotos.application.RegistrarMotocicleta;
+import pe.indumotos.application.ConsultarMotocicletasFiltradas;
+import pe.indumotos.application.PaginaMotocicletas;
 import pe.indumotos.domain.Motocicleta;
 import pe.indumotos.application.PermisoService;
 
@@ -32,10 +35,13 @@ import pe.indumotos.application.PermisoService;
 public class MotocicletaController {
     private final RegistrarMotocicleta registrar;
     private final PermisoService permisos;
+    private final ConsultarMotocicletasFiltradas consultarFiltradas;
 
-    public MotocicletaController(RegistrarMotocicleta registrar, PermisoService permisos) {
+    public MotocicletaController(RegistrarMotocicleta registrar, PermisoService permisos,
+        ConsultarMotocicletasFiltradas consultarFiltradas) {
         this.registrar = registrar;
         this.permisos = permisos;
+        this.consultarFiltradas = consultarFiltradas;
     }
 
     public record NuevaFicha(@NotNull @Positive Long llegadaId,
@@ -60,6 +66,13 @@ public class MotocicletaController {
     @GetMapping("/{id}")
     public Motocicleta consultar(@PathVariable long id) {
         return registrar.consultar(id);
+    }
+
+    @GetMapping
+    public PaginaMotocicletas listar(@RequestParam(required = false) String marca,
+        @RequestParam(required = false) String modelo, @RequestParam(required = false) String color,
+        @RequestParam(defaultValue = "0") int pagina, @RequestParam(defaultValue = "20") int tamano) {
+        return consultarFiltradas.consultar(marca, modelo, color, pagina, tamano);
     }
 
     @ExceptionHandler(RegistrarMotocicleta.ChasisDuplicado.class)
@@ -124,8 +137,14 @@ public class MotocicletaController {
         };
     }
 
-    @ExceptionHandler({EmptyResultDataAccessException.class, ResponseStatusException.class})
+    @ExceptionHandler(EmptyResultDataAccessException.class)
     public ResponseEntity<Map<String, String>> noEncontrado() {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Registro no encontrado"));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> respuestaEstado(ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode())
+            .body(Map.of("error", ex.getReason() == null ? "Solicitud inválida" : ex.getReason()));
     }
 }

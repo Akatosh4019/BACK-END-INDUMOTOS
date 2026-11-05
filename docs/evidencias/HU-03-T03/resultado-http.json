@@ -1,0 +1,11 @@
+{
+  "tarea": "HU-03-T03 - Implementar consulta filtrada de fichas",
+  "entorno": "API y PostgreSQL locales mediante Docker; datos de prueba ficticios",
+  "casos": [
+    {"nombre": "Consulta por marca y color", "solicitud": "GET /api/v1/motocicletas?marca=RONCO&color=ROJO&pagina=0&tamano=20", "http": 200, "respuesta": {"items": [{"id": 1, "marca": "RONCO", "modelo": "RZ 250", "color": "ROJO", "chasisVista": "**** 0042"}], "pagina": 0, "tamano": 20, "totalElementos": 1, "totalPaginas": 1}},
+    {"nombre": "Sin coincidencias", "solicitud": "GET /api/v1/motocicletas?marca=INEXISTENTE&pagina=0&tamano=20", "http": 200, "respuesta": {"items": [], "pagina": 0, "tamano": 20, "totalElementos": 0, "totalPaginas": 0}},
+    {"nombre": "Página inválida", "solicitud": "GET /api/v1/motocicletas?pagina=-1&tamano=20", "http": 400, "respuesta": {"error": "La página no puede ser negativa"}},
+    {"nombre": "Sin autenticación", "solicitud": "GET /api/v1/motocicletas", "http": 401},
+    {"nombre": "Rol sin permiso de inventario", "solicitud": "GET /api/v1/motocicletas", "http": 403}
+  ]
+}

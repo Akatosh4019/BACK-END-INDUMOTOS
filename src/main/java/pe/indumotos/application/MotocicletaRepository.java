@@ -12,4 +12,5 @@ public interface MotocicletaRepository {
         String creadorUsuario);
     Motocicleta buscarPorId(long id);
     List<Motocicleta> listarPorLlegada(long llegadaId);
+    PaginaMotocicletas buscarPorFiltros(FiltroMotocicletas filtro);
 }

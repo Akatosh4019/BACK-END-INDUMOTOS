@@ -1,5 +1,6 @@
 package pe.indumotos.infrastructure;
 
+import java.util.ArrayList;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -8,6 +9,9 @@ import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import pe.indumotos.application.MotocicletaRepository;
+import pe.indumotos.application.FiltroMotocicletas;
+import pe.indumotos.application.MotocicletaResumen;
+import pe.indumotos.application.PaginaMotocicletas;
 import pe.indumotos.domain.Motocicleta;
 
 @Repository
@@ -61,6 +65,48 @@ public class JdbcMotocicletaRepository implements MotocicletaRepository {
             "JOIN usuario u ON u.id_usuario = m.id_creador " +
             "WHERE m.id_llegada = ? ORDER BY m.id_motocicleta",
             this::mapear, llegadaId);
+    }
+
+    @Override
+    public PaginaMotocicletas buscarPorFiltros(FiltroMotocicletas filtro) {
+        List<Object> parametros = new ArrayList<>();
+        String where = construirWhere(filtro, parametros);
+        Long total = jdbc.queryForObject("SELECT COUNT(*) FROM motocicleta m" + where,
+            Long.class, parametros.toArray());
+        long totalElementos = total == null ? 0 : total;
+        List<Object> paginaParametros = new ArrayList<>(parametros);
+        paginaParametros.add(filtro.tamano());
+        paginaParametros.add((long) filtro.pagina() * filtro.tamano());
+        List<MotocicletaResumen> items = jdbc.query(
+            "SELECT m.id_motocicleta, m.marca, m.modelo, m.color, m.chasis_completo " +
+            "FROM motocicleta m" + where + " ORDER BY m.id_motocicleta ASC LIMIT ? OFFSET ?",
+            (rs, rowNum) -> new MotocicletaResumen(rs.getLong("id_motocicleta"),
+                rs.getString("marca"), rs.getString("modelo"), rs.getString("color"),
+                ocultarChasis(rs.getString("chasis_completo"))), paginaParametros.toArray());
+        int totalPaginas = totalElementos == 0 ? 0
+            : (int) Math.ceil((double) totalElementos / filtro.tamano());
+        return new PaginaMotocicletas(items, filtro.pagina(), filtro.tamano(), totalElementos,
+            totalPaginas);
+    }
+
+    private String construirWhere(FiltroMotocicletas filtro, List<Object> parametros) {
+        List<String> condiciones = new ArrayList<>();
+        agregarFiltro(condiciones, parametros, "marca", filtro.marca());
+        agregarFiltro(condiciones, parametros, "modelo", filtro.modelo());
+        agregarFiltro(condiciones, parametros, "color", filtro.color());
+        return condiciones.isEmpty() ? "" : " WHERE " + String.join(" AND ", condiciones);
+    }
+
+    private void agregarFiltro(List<String> condiciones, List<Object> parametros, String columna,
+        String valor) {
+        if (valor == null) return;
+        condiciones.add("LOWER(m." + columna + ") = LOWER(?)");
+        parametros.add(valor);
+    }
+
+    private String ocultarChasis(String chasisCompleto) {
+        if (chasisCompleto == null || chasisCompleto.length() <= 4) return "****";
+        return "**** " + chasisCompleto.substring(chasisCompleto.length() - 4);
     }
 
     private Motocicleta mapear(ResultSet rs, int rowNum) throws SQLException {

@@ -6,6 +6,9 @@ import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import pe.indumotos.application.RegistrarMotocicleta;
+import pe.indumotos.application.ConsultarMotocicletasFiltradas;
+import pe.indumotos.application.PaginaMotocicletas;
+import pe.indumotos.application.MotocicletaResumen;
 import pe.indumotos.domain.Motocicleta;
 
 class MotocicletaControllerTest {
@@ -17,7 +20,8 @@ class MotocicletaControllerTest {
         when(registrar.ejecutar(2L, "RONCO", "RZ 250", "ROJO", "DEMO-A-0042",
             "MOTOR-0001", "000123", "004", "admin")).thenReturn(moto);
         var controller = new MotocicletaController(registrar,
-            mock(pe.indumotos.application.PermisoService.class));
+            mock(pe.indumotos.application.PermisoService.class),
+            mock(ConsultarMotocicletasFiltradas.class));
         var auth = UsernamePasswordAuthenticationToken.authenticated(
             "admin", null, java.util.List.of());
 
@@ -29,5 +33,23 @@ class MotocicletaControllerTest {
         assertEquals("000123", response.getBody().dua());
         assertEquals("004", response.getBody().itemDua());
         assertEquals(2L, response.getBody().llegadaId());
+    }
+
+    @Test
+    void listaResumenesConFiltrosOpcionales() {
+        var registrar = mock(RegistrarMotocicleta.class);
+        var consulta = mock(ConsultarMotocicletasFiltradas.class);
+        var esperado = new PaginaMotocicletas(java.util.List.of(
+            new MotocicletaResumen(8L, "RONCO", "RZ 250", "ROJO", "**** 0042")),
+            0, 20, 1, 1);
+        when(consulta.consultar("RONCO", null, "ROJO", 0, 20)).thenReturn(esperado);
+        var controller = new MotocicletaController(registrar,
+            mock(pe.indumotos.application.PermisoService.class), consulta);
+
+        var respuesta = controller.listar("RONCO", null, "ROJO", 0, 20);
+
+        assertEquals(1, respuesta.items().size());
+        assertEquals("**** 0042", respuesta.items().getFirst().chasisVista());
+        verify(consulta).consultar("RONCO", null, "ROJO", 0, 20);
     }
 }

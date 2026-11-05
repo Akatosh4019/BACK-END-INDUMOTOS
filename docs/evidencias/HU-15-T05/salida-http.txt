@@ -1,0 +1,23 @@
+API activa: 200
+Login administrador: 200
+ADMIN sin permiso de llegada: 403
+Crear ALMACEN: 201
+Crear INVENTARIOS: 201
+Login ALMACEN: 200
+Login INVENTARIOS: 200
+Consulta permisos sin sesión: 401
+Consulta permisos sin autorización: 403
+Consulta permisos ADMIN: 200
+Consulta ficha con rol autorizado: 404
+Guardar DENEGAR: 200
+Ficha rechazada tras DENEGAR: 403
+Guardar PERMITIR: 200
+Llegada permitida por excepción: 201
+Cambio de rol: 200
+Ficha rechazada tras cambio de rol: 403
+Retirar DENEGAR: 200
+Restaurar rol: 200
+Retirar PERMITIR: 200
+Llegada rechazada tras retirar PERMITIR: 403
+No conceder creación de cuentas a INVENTARIOS: 403
+RESULTADO: TODAS LAS COMPROBACIONES PASARON

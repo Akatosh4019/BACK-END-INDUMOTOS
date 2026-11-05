@@ -19,13 +19,15 @@ La respuesta de listado solo expone `id`, `marca`, `modelo`, `color` y `chasisVi
 
 ## Capturas de Postman
 
+- `01-login-inventarios-200.png` (token redactado)
 - `02-filtro-ronco-rojo-200.png`
 - `03-sin-coincidencias-200.png`
 - `04-pagina-invalida-400.png`
 - `05-sin-autenticacion-401.png`
+- `06-login-comercial-200.png` (token redactado)
 - `07-rol-sin-permiso-403.png`
 
-Las capturas de inicio de sesión no se almacenan porque muestran un token JWT completo. El resultado de autenticación se registra en los casos de prueba sin exponer secretos.
+Las capturas de inicio de sesión tienen el token JWT redactado; no se almacenan secretos en el repositorio.
 
 ## Diseño implementado
 

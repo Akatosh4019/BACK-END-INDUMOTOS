@@ -1,0 +1,191 @@
+{
+  "gateway": "http://127.0.0.1:8030",
+  "solicitudes": 24,
+  "aprobadas": 24,
+  "fallidas": 0,
+  "fichasValidasGuardadas": 1,
+  "fichasInvalidasGuardadas": 0,
+  "ejemploRespuesta400": {
+    "solicitud": "POST /api/v1/motocicletas",
+    "codigo": 400,
+    "cuerpo": {
+      "campos": [
+        "marca"
+      ],
+      "errores": {
+        "marca": "Ingresa la marca."
+      },
+      "error": "Revisa los campos indicados antes de registrar la ficha."
+    }
+  },
+  "resultados": [
+    {
+      "caso": "Ficha completa",
+      "esperado": 201,
+      "obtenido": 201,
+      "campo": null,
+      "paso": true
+    },
+    {
+      "caso": "marca omitido",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "marca",
+      "paso": true
+    },
+    {
+      "caso": "marca nulo",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "marca",
+      "paso": true
+    },
+    {
+      "caso": "marca en blanco",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "marca",
+      "paso": true
+    },
+    {
+      "caso": "modelo omitido",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "modelo",
+      "paso": true
+    },
+    {
+      "caso": "modelo nulo",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "modelo",
+      "paso": true
+    },
+    {
+      "caso": "modelo en blanco",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "modelo",
+      "paso": true
+    },
+    {
+      "caso": "color omitido",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "color",
+      "paso": true
+    },
+    {
+      "caso": "color nulo",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "color",
+      "paso": true
+    },
+    {
+      "caso": "color en blanco",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "color",
+      "paso": true
+    },
+    {
+      "caso": "chasisCompleto omitido",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "chasisCompleto",
+      "paso": true
+    },
+    {
+      "caso": "chasisCompleto nulo",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "chasisCompleto",
+      "paso": true
+    },
+    {
+      "caso": "chasisCompleto en blanco",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "chasisCompleto",
+      "paso": true
+    },
+    {
+      "caso": "numeroMotor omitido",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "numeroMotor",
+      "paso": true
+    },
+    {
+      "caso": "numeroMotor nulo",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "numeroMotor",
+      "paso": true
+    },
+    {
+      "caso": "numeroMotor en blanco",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "numeroMotor",
+      "paso": true
+    },
+    {
+      "caso": "dua omitido",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "dua",
+      "paso": true
+    },
+    {
+      "caso": "dua nulo",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "dua",
+      "paso": true
+    },
+    {
+      "caso": "dua en blanco",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "dua",
+      "paso": true
+    },
+    {
+      "caso": "itemDua omitido",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "itemDua",
+      "paso": true
+    },
+    {
+      "caso": "itemDua nulo",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "itemDua",
+      "paso": true
+    },
+    {
+      "caso": "itemDua en blanco",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "itemDua",
+      "paso": true
+    },
+    {
+      "caso": "Llegada omitida",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "llegadaId",
+      "paso": true
+    },
+    {
+      "caso": "Sin autenticación",
+      "esperado": 401,
+      "obtenido": 401,
+      "campo": null,
+      "paso": true
+    }
+  ]
+}

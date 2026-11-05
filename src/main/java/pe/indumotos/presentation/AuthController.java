@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,14 +24,23 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthenticationManager authentication;
     private final JwtEncoder encoder;
+    private final pe.indumotos.application.PermisoService permisos;
 
-    public AuthController(AuthenticationManager authentication, JwtEncoder encoder) {
+    public AuthController(AuthenticationManager authentication, JwtEncoder encoder,
+        pe.indumotos.application.PermisoService permisos) {
         this.authentication = authentication;
         this.encoder = encoder;
+        this.permisos = permisos;
     }
 
     public record LoginRequest(@NotBlank String nombreUsuario, @NotBlank String clave) {}
     public record LoginResponse(String accessToken, String tokenType, long expiresIn) {}
+
+    @GetMapping("/me")
+    public pe.indumotos.application.PermisoService.Accesos me(
+        org.springframework.security.core.Authentication authentication) {
+        return permisos.consultarPropios(authentication.getName());
+    }
 
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {

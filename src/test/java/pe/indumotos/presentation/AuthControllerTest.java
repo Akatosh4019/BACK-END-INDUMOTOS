@@ -18,7 +18,8 @@ class AuthControllerTest {
         AuthenticationManager manager = mock(AuthenticationManager.class);
         when(manager.authenticate(any())).thenReturn(
             UsernamePasswordAuthenticationToken.authenticated("admin", null, java.util.List.of()));
-        var controller = new AuthController(manager, new JwtConfig().jwtEncoder(key));
+        var controller = new AuthController(manager, new JwtConfig().jwtEncoder(key),
+            mock(pe.indumotos.application.PermisoService.class));
         var response = controller.login(new AuthController.LoginRequest("ADMIN", "clave_de_prueba"));
         var jwt = new JwtConfig().jwtDecoder(key).decode(response.accessToken());
         assertEquals("Bearer", response.tokenType());
@@ -33,7 +34,8 @@ class AuthControllerTest {
     void credencialesIncorrectasNoEmitenToken() {
         AuthenticationManager manager = mock(AuthenticationManager.class);
         when(manager.authenticate(any())).thenThrow(new BadCredentialsException("Incorrectas"));
-        var controller = new AuthController(manager, new JwtConfig().jwtEncoder(key));
+        var controller = new AuthController(manager, new JwtConfig().jwtEncoder(key),
+            mock(pe.indumotos.application.PermisoService.class));
         assertThrows(BadCredentialsException.class,
             () -> controller.login(new AuthController.LoginRequest("admin", "incorrecta")));
     }

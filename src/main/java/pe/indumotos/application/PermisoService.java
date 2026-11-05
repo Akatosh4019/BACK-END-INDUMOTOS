@@ -33,6 +33,12 @@ public class PermisoService {
                     efectivo(cuenta, p))).toList());
     }
 
+    public Accesos consultarPropios(String nombreUsuario) {
+        var cuenta = repository.buscarPorNombre(nombreUsuario);
+        if (cuenta == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cuenta no encontrada");
+        return consultar(cuenta.id());
+    }
+
     @Transactional
     public Accesos cambiarRol(long usuarioId, String rolCodigo) {
         cuenta(usuarioId);

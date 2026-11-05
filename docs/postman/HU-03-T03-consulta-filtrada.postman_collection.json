@@ -9,6 +9,8 @@
     {"key": "inventoryUsername", "value": ""},
     {"key": "inventoryPassword", "value": "", "type": "secret"},
     {"key": "inventoryToken", "value": "", "type": "secret"},
+    {"key": "comercialUsername", "value": ""},
+    {"key": "comercialPassword", "value": "", "type": "secret"},
     {"key": "comercialToken", "value": "", "type": "secret"}
   ],
   "item": [
@@ -64,7 +66,20 @@
       "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Sin autenticación: 401', () => pm.response.to.have.status(401));"]}}]
     },
     {
-      "name": "06 - Rol sin permiso (403)",
+      "name": "06 - Login COMERCIAL (200)",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"nombreUsuario\": \"{{comercialUsername}}\",\n  \"clave\": \"{{comercialPassword}}\"\n}"},
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      },
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": [
+        "pm.test('Login COMERCIAL: 200', () => pm.response.to.have.status(200));",
+        "if (pm.response.code === 200) pm.collectionVariables.set('comercialToken', pm.response.json().accessToken);"
+      ]}}]
+    },
+    {
+      "name": "07 - Rol sin permiso (403)",
       "request": {
         "method": "GET",
         "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{comercialToken}}", "type": "string"}]},

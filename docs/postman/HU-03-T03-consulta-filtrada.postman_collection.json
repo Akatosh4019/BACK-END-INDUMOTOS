@@ -1,0 +1,76 @@
+{
+  "info": {
+    "name": "Indumotos | HU-03-T03 | Consulta filtrada",
+    "description": "Pruebas de la consulta filtrada de fichas. Configura los valores locales inventoryUsername, inventoryPassword y comercialToken antes de enviar las solicitudes. No exportar secretos ni tokens.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "http://127.0.0.1:8080"},
+    {"key": "inventoryUsername", "value": ""},
+    {"key": "inventoryPassword", "value": "", "type": "secret"},
+    {"key": "inventoryToken", "value": "", "type": "secret"},
+    {"key": "comercialToken", "value": "", "type": "secret"}
+  ],
+  "item": [
+    {
+      "name": "01 - Login INVENTARIOS (200)",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"nombreUsuario\": \"{{inventoryUsername}}\",\n  \"clave\": \"{{inventoryPassword}}\"\n}"},
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      },
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": [
+        "pm.test('Login correcto: 200', () => pm.response.to.have.status(200));",
+        "if (pm.response.code === 200) pm.collectionVariables.set('inventoryToken', pm.response.json().accessToken);"
+      ]}}]
+    },
+    {
+      "name": "02 - Filtrar RONCO ROJO (200)",
+      "request": {
+        "method": "GET",
+        "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{inventoryToken}}", "type": "string"}]},
+        "url": "{{baseUrl}}/api/v1/motocicletas?marca=RONCO&color=ROJO&pagina=0&tamano=20"
+      },
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": [
+        "pm.test('Consulta filtrada: 200', () => pm.response.to.have.status(200));",
+        "if (pm.response.code === 200) { const body = pm.response.json(); pm.test('No expone datos privados', () => { pm.expect(body.items[0]).not.to.have.property('numeroMotor'); pm.expect(body.items[0]).not.to.have.property('dua'); pm.expect(body.items[0]).not.to.have.property('chasisCompleto'); }); }"
+      ]}}]
+    },
+    {
+      "name": "03 - Sin coincidencias (200)",
+      "request": {
+        "method": "GET",
+        "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{inventoryToken}}", "type": "string"}]},
+        "url": "{{baseUrl}}/api/v1/motocicletas?marca=INEXISTENTE&pagina=0&tamano=20"
+      },
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": [
+        "pm.test('Sin coincidencias: 200', () => pm.response.to.have.status(200));",
+        "if (pm.response.code === 200) pm.test('Lista vacía', () => pm.expect(pm.response.json().items).to.eql([]));"
+      ]}}]
+    },
+    {
+      "name": "04 - Página inválida (400)",
+      "request": {
+        "method": "GET",
+        "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{inventoryToken}}", "type": "string"}]},
+        "url": "{{baseUrl}}/api/v1/motocicletas?pagina=-1&tamano=20"
+      },
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Página inválida: 400', () => pm.response.to.have.status(400));"]}}]
+    },
+    {
+      "name": "05 - Sin autenticación (401)",
+      "request": {"method": "GET", "auth": {"type": "noauth"}, "url": "{{baseUrl}}/api/v1/motocicletas?pagina=0&tamano=20"},
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Sin autenticación: 401', () => pm.response.to.have.status(401));"]}}]
+    },
+    {
+      "name": "06 - Rol sin permiso (403)",
+      "request": {
+        "method": "GET",
+        "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{comercialToken}}", "type": "string"}]},
+        "url": "{{baseUrl}}/api/v1/motocicletas?pagina=0&tamano=20"
+      },
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Rol sin permiso: 403', () => pm.response.to.have.status(403));"]}}]
+    }
+  ]
+}

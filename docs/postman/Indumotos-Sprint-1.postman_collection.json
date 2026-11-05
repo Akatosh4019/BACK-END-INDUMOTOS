@@ -1,7 +1,7 @@
 {
   "info": {
-      "name": "Indumotos | Sprint 1 | Registro de usuarios",
-    "description": "Pruebas locales de HU-14 y HU-26. Configurar adminPassword; ejecutar 00, Login administrador y luego 01 antes de 02 y Login ALMACEN antes de 04. Los tokens se guardan solo en variables locales de Postman. No compartir exportaciones con credenciales o tokens.",
+    "name": "Indumotos | Sprint 1 | Usuarios, acceso y llegadas",
+    "description": "Pruebas locales de HU-14, HU-26 y HU-04 T03. Configurar adminPassword; ejecutar 00 y Login administrador antes de crear cuentas o llegadas. Para HU-04 ejecutar 08 y después 09; 08 guarda llegadaId automáticamente. Los tokens se guardan solo en variables locales de Postman. No compartir exportaciones con credenciales o tokens.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -129,6 +129,49 @@
         "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"Prueba rol\",\n  \"nombreUsuario\": \"prueba_rol_invalido\",\n  \"clave\": \"{{testUserPassword}}\",\n  \"rolCodigo\": \"INEXISTENTE\"\n}" },
         "url": "{{baseUrl}}/api/v1/usuarios"
       }
+    },
+    {
+      "name": "08 - HU-04 T03 Registrar llegada (201)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Llegada creada: 201', () => pm.response.to.have.status(201));",
+        "if (pm.response.code === 201) {",
+        "  const data = pm.response.json();",
+        "  pm.collectionVariables.set('llegadaId', String(data.id));",
+        "  pm.test('Guía y cantidades guardadas', () => {",
+        "    pm.expect(data.numeroGuia).to.eql('GR-PRUEBA-HU04-POSTMAN');",
+        "    pm.expect(data.cantidadDeclarada).to.eql(2);",
+        "    pm.expect(data.cantidadRecibida).to.eql(1);",
+        "    pm.expect(data.receptorUsuario).to.eql(pm.collectionVariables.get('adminUsername'));",
+        "  });",
+        "}"
+      ], "type": "text/javascript" } }],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"numeroGuia\": \"GR-PRUEBA-HU04-POSTMAN\",\n  \"cantidadDeclarada\": 2,\n  \"cantidadRecibida\": 1,\n  \"observacion\": \"Datos ficticios para prueba de persistencia\"\n}" },
+        "url": "{{baseUrl}}/api/v1/llegadas"
+      }
+    },
+    {
+      "name": "09 - HU-04 T03 Consultar llegada (200)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Llegada consultada: 200', () => pm.response.to.have.status(200));",
+        "if (pm.response.code === 200) {",
+        "  const data = pm.response.json();",
+        "  pm.test('Mismo registro persistido', () => {",
+        "    pm.expect(String(data.id)).to.eql(pm.collectionVariables.get('llegadaId'));",
+        "    pm.expect(data.numeroGuia).to.eql('GR-PRUEBA-HU04-POSTMAN');",
+        "    pm.expect(data.cantidadDeclarada).to.eql(2);",
+        "    pm.expect(data.cantidadRecibida).to.eql(1);",
+        "  });",
+        "}"
+      ], "type": "text/javascript" } }],
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/api/v1/llegadas/{{llegadaId}}"
+      }
     }
   ],
   "variable": [
@@ -138,6 +181,7 @@
     { "key": "adminToken", "value": "", "type": "secret" },
     { "key": "almacenToken", "value": "", "type": "secret" },
     { "key": "testUserPassword", "value": "ClaveDePrueba_2026!", "type": "secret" },
-    { "key": "testUsername", "value": "" }
+    { "key": "testUsername", "value": "" },
+    { "key": "llegadaId", "value": "" }
   ]
 }

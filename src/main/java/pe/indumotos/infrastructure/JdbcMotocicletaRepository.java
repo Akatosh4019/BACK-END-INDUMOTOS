@@ -3,6 +3,7 @@ package pe.indumotos.infrastructure;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import pe.indumotos.application.MotocicletaRepository;
@@ -43,6 +44,15 @@ public class JdbcMotocicletaRepository implements MotocicletaRepository {
             "SELECT m.*, u.nombre_usuario FROM motocicleta m " +
             "JOIN usuario u ON u.id_usuario = m.id_creador WHERE m.id_motocicleta = ?",
             this::mapear, id);
+    }
+
+    @Override
+    public List<Motocicleta> listarPorLlegada(long llegadaId) {
+        return jdbc.query(
+            "SELECT m.*, u.nombre_usuario FROM motocicleta m " +
+            "JOIN usuario u ON u.id_usuario = m.id_creador " +
+            "WHERE m.id_llegada = ? ORDER BY m.id_motocicleta",
+            this::mapear, llegadaId);
     }
 
     private Motocicleta mapear(ResultSet rs, int rowNum) throws SQLException {

@@ -1,5 +1,6 @@
 package pe.indumotos.application;
 
+import java.util.List;
 import pe.indumotos.domain.Motocicleta;
 
 public interface MotocicletaRepository {
@@ -8,4 +9,5 @@ public interface MotocicletaRepository {
         String chasisCompleto, String numeroMotor, String dua, String itemDua,
         String creadorUsuario);
     Motocicleta buscarPorId(long id);
+    List<Motocicleta> listarPorLlegada(long llegadaId);
 }

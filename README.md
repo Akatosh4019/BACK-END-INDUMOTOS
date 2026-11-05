@@ -44,3 +44,5 @@ Tomar del backend de Pharmamobil la separación de configuración de seguridad, 
 4. Probar al menos acceso sin sesión (401), con sesión sin permiso (403), cuenta inactiva y denegación individual. La configuración inicial de Spring Security no sustituye estas pruebas.
 
 La colección vigente para Postman está en `docs/postman/Indumotos-Sprint-1.postman_collection.json`; ejecutarla en orden, usando cuentas ficticias ALMACEN e INVENTARIOS para las operaciones correspondientes. El administrador no registra llegadas ni fichas por defecto según la matriz inicial. No exponer la API fuera del entorno local antes de HTTPS, pruebas integrales y cierre de HU-14, HU-15 y HU-26.
+
+HU-04-T05 añade `GET /api/v1/llegadas/{id}/detalle` (requiere `INVENTARIO_CONSULTAR`). Devuelve la llegada, sus fichas vinculadas por `id_llegada`, `cantidadFichas` y `diferenciaInformativa` = cantidad recibida menos fichas vinculadas. La diferencia es solo informativa; no aprueba la recepción ni modifica stock. Si la llegada no existe devuelve 404; si existe sin fichas devuelve una lista vacía y 200.

@@ -572,6 +572,43 @@
       }
     },
     {
+      "name": "HU-04 T05 Detalle sin fichas (200)",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{baseUrl}}/api/v1/llegadas/{{llegadaId}}/detalle"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Detalle 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "  const data = pm.response.json();",
+              "  pm.test('Guía y fichas vinculadas', () => {",
+              "    pm.expect(data.llegada.id).to.eql(Number(pm.collectionVariables.get('llegadaId')));",
+              "    pm.expect(data.cantidadFichas).to.eql(0);",
+              "    pm.expect(data.fichas).to.have.lengthOf(0);",
+              "    data.fichas.forEach(f => pm.expect(f.llegadaId).to.eql(data.llegada.id));",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "10 - HU-02 T03 Crear llegada de dos motos (201)",
       "event": [
         {
@@ -739,6 +776,43 @@
         },
         "url": "{{baseUrl}}/api/v1/motocicletas/{{fichaId}}"
       }
+    },
+    {
+      "name": "HU-04 T05 Detalle con dos fichas (200)",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{baseUrl}}/api/v1/llegadas/{{llegadaFichasId}}/detalle"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Detalle 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "  const data = pm.response.json();",
+              "  pm.test('Guía y fichas vinculadas', () => {",
+              "    pm.expect(data.llegada.id).to.eql(Number(pm.collectionVariables.get('llegadaFichasId')));",
+              "    pm.expect(data.cantidadFichas).to.eql(2);",
+              "    pm.expect(data.fichas).to.have.lengthOf(2);",
+              "    data.fichas.forEach(f => pm.expect(f.llegadaId).to.eql(data.llegada.id));",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ]
     },
     {
       "request": {

@@ -42,14 +42,14 @@ class MotocicletaControllerTest {
         var esperado = new PaginaMotocicletas(java.util.List.of(
             new MotocicletaResumen(8L, "RONCO", "RZ 250", "ROJO", "**** 0042")),
             0, 20, 1, 1);
-        when(consulta.consultar("RONCO", null, "ROJO", 0, 20)).thenReturn(esperado);
+        when(consulta.consultar("RONCO", null, "ROJO", null, 0, 20)).thenReturn(esperado);
         var controller = new MotocicletaController(registrar,
             mock(pe.indumotos.application.PermisoService.class), consulta);
 
-        var respuesta = controller.listar("RONCO", null, "ROJO", 0, 20);
+        var respuesta = controller.listar("RONCO", null, "ROJO", null, 0, 20);
 
         assertEquals(1, respuesta.items().size());
         assertEquals("**** 0042", respuesta.items().getFirst().chasisVista());
-        verify(consulta).consultar("RONCO", null, "ROJO", 0, 20);
+        verify(consulta).consultar("RONCO", null, "ROJO", null, 0, 20);
     }
 }

@@ -71,8 +71,9 @@ public class MotocicletaController {
     @GetMapping
     public PaginaMotocicletas listar(@RequestParam(required = false) String marca,
         @RequestParam(required = false) String modelo, @RequestParam(required = false) String color,
+        @RequestParam(required = false) String chasis,
         @RequestParam(defaultValue = "0") int pagina, @RequestParam(defaultValue = "20") int tamano) {
-        return consultarFiltradas.consultar(marca, modelo, color, pagina, tamano);
+        return consultarFiltradas.consultar(marca, modelo, color, chasis, pagina, tamano);
     }
 
     @ExceptionHandler(RegistrarMotocicleta.ChasisDuplicado.class)

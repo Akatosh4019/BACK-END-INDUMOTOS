@@ -94,6 +94,14 @@ public class JdbcMotocicletaRepository implements MotocicletaRepository {
         agregarFiltro(condiciones, parametros, "marca", filtro.marca());
         agregarFiltro(condiciones, parametros, "modelo", filtro.modelo());
         agregarFiltro(condiciones, parametros, "color", filtro.color());
+        if (filtro.chasis() != null) {
+            if (filtro.chasis().length() == 4) {
+                condiciones.add("RIGHT(UPPER(BTRIM(m.chasis_completo)), 4) = UPPER(?)");
+            } else {
+                condiciones.add("UPPER(BTRIM(m.chasis_completo)) = UPPER(?)");
+            }
+            parametros.add(filtro.chasis());
+        }
         return condiciones.isEmpty() ? "" : " WHERE " + String.join(" AND ", condiciones);
     }
 

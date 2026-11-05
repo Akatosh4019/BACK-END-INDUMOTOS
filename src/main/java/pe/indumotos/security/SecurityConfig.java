@@ -54,6 +54,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/v1/llegadas").hasAnyRole("ADMIN", "ALMACEN", "INVENTARIOS")
+                .requestMatchers(HttpMethod.GET, "/api/v1/llegadas/**").hasAnyRole("ADMIN", "ALMACEN", "INVENTARIOS")
                 .anyRequest().authenticated())
             .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(this::jwtAuthentication)))
             .httpBasic(AbstractHttpConfigurer::disable)

@@ -3,6 +3,7 @@ package pe.indumotos.presentation;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import java.time.OffsetDateTime;
+import java.math.BigDecimal;
 import jakarta.validation.Validation;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,7 +23,8 @@ class LlegadaControllerTest {
             "almacen_prueba", null, java.util.List.of());
 
         var response = controller.crear(
-            new LlegadaController.NuevaLlegada("GR-PRUEBA-001", 2, 1, null), auth);
+            new LlegadaController.NuevaLlegada("GR-PRUEBA-001", BigDecimal.valueOf(2),
+                BigDecimal.ONE, null), auth);
 
         assertEquals(201, response.getStatusCode().value());
         assertEquals("/api/v1/llegadas/7", response.getHeaders().getLocation().toString());
@@ -34,10 +36,18 @@ class LlegadaControllerTest {
     @Test
     void rechazaCamposBasicosInvalidos() {
         var validator = Validation.buildDefaultValidatorFactory().getValidator();
-        var errores = validator.validate(new LlegadaController.NuevaLlegada(" ", 0, null, null));
+        var errores = validator.validate(new LlegadaController.NuevaLlegada(" ", BigDecimal.ZERO, null, null));
         assertEquals(3, errores.size());
         assertTrue(errores.stream().anyMatch(e -> e.getPropertyPath().toString().equals("numeroGuia")));
         assertTrue(errores.stream().anyMatch(e -> e.getPropertyPath().toString().equals("cantidadDeclarada")));
         assertTrue(errores.stream().anyMatch(e -> e.getPropertyPath().toString().equals("cantidadRecibida")));
+    }
+
+    @Test
+    void rechazaCantidadesFraccionarias() {
+        var validator = Validation.buildDefaultValidatorFactory().getValidator();
+        var errores = validator.validate(new LlegadaController.NuevaLlegada("GR-PRUEBA-001",
+            new BigDecimal("1.5"), BigDecimal.ONE, null));
+        assertTrue(errores.stream().anyMatch(e -> e.getPropertyPath().toString().equals("cantidadDeclarada")));
     }
 }

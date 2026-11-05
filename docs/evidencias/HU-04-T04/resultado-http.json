@@ -1,0 +1,121 @@
+{
+  "gateway": "http://127.0.0.1:8030",
+  "solicitudes": 14,
+  "aprobadas": 14,
+  "fallidas": 0,
+  "llegadasValidasGuardadas": 1,
+  "llegadasInvalidasGuardadas": 0,
+  "ejemploRespuesta400": {
+    "solicitud": "POST /api/v1/llegadas",
+    "codigo": 400,
+    "cuerpo": {
+      "errores": {
+        "numeroGuia": "Ingresa el número de guía."
+      },
+      "campos": [
+        "numeroGuia"
+      ],
+      "error": "Revisa los campos indicados antes de registrar la llegada."
+    }
+  },
+  "resultados": [
+    {
+      "caso": "Caso válido",
+      "esperado": 201,
+      "obtenido": 201,
+      "campo": null,
+      "paso": true
+    },
+    {
+      "caso": "Guía omitida",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "numeroGuia",
+      "paso": true
+    },
+    {
+      "caso": "Guía nula",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "numeroGuia",
+      "paso": true
+    },
+    {
+      "caso": "Guía en blanco",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "numeroGuia",
+      "paso": true
+    },
+    {
+      "caso": "Cantidad declarada omitida",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "cantidadDeclarada",
+      "paso": true
+    },
+    {
+      "caso": "Cantidad declarada nula",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "cantidadDeclarada",
+      "paso": true
+    },
+    {
+      "caso": "Cantidad declarada cero",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "cantidadDeclarada",
+      "paso": true
+    },
+    {
+      "caso": "Cantidad declarada negativa",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "cantidadDeclarada",
+      "paso": true
+    },
+    {
+      "caso": "Cantidad declarada fraccionaria",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "cantidadDeclarada",
+      "paso": true
+    },
+    {
+      "caso": "Cantidad recibida omitida",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "cantidadRecibida",
+      "paso": true
+    },
+    {
+      "caso": "Cantidad recibida cero",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "cantidadRecibida",
+      "paso": true
+    },
+    {
+      "caso": "Cantidad recibida no numérica",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": "cantidadRecibida",
+      "paso": true
+    },
+    {
+      "caso": "Sin autenticación",
+      "esperado": 401,
+      "obtenido": 401,
+      "campo": null,
+      "paso": true
+    },
+    {
+      "caso": "JSON malformado",
+      "esperado": 400,
+      "obtenido": 400,
+      "campo": null,
+      "paso": true
+    }
+  ]
+}

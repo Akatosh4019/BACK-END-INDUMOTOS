@@ -13,7 +13,7 @@ WHERE NOT EXISTS (SELECT 1 FROM ubicacion u WHERE upper(btrim(u.codigo))=upper(b
 
 INSERT INTO llegada (numero_guia, id_receptor, cantidad_declarada, cantidad_recibida, observacion)
 SELECT 'GR-DEMO-VISUAL-10', u.id_usuario, 10, 10, 'Diez unidades para pruebas visuales del Sprint 2'
-FROM usuario u WHERE u.nombre_usuario = 'admin'
+FROM usuario u WHERE u.nombre_usuario = current_setting('indumotos.demo_admin')
 AND NOT EXISTS (SELECT 1 FROM llegada l WHERE l.numero_guia='GR-DEMO-VISUAL-10');
 
 INSERT INTO motocicleta (id_llegada,marca,modelo,color,chasis_completo,numero_motor,dua,item_dua,id_creador)
@@ -31,14 +31,14 @@ FROM (VALUES
  ('TVS','Apache RTR 200','Amarillo','IND-DEMO-S2-0010','M-DEMO-0010','10')
 ) AS v(marca,modelo,color,chasis,motor,item)
 CROSS JOIN usuario u CROSS JOIN llegada l
-WHERE u.nombre_usuario='admin' AND l.numero_guia='GR-DEMO-VISUAL-10'
+WHERE u.nombre_usuario=current_setting('indumotos.demo_admin') AND l.numero_guia='GR-DEMO-VISUAL-10'
 AND NOT EXISTS (SELECT 1 FROM motocicleta m WHERE upper(btrim(m.chasis_completo))=upper(btrim(v.chasis)));
 
 INSERT INTO movimiento_motocicleta (id_motocicleta,tipo,id_destino,id_registrador,ocurrido_en,observacion)
 SELECT m.id_motocicleta,'UBICACION',d.id_ubicacion,u.id_usuario,CURRENT_TIMESTAMP,'Ubicación inicial para demostración'
 FROM motocicleta m CROSS JOIN ubicacion d CROSS JOIN usuario u
 WHERE m.chasis_completo LIKE 'IND-DEMO-S2-%' AND d.codigo='DEMO_ALM_CENTRAL'
-AND u.nombre_usuario='admin'
+AND u.nombre_usuario=current_setting('indumotos.demo_admin')
 AND NOT EXISTS (SELECT 1 FROM movimiento_motocicleta mm WHERE mm.id_motocicleta=m.id_motocicleta);
 
 COMMIT;

@@ -35,6 +35,8 @@ public class GestionarSeguimiento {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El motivo de rechazo es obligatorio");
         if (motivo != null && motivo.length() > 1000)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Motivo demasiado largo");
+        if ("RECHAZADA".equals(estado))
+            repository.liberarUnidades(id, motivo.trim(), usuario);
         return repository.agregar(id, estado, motivo == null || motivo.isBlank() ? null : motivo.trim(), usuario);
     }
 }

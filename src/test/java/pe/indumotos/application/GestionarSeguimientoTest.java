@@ -46,4 +46,14 @@ class GestionarSeguimientoTest {
         assertEquals(HttpStatus.CONFLICT,assertThrows(ResponseStatusException.class,
             () -> servicio.avanzar(5,"EN_PREPARACION",null,"ensamblaje")).getStatusCode());
     }
+
+    @Test
+    void rechazoLiberaUnidadesAntesDeRegistrarEvento() {
+        when(repo.bloquearSolicitud(5)).thenReturn(true);
+        when(repo.estado(5)).thenReturn(new SeguimientoRepository.Evento(1,"EN_PREPARACION","ensamblaje",null,null));
+        servicio.avanzar(5,"RECHAZADA","  Sin stock  ","ensamblaje");
+        var orden=inOrder(repo);
+        orden.verify(repo).liberarUnidades(5,"Sin stock","ensamblaje");
+        orden.verify(repo).agregar(5,"RECHAZADA","Sin stock","ensamblaje");
+    }
 }

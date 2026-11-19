@@ -9,5 +9,6 @@ public interface SeguimientoRepository {
     boolean existeSolicitud(long id);
     Evento estado(long id);
     Evento agregar(long id, String nuevoEstado, String motivo, String usuario);
+    void liberarUnidades(long id, String motivo, String usuario);
     List<Evento> historial(long id);
 }

@@ -44,6 +44,15 @@ public class JdbcSeguimientoRepository implements SeguimientoRepository {
     }
 
     @Override
+    public void liberarUnidades(long id, String motivo, String usuario) {
+        jdbc.update("UPDATE solicitud_ensamblaje_unidad a SET retirada_en=CURRENT_TIMESTAMP," +
+            "id_retirador=(SELECT id_usuario FROM usuario WHERE nombre_usuario=?), motivo_retiro=? " +
+            "FROM solicitud_ensamblaje_detalle d WHERE d.id_detalle=a.id_detalle " +
+            "AND d.id_solicitud=? AND a.retirada_en IS NULL", usuario,
+            ("Solicitud rechazada: " + motivo).substring(0, Math.min(1000, 21 + motivo.length())), id);
+    }
+
+    @Override
     public List<Evento> historial(long id) {
         return jdbc.query("SELECT e.id_evento,e.estado,u.nombre_usuario,e.registrado_en,e.motivo " +
             "FROM solicitud_ensamblaje_evento e JOIN usuario u ON u.id_usuario=e.id_registrador " +

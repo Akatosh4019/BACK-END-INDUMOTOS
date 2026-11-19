@@ -26,6 +26,11 @@ public class SolicitudController {
     public record NuevaSolicitud(@NotNull @Positive Long destinoId, String observacion,
         List<SolicitudRepository.NuevaLinea> lineas) {}
 
+    @GetMapping("/opciones-motocicleta")
+    public List<SolicitudRepository.OpcionMotocicleta> opcionesMotocicleta() {
+        return solicitudes.opcionesMotocicleta();
+    }
+
     @PostMapping
     public ResponseEntity<SolicitudRepository.Solicitud> crear(@Valid @RequestBody NuevaSolicitud datos,
         Authentication usuario) {

@@ -41,11 +41,21 @@ class GestionarSolicitudesTest {
     @Test
     void aceptaVariosRenglonesYNormalizaDatos() {
         when(repository.destinoActivo(1)).thenReturn(true);
+        when(repository.combinacionRegistrada(anyString(),anyString(),anyString())).thenReturn(true);
         servicio.crear(1, " urgente ", List.of(
             new SolicitudRepository.NuevaLinea(" M "," X "," Rojo ",2),
             new SolicitudRepository.NuevaLinea("N","Y","Azul",1)), "comercial");
         verify(repository).guardar(eq(1L), eq("urgente"), eq("comercial"),
             eq(List.of(new SolicitudRepository.NuevaLinea("M","X","Rojo",2),
                 new SolicitudRepository.NuevaLinea("N","Y","Azul",1))));
+    }
+
+    @Test
+    void rechazaCombinacionQueNoExisteEnFichas() {
+        when(repository.destinoActivo(1)).thenReturn(true);
+        var error = assertThrows(ResponseStatusException.class,
+            () -> servicio.crear(1, null, List.of(new SolicitudRepository.NuevaLinea("Marca","Modelo","Azul",1)), "comercial"));
+        assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+        verify(repository, never()).guardar(anyLong(), any(), anyString(), anyList());
     }
 }

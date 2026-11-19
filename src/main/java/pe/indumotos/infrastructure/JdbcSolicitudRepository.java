@@ -20,6 +20,21 @@ public class JdbcSolicitudRepository implements SolicitudRepository {
     }
 
     @Override
+    public List<OpcionMotocicleta> opcionesMotocicleta() {
+        return jdbc.query("SELECT DISTINCT marca,modelo,color FROM motocicleta " +
+            "ORDER BY marca,modelo,color", (rs,n) -> new OpcionMotocicleta(
+                rs.getString(1),rs.getString(2),rs.getString(3)));
+    }
+
+    @Override
+    public boolean combinacionRegistrada(String marca, String modelo, String color) {
+        return Boolean.TRUE.equals(jdbc.queryForObject(
+            "SELECT EXISTS(SELECT 1 FROM motocicleta WHERE lower(btrim(marca))=lower(?) " +
+            "AND lower(btrim(modelo))=lower(?) AND lower(btrim(color))=lower(?))",
+            Boolean.class, marca, modelo, color));
+    }
+
+    @Override
     public Solicitud guardar(long destinoId, String observacion, String usuario, List<NuevaLinea> lineas) {
         Long id = jdbc.queryForObject("INSERT INTO solicitud_ensamblaje(id_solicitante,id_destino,observacion) " +
             "SELECT id_usuario,?,? FROM usuario WHERE nombre_usuario=? AND estado='ACTIVO' RETURNING id_solicitud",

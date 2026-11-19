@@ -25,8 +25,14 @@ public class GestionarSolicitudes {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Observación demasiado larga");
         var normalizadas = lineas.stream().map(l -> new SolicitudRepository.NuevaLinea(
             l.marca().trim(), l.modelo().trim(), l.color().trim(), l.cantidad())).toList();
+        if (normalizadas.stream().anyMatch(l -> !repository.combinacionRegistrada(l.marca(), l.modelo(), l.color())))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La marca, modelo y color deben corresponder a una motocicleta registrada");
         return repository.guardar(destinoId, observacion == null || observacion.isBlank() ? null : observacion.trim(),
             usuario, normalizadas);
+    }
+
+    public List<SolicitudRepository.OpcionMotocicleta> opcionesMotocicleta() {
+        return repository.opcionesMotocicleta();
     }
 
     public SolicitudRepository.Solicitud consultar(long id) {

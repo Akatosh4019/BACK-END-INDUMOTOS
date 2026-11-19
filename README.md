@@ -1,5 +1,7 @@
 # Backend Indumotos
 
+Los cambios del equipo DAM se desarrollan de forma incremental en la rama `DAM`. La guía de comprobación del incremento de base logística está en `docs/pruebas/GUIA_VISUAL_BASE_LOGISTICA_DAM.md`.
+
 Backend compartido por la web y la app móvil de Indumotos. Usa Java 21, Spring Boot, PostgreSQL y Flyway. V1–V5 crean cuentas, roles, permisos, llegadas y fichas; V6 impide chasis completos duplicados y V7 almacena los hashes de tokens revocados. Permite crear cuentas, iniciar y cerrar sesión con JWT, registrar llegadas y fichas, y asignar roles y excepciones individuales. La web está implementada; Android se desarrolla por separado.
 
 **Verificación local 01/11/2026:** `mvn clean verify` pasó (1 prueba); Docker Compose levantó PostgreSQL y la API; `/api/health` respondió `{"status":"ok"}`; Flyway V1 figura aplicada una sola vez y existen las cinco tablas. La prueba SQL de `src/test/resources/sql/verificar_usuarios_roles_permisos.sql` confirmó inserciones relacionadas y rechazo de duplicados/FK inválida, con `ROLLBACK` final y cero usuarios de prueba persistidos. Esto verifica la estructura de HU-14-T03, no el registro de cuentas ni la seguridad funcional.

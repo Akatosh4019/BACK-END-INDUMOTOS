@@ -4,6 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import pe.indumotos.domain.Llegada;
 
 @Service
@@ -49,5 +51,17 @@ public class RegistrarLlegada {
         if (numeroGuia == null || numeroGuia.isBlank() || numeroGuia.length() > 120)
             throw new DatosInvalidos(Map.of("numeroGuia", "Ingresa un número de guía válido."));
         return repository.buscarPorGuia(numeroGuia.trim());
+    }
+
+    public record PaginaLlegadas(List<Llegada> items, int pagina, int tamano, long totalElementos,
+        long totalPaginas) {}
+
+    public PaginaLlegadas listar(String numeroGuia, int pagina) {
+        String filtro = numeroGuia == null ? "" : numeroGuia.trim();
+        if (filtro.length() > 120 || pagina < 0 || (long) pagina * 10 > Integer.MAX_VALUE)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Filtro o página no válidos");
+        long total = repository.contar(filtro);
+        return new PaginaLlegadas(repository.listar(filtro, 10, (long) pagina * 10),
+            pagina, 10, total, (total + 9) / 10);
     }
 }

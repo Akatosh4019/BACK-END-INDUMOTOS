@@ -8,4 +8,6 @@ public interface LlegadaRepository {
         int cantidadRecibida, String observacion);
     Llegada buscarPorId(long id);
     List<Llegada> buscarPorGuia(String numeroGuia);
+    List<Llegada> listar(String numeroGuia, int limite, long desplazamiento);
+    long contar(String numeroGuia);
 }

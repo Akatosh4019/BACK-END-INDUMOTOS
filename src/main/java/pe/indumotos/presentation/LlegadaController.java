@@ -63,6 +63,12 @@ public class LlegadaController {
         return registrar.buscarPorGuia(numeroGuia);
     }
 
+    @GetMapping("/pagina")
+    public RegistrarLlegada.PaginaLlegadas listar(@RequestParam(defaultValue="") String numeroGuia,
+        @RequestParam(defaultValue="0") int pagina) {
+        return registrar.listar(numeroGuia, pagina);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> invalidos(MethodArgumentNotValidException ex) {
         Map<String, String> errores = new LinkedHashMap<>();

@@ -33,6 +33,15 @@ public class JdbcSeguimientoRepository implements SeguimientoRepository {
     }
 
     @Override
+    public boolean unidadesCompletas(long id) {
+        return Boolean.TRUE.equals(jdbc.queryForObject(
+            "SELECT NOT EXISTS (SELECT 1 FROM solicitud_ensamblaje_detalle d " +
+            "WHERE d.id_solicitud=? AND d.cantidad > (SELECT count(*) " +
+            "FROM solicitud_ensamblaje_unidad a WHERE a.id_detalle=d.id_detalle AND a.retirada_en IS NULL))",
+            Boolean.class, id));
+    }
+
+    @Override
     public Evento agregar(long id, String nuevoEstado, String motivo, String usuario) {
         Long evento = jdbc.queryForObject("INSERT INTO solicitud_ensamblaje_evento(id_solicitud,estado,id_registrador,motivo) " +
             "SELECT ?, ?, id_usuario, ? FROM usuario WHERE nombre_usuario=? AND estado='ACTIVO' RETURNING id_evento",

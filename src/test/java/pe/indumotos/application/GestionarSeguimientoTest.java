@@ -40,6 +40,18 @@ class GestionarSeguimientoTest {
     }
 
     @Test
+    void noConfirmaPreparacionIncompleta() {
+        when(repo.bloquearSolicitud(5)).thenReturn(true);
+        when(repo.estado(5)).thenReturn(new SeguimientoRepository.Evento(1,"EN_PREPARACION","almacen",null,null));
+        assertEquals(HttpStatus.CONFLICT,assertThrows(ResponseStatusException.class,
+            () -> servicio.avanzar(5,"ATENDIDA",null,"almacen")).getStatusCode());
+        verify(repo,never()).agregar(anyLong(),any(),any(),any());
+        when(repo.unidadesCompletas(5)).thenReturn(true);
+        servicio.avanzar(5,"ATENDIDA",null,"almacen");
+        verify(repo).agregar(5,"ATENDIDA",null,"almacen");
+    }
+
+    @Test
     void noPuedeAvanzarEstadoTerminal() {
         when(repo.bloquearSolicitud(5)).thenReturn(true);
         when(repo.estado(5)).thenReturn(new SeguimientoRepository.Evento(1,"ATENDIDA","ensamblaje",null,null));

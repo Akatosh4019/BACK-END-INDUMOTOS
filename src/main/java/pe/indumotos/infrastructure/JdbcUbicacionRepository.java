@@ -80,6 +80,20 @@ public class JdbcUbicacionRepository implements UbicacionRepository {
             this::mapear, id);
     }
 
+    @Override
+    public Movimiento trasladar(long motocicletaId, long origenId, long destinoId, String usuario) {
+        Long id=jdbc.queryForObject("INSERT INTO movimiento_motocicleta " +
+            "(id_motocicleta,tipo,id_origen,id_destino,id_registrador,ocurrido_en) " +
+            "SELECT ?, 'TRASLADO', ?, ?, id_usuario, CURRENT_TIMESTAMP FROM usuario " +
+            "WHERE nombre_usuario=? AND estado='ACTIVO' RETURNING id_movimiento",
+            Long.class,motocicletaId,origenId,destinoId,usuario);
+        return jdbc.queryForObject("SELECT m.id_movimiento,m.id_motocicleta,m.id_origen,m.id_destino," +
+            "d.nombre AS destino_nombre,m.tipo,u.nombre_usuario,m.ocurrido_en FROM movimiento_motocicleta m " +
+            "JOIN ubicacion d ON d.id_ubicacion=m.id_destino " +
+            "JOIN usuario u ON u.id_usuario=m.id_registrador WHERE m.id_movimiento=?",
+            this::mapear,id);
+    }
+
     private Movimiento mapear(ResultSet rs, int row) throws SQLException {
         Long origen = rs.getObject("id_origen", Long.class);
         return new Movimiento(rs.getLong("id_movimiento"), rs.getLong("id_motocicleta"), origen,

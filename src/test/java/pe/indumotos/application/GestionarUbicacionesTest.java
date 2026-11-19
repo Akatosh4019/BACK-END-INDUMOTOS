@@ -65,4 +65,37 @@ class GestionarUbicacionesTest {
         orden.verify(repository).actual(9);
         orden.verify(repository).registrar(9, 2, "almacen");
     }
+
+    @Test
+    void trasladoExigeUbicacionPrevia() {
+        when(repository.existeMotocicleta(9)).thenReturn(true);
+        assertEquals(HttpStatus.CONFLICT, assertThrows(ResponseStatusException.class,
+            () -> servicio.trasladar(9, 3, "almacen")).getStatusCode());
+        verify(repository, never()).trasladar(anyLong(), anyLong(), anyLong(), anyString());
+    }
+
+    @Test
+    void trasladoExigeDestinoValidoDistintoDelActual() {
+        when(repository.existeMotocicleta(9)).thenReturn(true);
+        when(repository.actual(9)).thenReturn(new UbicacionRepository.Movimiento(
+            1, 9, null, 2, "Almacen", "UBICACION", "almacen", null));
+        when(repository.sede(3)).thenReturn(new UbicacionRepository.Sede(3, "TAL", "Taller", "TALLER"));
+        assertEquals(HttpStatus.BAD_REQUEST, assertThrows(ResponseStatusException.class,
+            () -> servicio.trasladar(9, 3, "almacen")).getStatusCode());
+        when(repository.sede(2)).thenReturn(new UbicacionRepository.Sede(2, "ALM", "Almacen", "TIENDA"));
+        assertEquals(HttpStatus.CONFLICT, assertThrows(ResponseStatusException.class,
+            () -> servicio.trasladar(9, 2, "almacen")).getStatusCode());
+        verify(repository, never()).trasladar(anyLong(), anyLong(), anyLong(), anyString());
+    }
+
+    @Test
+    void trasladoConservaOrigenDestinoYActor() {
+        when(repository.existeMotocicleta(9)).thenReturn(true);
+        when(repository.actual(9)).thenReturn(new UbicacionRepository.Movimiento(
+            1, 9, null, 2, "Almacen", "UBICACION", "almacen", null));
+        when(repository.sede(3)).thenReturn(new UbicacionRepository.Sede(3, "TIE", "Tienda", "TIENDA"));
+        servicio.trasladar(9, 3, "roberto");
+        verify(repository).bloquearMotocicleta(9);
+        verify(repository).trasladar(9, 2, 3, "roberto");
+    }
 }

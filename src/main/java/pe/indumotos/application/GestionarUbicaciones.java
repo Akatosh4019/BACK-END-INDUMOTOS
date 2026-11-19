@@ -18,7 +18,7 @@ public class GestionarUbicaciones {
 
     public UbicacionRepository.Sede crearSede(String codigo, String nombre, String tipo) {
         if (codigo == null || codigo.isBlank() || nombre == null || nombre.isBlank() ||
-            tipo == null || !java.util.Set.of("ALMACEN", "TIENDA", "TALLER").contains(tipo))
+            tipo == null || !java.util.Set.of("ALMACEN", "TIENDA", "TALLER", "DESPACHO").contains(tipo))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datos de ubicación no válidos");
         return repository.crearSede(codigo.trim(), nombre.trim(), tipo);
     }
@@ -43,6 +43,21 @@ public class GestionarUbicaciones {
         if (actual != null) throw new ResponseStatusException(HttpStatus.CONFLICT,
             "La motocicleta ya tiene ubicación; registre un traslado para conservar su recorrido");
         return repository.registrar(motocicletaId, destinoId, usuario);
+    }
+
+    @Transactional
+    public UbicacionRepository.Movimiento trasladar(long motocicletaId, long destinoId, String usuario) {
+        verificarMotocicleta(motocicletaId);
+        repository.bloquearMotocicleta(motocicletaId);
+        var anterior=repository.actual(motocicletaId);
+        if (anterior == null)
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Registre primero la ubicación conocida");
+        var destino=repository.sede(destinoId);
+        if (destino == null || !java.util.Set.of("TIENDA","DESPACHO").contains(destino.tipo()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"El destino debe ser una tienda o despacho activo");
+        if (anterior.destinoId() == destinoId)
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"La motocicleta ya está en ese destino");
+        return repository.trasladar(motocicletaId,anterior.destinoId(),destinoId,usuario);
     }
 
     private void verificarMotocicleta(long id) {

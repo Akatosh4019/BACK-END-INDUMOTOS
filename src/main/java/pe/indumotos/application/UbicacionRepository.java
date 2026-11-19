@@ -16,4 +16,5 @@ public interface UbicacionRepository {
     Movimiento actual(long motocicletaId);
     List<Movimiento> historial(long motocicletaId);
     Movimiento registrar(long motocicletaId, long destinoId, String usuario);
+    Movimiento trasladar(long motocicletaId, long origenId, long destinoId, String usuario);
 }

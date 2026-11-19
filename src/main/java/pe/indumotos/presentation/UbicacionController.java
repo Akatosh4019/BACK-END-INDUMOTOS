@@ -63,4 +63,12 @@ public class UbicacionController {
         return ResponseEntity.created(URI.create("/api/v1/motocicletas/" + id + "/ubicacion"))
             .body(guardado);
     }
+
+    @PostMapping("/motocicletas/{id}/traslados")
+    public ResponseEntity<UbicacionRepository.Movimiento> trasladar(@PathVariable long id,
+        @Valid @RequestBody NuevaUbicacion datos,Authentication usuario) {
+        var creado=ubicaciones.trasladar(id,datos.destinoId(),usuario.getName());
+        return ResponseEntity.created(URI.create("/api/v1/motocicletas/"+id+"/ubicacion/historial"))
+            .body(creado);
+    }
 }

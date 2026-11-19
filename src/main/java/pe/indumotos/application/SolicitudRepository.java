@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface SolicitudRepository {
     record Linea(long id, String marca, String modelo, String color, int cantidad) {}
-    record Solicitud(long id, String solicitante, long destinoId, OffsetDateTime creadaEn,
+    record Solicitud(long id, String solicitante, long destinoId, String destinoNombre, OffsetDateTime creadaEn,
         String observacion, String estado, List<Linea> lineas) {}
     record NuevaLinea(String marca, String modelo, String color, int cantidad) {}
 

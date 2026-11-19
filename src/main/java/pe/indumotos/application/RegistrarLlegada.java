@@ -1,6 +1,7 @@
 package pe.indumotos.application;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import pe.indumotos.domain.Llegada;
@@ -42,5 +43,11 @@ public class RegistrarLlegada {
 
     public Llegada consultar(long id) {
         return repository.buscarPorId(id);
+    }
+
+    public List<Llegada> buscarPorGuia(String numeroGuia) {
+        if (numeroGuia == null || numeroGuia.isBlank() || numeroGuia.length() > 120)
+            throw new DatosInvalidos(Map.of("numeroGuia", "Ingresa un número de guía válido."));
+        return repository.buscarPorGuia(numeroGuia.trim());
     }
 }

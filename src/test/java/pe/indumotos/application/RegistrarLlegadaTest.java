@@ -33,4 +33,16 @@ class RegistrarLlegadaTest {
         servicio.ejecutar(" GR-PRUEBA-001 ", "almacen", 2, 1, " ");
         verify(repository).guardar("GR-PRUEBA-001", "almacen", 2, 1, null);
     }
+
+    @Test
+    void buscaLlegadasPorNumeroDeGuiaNormalizado() {
+        servicio.buscarPorGuia(" GR-PRUEBA ");
+        verify(repository).buscarPorGuia("GR-PRUEBA");
+    }
+
+    @Test
+    void rechazaBusquedaSinGuia() {
+        assertThrows(RegistrarLlegada.DatosInvalidos.class, () -> servicio.buscarPorGuia(" "));
+        verifyNoInteractions(repository);
+    }
 }

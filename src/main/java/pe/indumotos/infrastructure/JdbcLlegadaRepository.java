@@ -3,6 +3,7 @@ package pe.indumotos.infrastructure;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import pe.indumotos.application.LlegadaRepository;
@@ -33,6 +34,14 @@ public class JdbcLlegadaRepository implements LlegadaRepository {
         return jdbc.queryForObject(
             "SELECT l.*, u.nombre_usuario FROM llegada l JOIN usuario u ON u.id_usuario = l.id_receptor " +
             "WHERE l.id_llegada = ?", this::mapear, id);
+    }
+
+    @Override
+    public List<Llegada> buscarPorGuia(String numeroGuia) {
+        return jdbc.query(
+            "SELECT l.*, u.nombre_usuario FROM llegada l JOIN usuario u ON u.id_usuario = l.id_receptor " +
+            "WHERE lower(l.numero_guia) LIKE lower(?) ORDER BY l.fecha_llegada DESC, l.id_llegada DESC LIMIT 20",
+            this::mapear, "%" + numeroGuia + "%");
     }
 
     private Llegada mapear(ResultSet rs, int rowNum) throws SQLException {

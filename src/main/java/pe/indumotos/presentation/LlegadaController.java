@@ -3,6 +3,7 @@ package pe.indumotos.presentation;
 import java.net.URI;
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.List;
 import java.util.LinkedHashMap;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -16,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -54,6 +56,11 @@ public class LlegadaController {
     @GetMapping("/{id}")
     public Llegada consultar(@PathVariable long id) {
         return registrar.consultar(id);
+    }
+
+    @GetMapping
+    public List<Llegada> buscarPorGuia(@RequestParam String numeroGuia) {
+        return registrar.buscarPorGuia(numeroGuia);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

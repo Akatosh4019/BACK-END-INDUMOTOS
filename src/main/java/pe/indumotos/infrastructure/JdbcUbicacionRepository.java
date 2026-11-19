@@ -21,6 +21,14 @@ public class JdbcUbicacionRepository implements UbicacionRepository {
     }
 
     @Override
+    public Sede crearSede(String codigo, String nombre, String tipo) {
+        return jdbc.queryForObject("INSERT INTO ubicacion(codigo, nombre, tipo) VALUES(?, ?, ?) " +
+            "RETURNING id_ubicacion, codigo, nombre, tipo",
+            (rs, n) -> new Sede(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4)),
+            codigo, nombre, tipo);
+    }
+
+    @Override
     public boolean existeMotocicleta(long id) {
         return Boolean.TRUE.equals(jdbc.queryForObject(
             "SELECT EXISTS(SELECT 1 FROM motocicleta WHERE id_motocicleta = ?)", Boolean.class, id));

@@ -9,6 +9,7 @@ public interface UbicacionRepository {
         String destinoNombre, String tipo, String registrador, OffsetDateTime fecha) {}
 
     List<Sede> sedes();
+    Sede crearSede(String codigo, String nombre, String tipo);
     boolean existeMotocicleta(long id);
     Sede sede(long id);
     void bloquearMotocicleta(long id);

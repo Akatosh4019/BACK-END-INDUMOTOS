@@ -16,6 +16,13 @@ public class GestionarUbicaciones {
 
     public List<UbicacionRepository.Sede> sedes() { return repository.sedes(); }
 
+    public UbicacionRepository.Sede crearSede(String codigo, String nombre, String tipo) {
+        if (codigo == null || codigo.isBlank() || nombre == null || nombre.isBlank() ||
+            tipo == null || !java.util.Set.of("ALMACEN", "TIENDA", "TALLER").contains(tipo))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datos de ubicación no válidos");
+        return repository.crearSede(codigo.trim(), nombre.trim(), tipo);
+    }
+
     public UbicacionRepository.Movimiento actual(long motocicletaId) {
         verificarMotocicleta(motocicletaId);
         return repository.actual(motocicletaId);

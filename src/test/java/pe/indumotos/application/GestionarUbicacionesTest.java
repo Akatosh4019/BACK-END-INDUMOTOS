@@ -12,6 +12,20 @@ class GestionarUbicacionesTest {
     private final GestionarUbicaciones servicio = new GestionarUbicaciones(repository);
 
     @Test
+    void rechazaSedeInvalidaSinGuardar() {
+        var error = assertThrows(ResponseStatusException.class,
+            () -> servicio.crearSede("A1", "Almacén", "DESCONOCIDO"));
+        assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+        verify(repository, never()).crearSede(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void normalizaDatosDeSedeAntesDePersistir() {
+        servicio.crearSede(" A1 ", " Almacén ", "ALMACEN");
+        verify(repository).crearSede("A1", "Almacén", "ALMACEN");
+    }
+
+    @Test
     void rechazaMotocicletaInexistenteSinGuardar() {
         var error = assertThrows(ResponseStatusException.class,
             () -> servicio.registrar(9, 2, "almacen"));

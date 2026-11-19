@@ -2,6 +2,7 @@ package pe.indumotos.presentation;
 
 import java.net.URI;
 import java.util.Locale;
+import java.util.List;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -13,6 +14,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,6 +38,41 @@ public class UsuarioController {
         @NotBlank @Size(min=12, max=100) String clave,
         @NotBlank @Size(max=50) @Pattern(regexp="[A-Za-z_]+") String rolCodigo) {}
     public record UsuarioCreado(Long id, String nombreCompleto, String nombreUsuario, String rolCodigo) {}
+    public record UsuarioListado(Long id, String nombreCompleto, String nombreUsuario,
+        String rolCodigo, String estado) {}
+    public record PaginaUsuarios(List<UsuarioListado> items, int pagina, int tamano, long totalElementos) {}
+
+    @GetMapping
+    public PaginaUsuarios listar(@RequestParam(defaultValue = "") String buscar,
+        @RequestParam(defaultValue = "") String rol,
+        @RequestParam(defaultValue = "") String estado,
+        @RequestParam(defaultValue = "0") int pagina,
+        @RequestParam(defaultValue = "10") int tamano) {
+        if (pagina < 0 || tamano != 10)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Página o tamaño no válidos");
+        String filtro = buscar.trim();
+        if (filtro.length() > 180)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Búsqueda demasiado larga");
+        String filtroRol = rol.trim().toUpperCase(Locale.ROOT);
+        String filtroEstado = estado.trim().toUpperCase(Locale.ROOT);
+        if (filtroRol.length() > 50 || (!filtroEstado.isEmpty()
+            && !filtroEstado.equals("ACTIVO") && !filtroEstado.equals("INACTIVO")))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Filtro no válido");
+        String condiciones = " FROM usuario u JOIN rol r ON r.id_rol=u.id_rol "
+            + "WHERE (? = '' OR strpos(lower(u.nombre_usuario), lower(?)) > 0 "
+            + "OR strpos(lower(u.nombre_completo), lower(?)) > 0) "
+            + "AND (? = '' OR r.codigo = ?) AND (? = '' OR u.estado = ?)";
+        Object[] parametros = {filtro, filtro, filtro, filtroRol, filtroRol, filtroEstado, filtroEstado};
+        Long total = jdbc.queryForObject("SELECT count(*)" + condiciones, Long.class, parametros);
+        List<UsuarioListado> cuentas = jdbc.query(
+            "SELECT u.id_usuario,u.nombre_completo,u.nombre_usuario,r.codigo,u.estado"
+                + condiciones + " ORDER BY u.nombre_usuario,u.id_usuario LIMIT ? OFFSET ?",
+            (rs, row) -> new UsuarioListado(rs.getLong(1), rs.getString(2), rs.getString(3),
+                rs.getString(4), rs.getString(5)),
+            filtro, filtro, filtro, filtroRol, filtroRol, filtroEstado, filtroEstado,
+            tamano, (long) pagina * tamano);
+        return new PaginaUsuarios(cuentas, pagina, tamano, total == null ? 0 : total);
+    }
 
     @PostMapping
     public ResponseEntity<UsuarioCreado> crear(@Valid @RequestBody CrearUsuario request) {

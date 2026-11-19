@@ -65,6 +65,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").access(exige("USUARIOS_CREAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/usuarios").access(exigeAlguno("USUARIOS_CREAR", "PERMISOS_ASIGNAR"))
                 .requestMatchers("/api/v1/usuarios/*/rol", "/api/v1/usuarios/*/permisos",
                     "/api/v1/usuarios/*/permisos/*")
                     .access(exige("PERMISOS_ASIGNAR"))
@@ -106,6 +107,14 @@ public class SecurityConfig {
             var actual = authentication.get();
             return new AuthorizationDecision(actual != null && actual.isAuthenticated()
                 && permisos.permitido(actual.getName(), codigo));
+        };
+    }
+
+    private AuthorizationManager<RequestAuthorizationContext> exigeAlguno(String... codigos) {
+        return (authentication, context) -> {
+            var actual = authentication.get();
+            return new AuthorizationDecision(actual != null && actual.isAuthenticated()
+                && java.util.Arrays.stream(codigos).anyMatch(codigo -> permisos.permitido(actual.getName(), codigo)));
         };
     }
 

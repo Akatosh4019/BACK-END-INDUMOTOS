@@ -6,14 +6,14 @@ Trabajo realizado sobre la rama `sprint-2` de los repositorios existentes de bac
 | --- | --- | --- |
 | HU-05 | Catálogo de sedes, registro de ubicación inicial, consulta de ubicación e historial; pantalla web | Código y pruebas disponibles |
 | HU-06 | Solicitudes con líneas, destino y estado inicial; pantalla de creación y consulta | Código y pruebas disponibles |
-| HU-07 | Historial de eventos y transiciones controladas; pantalla de seguimiento | Código y pruebas disponibles |
+| HU-07 | Historial de eventos, transiciones controladas y liberación de unidades cuando se rechaza; pantalla de seguimiento | Código y pruebas disponibles |
 | HU-08 | Búsqueda, asignación exclusiva y retiro de unidades; controles web | Código y pruebas disponibles |
 | HU-09 | Traslado entre sedes con origen, destino y usuario; pantalla compartida de ubicaciones | Código y pruebas disponibles |
 | HU-27 | Anulación con motivo y evento conservado | Código disponible; pendiente confirmar con Product Owner el estado límite para anular |
 
 ## Evidencia de ejecución
 
-- Backend: `mvn test` con Java 21; **62 pruebas, 0 fallos, BUILD SUCCESS**. Las pruebas cubren reglas de ubicación, solicitudes, seguimiento, asignación y anulación. No sustituyen una ejecución HTTP integral.
+- Backend: `mvn test` con Java 21; **63 pruebas, 0 fallos, BUILD SUCCESS**. Las pruebas cubren reglas de ubicación, solicitudes, seguimiento, asignación y anulación. No sustituyen una ejecución HTTP integral.
 - Frontend Angular: `ng build` concluye correctamente; `ng test --watch=false`: **6 pruebas aprobadas**.
 - Base de datos: migraciones V8 a V15 aplicadas progresivamente sobre PostgreSQL 18 aislado en `localhost:55440`, base `s2_hu06_verify_live`; V14 y V15 aplicadas con `psql -v ON_ERROR_STOP=1`. Las consultas confirmaron la creación de los permisos `TRASLADOS_REGISTRAR` y `SOLICITUDES_ANULAR`. Esta base es de verificación y no contiene registros reales del proyecto.
 - Intento de `mvn package` offline: las 62 pruebas se ejecutan, pero el empaquetado termina con **BUILD FAILURE** por dependencias de plugins ausentes en el caché Maven, entre ellas `org.tukaani:xz` y `zstd-jni`.

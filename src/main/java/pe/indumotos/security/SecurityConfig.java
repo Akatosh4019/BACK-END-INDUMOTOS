@@ -71,6 +71,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/llegadas").access(exige("LLEGADAS_REGISTRAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/llegadas/**").access(exige("INVENTARIO_CONSULTAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/motocicletas").access(exige("FICHAS_REGISTRAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/ubicaciones").access(exige("UBICACIONES_CONSULTAR"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/motocicletas/*/ubicacion")
+                    .access(exige("UBICACIONES_REGISTRAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/motocicletas/*/ubicacion",
+                    "/api/v1/motocicletas/*/ubicacion/historial")
+                    .access(exige("UBICACIONES_CONSULTAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/motocicletas/**").access(exige("INVENTARIO_CONSULTAR"))
                 .anyRequest().denyAll())
             .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(this::jwtAuthentication)))

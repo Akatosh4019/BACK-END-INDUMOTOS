@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,6 +26,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import tools.jackson.core.JacksonException;
 import org.springframework.web.server.ResponseStatusException;
 import pe.indumotos.application.RegistrarMotocicleta;
+import pe.indumotos.application.EditarMotocicleta;
 import pe.indumotos.application.ConsultarMotocicletasFiltradas;
 import pe.indumotos.application.PaginaMotocicletas;
 import pe.indumotos.domain.Motocicleta;
@@ -36,12 +38,14 @@ public class MotocicletaController {
     private final RegistrarMotocicleta registrar;
     private final PermisoService permisos;
     private final ConsultarMotocicletasFiltradas consultarFiltradas;
+    private final EditarMotocicleta editar;
 
     public MotocicletaController(RegistrarMotocicleta registrar, PermisoService permisos,
-        ConsultarMotocicletasFiltradas consultarFiltradas) {
+        ConsultarMotocicletasFiltradas consultarFiltradas, EditarMotocicleta editar) {
         this.registrar = registrar;
         this.permisos = permisos;
         this.consultarFiltradas = consultarFiltradas;
+        this.editar = editar;
     }
 
     public record NuevaFicha(@NotNull @Positive Long llegadaId,
@@ -52,6 +56,20 @@ public class MotocicletaController {
         @NotBlank @Size(max = 120) String numeroMotor,
         @NotBlank @Size(max = 120) String dua,
         @NotBlank @Size(max = 120) String itemDua) {}
+
+    public record CambiosFicha(@NotBlank @Size(max = 120) String marca,
+        @NotBlank @Size(max = 120) String modelo,
+        @NotBlank @Size(max = 120) String color,
+        @NotBlank @Size(max = 120) String chasisCompleto,
+        @NotBlank @Size(max = 120) String numeroMotor,
+        @NotBlank @Size(max = 120) String dua,
+        @NotBlank @Size(max = 120) String itemDua) {}
+
+    @PutMapping("/{id}")
+    public Motocicleta actualizar(@PathVariable long id, @Valid @RequestBody CambiosFicha cambios) {
+        return editar.ejecutar(id, cambios.marca(), cambios.modelo(), cambios.color(),
+            cambios.chasisCompleto(), cambios.numeroMotor(), cambios.dua(), cambios.itemDua());
+    }
 
     @PostMapping
     public ResponseEntity<Motocicleta> crear(@Valid @RequestBody NuevaFicha ficha,

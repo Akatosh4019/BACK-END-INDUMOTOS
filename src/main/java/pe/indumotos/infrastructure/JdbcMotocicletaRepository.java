@@ -59,6 +59,18 @@ public class JdbcMotocicletaRepository implements MotocicletaRepository {
     }
 
     @Override
+    public Motocicleta actualizar(long id, String marca, String modelo, String color,
+        String chasisCompleto, String numeroMotor, String dua, String itemDua) {
+        return jdbc.queryForObject(
+            "WITH modificada AS (UPDATE motocicleta SET marca=?,modelo=?,color=?,"
+                + "chasis_completo=?,numero_motor=?,dua=?,item_dua=? "
+                + "WHERE id_motocicleta=? RETURNING *) "
+                + "SELECT m.*,u.nombre_usuario FROM modificada m "
+                + "JOIN usuario u ON u.id_usuario=m.id_creador",
+            this::mapear, marca, modelo, color, chasisCompleto, numeroMotor, dua, itemDua, id);
+    }
+
+    @Override
     public List<Motocicleta> listarPorLlegada(long llegadaId) {
         return jdbc.query(
             "SELECT m.*, u.nombre_usuario FROM motocicleta m " +

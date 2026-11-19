@@ -11,6 +11,8 @@ public interface MotocicletaRepository {
         String chasisCompleto, String numeroMotor, String dua, String itemDua,
         String creadorUsuario);
     Motocicleta buscarPorId(long id);
+    Motocicleta actualizar(long id, String marca, String modelo, String color,
+        String chasisCompleto, String numeroMotor, String dua, String itemDua);
     List<Motocicleta> listarPorLlegada(long llegadaId);
     PaginaMotocicletas buscarPorFiltros(FiltroMotocicletas filtro);
 }

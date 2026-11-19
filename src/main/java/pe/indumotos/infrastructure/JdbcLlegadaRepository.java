@@ -35,6 +35,13 @@ public class JdbcLlegadaRepository implements LlegadaRepository {
             "WHERE l.id_llegada = ?", this::mapear, id);
     }
 
+    @Override
+    public java.util.List<Llegada> buscar(String guia, int limite) {
+        return jdbc.query("SELECT l.*, u.nombre_usuario FROM llegada l JOIN usuario u ON u.id_usuario=l.id_receptor " +
+            "WHERE strpos(lower(l.numero_guia),lower(?)) > 0 ORDER BY l.fecha_llegada DESC,l.id_llegada DESC LIMIT ?",
+            this::mapear, guia, limite);
+    }
+
     private Llegada mapear(ResultSet rs, int rowNum) throws SQLException {
         return new Llegada(rs.getLong("id_llegada"), rs.getString("numero_guia"),
             rs.getObject("fecha_llegada", OffsetDateTime.class), rs.getLong("id_receptor"),

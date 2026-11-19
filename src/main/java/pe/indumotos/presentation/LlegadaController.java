@@ -51,6 +51,13 @@ public class LlegadaController {
         return ResponseEntity.created(URI.create("/api/v1/llegadas/" + llegada.id())).body(llegada);
     }
 
+    @GetMapping
+    public java.util.List<Llegada> listar(
+        @org.springframework.web.bind.annotation.RequestParam(defaultValue="") String guia,
+        @org.springframework.web.bind.annotation.RequestParam(defaultValue="20") int limite) {
+        return registrar.buscar(guia, limite);
+    }
+
     @GetMapping("/{id}")
     public Llegada consultar(@PathVariable long id) {
         return registrar.consultar(id);

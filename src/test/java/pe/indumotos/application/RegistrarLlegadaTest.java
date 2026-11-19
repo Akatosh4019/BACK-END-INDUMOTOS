@@ -9,6 +9,19 @@ class RegistrarLlegadaTest {
     private final RegistrarLlegada servicio = new RegistrarLlegada(repository);
 
     @Test
+    void listadoLimitaResultadosYNormalizaGuia() {
+        servicio.buscar("  GUIA-01  ",20);
+        verify(repository).buscar("GUIA-01",20);
+    }
+    @Test
+    void listadoRechazaLimitesInvalidos() {
+        assertThrows(RegistrarLlegada.DatosInvalidos.class,()->servicio.buscar("",0));
+        assertThrows(RegistrarLlegada.DatosInvalidos.class,()->servicio.buscar("",51));
+        assertThrows(RegistrarLlegada.DatosInvalidos.class,()->servicio.buscar("x".repeat(121),20));
+        verifyNoInteractions(repository);
+    }
+
+    @Test
     void rechazaDatosIncompletosSinPersistir() {
         var error = assertThrows(RegistrarLlegada.DatosInvalidos.class,
             () -> servicio.ejecutar("  ", "almacen", 0, -1, null));

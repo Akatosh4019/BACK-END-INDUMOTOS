@@ -20,6 +20,20 @@ El diagrama editable del autor está en `docs/modelo/HU-14-T01-usuarios-roles-pe
 
 ### Con Docker Desktop (base y API)
 
+Para compilar y arrancar desde el código fuente dentro de Docker, prepara el
+`.env` local del paso 2 y ejecuta desde la raíz del repositorio:
+
+```powershell
+docker compose -p indumotos-sprint2-local -f compose.yaml -f compose.local.yaml up --build -d
+curl.exe http://127.0.0.1:8080/api/health
+```
+
+El archivo de configuración adicional compila con Maven y Java 21. Para el
+emulador Android con la URL predeterminada de la app, conecta ambos puertos con
+`adb -s <serial-del-emulador> reverse tcp:8089 tcp:8080`.
+La base local usa un volumen persistente. Las credenciales y los registros
+sintéticos usados para verificar HU-05 pertenecen al entorno local.
+
 1. Iniciar Docker Desktop.
 2. Copiar `.env.example` a `.env`; cambiar `DB_PASSWORD` y `ADMIN_PASSWORD`, definir `ADMIN_USERNAME` y generar `JWT_SECRET_BASE64` a partir de 32 bytes aleatorios. `.env` está excluido de Git.
 3. Ejecutar `mvn package` y después `docker compose up --build -d` desde esta carpeta.

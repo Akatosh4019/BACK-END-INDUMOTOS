@@ -74,6 +74,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/ubicaciones").access(exige("UBICACIONES_CONSULTAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/ubicaciones").access(exige("PERMISOS_ASIGNAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes").access(exige("SOLICITUDES_CREAR"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes/*/anulacion")
+                    .access(exige("SOLICITUDES_ANULAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes/*/seguimiento")
                     .access(exige("SOLICITUDES_AVANZAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/motocicletas/elegibles")

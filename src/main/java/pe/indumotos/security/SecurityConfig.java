@@ -74,7 +74,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/llegadas/**").access(exige("INVENTARIO_CONSULTAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/motocicletas").access(exige("FICHAS_REGISTRAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/catalogo-motocicletas")
-                    .access(exigeAlguno("CATALOGO_GESTIONAR", "SOLICITUDES_CREAR"))
+                    .access(exigeAlguno("CATALOGO_GESTIONAR", "FICHAS_REGISTRAR", "FICHAS_EDITAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/catalogo-motocicletas")
                     .access(exige("CATALOGO_GESTIONAR"))
                 .requestMatchers(HttpMethod.PUT, "/api/v1/motocicletas/*").access(exige("FICHAS_EDITAR"))

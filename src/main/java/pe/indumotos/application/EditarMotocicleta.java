@@ -29,6 +29,9 @@ public class EditarMotocicleta {
         String chasis = chasisCompleto.trim();
         repository.buscarIdPorChasis(chasis).filter(otroId -> otroId != id)
             .ifPresent(otroId -> { throw new RegistrarMotocicleta.ChasisDuplicado(otroId); });
+        if (!repository.combinacionRegistrada(marca.trim(), modelo.trim(), color.trim()))
+            throw new RegistrarMotocicleta.DatosInvalidos(Map.of(
+                "modelo", "Selecciona una combinación registrada en el catálogo."));
         try {
             return repository.actualizar(id, marca.trim(), modelo.trim(), color.trim(),
                 chasis, numeroMotor.trim(), dua.trim(), itemDua.trim());

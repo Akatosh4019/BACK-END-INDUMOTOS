@@ -28,6 +28,7 @@ class RegistrarMotocicletaTest {
     void traduceConflictoDeSolicitudesSimultaneas() {
         var repository = mock(MotocicletaRepository.class);
         when(repository.existeLlegada(2L)).thenReturn(true);
+        when(repository.combinacionRegistrada("RONCO", "RZ 250", "ROJO")).thenReturn(true);
         when(repository.buscarIdPorChasis("DEMO-A-0042"))
             .thenReturn(java.util.Optional.empty(), java.util.Optional.of(8L));
         when(repository.guardar(anyLong(), any(), any(), any(), any(), any(), any(), any(), any()))
@@ -63,6 +64,7 @@ class RegistrarMotocicletaTest {
     void aceptaFichaCompletaYConservaIdentificadoresComoTexto() {
         var repository = mock(MotocicletaRepository.class);
         when(repository.existeLlegada(2L)).thenReturn(true);
+        when(repository.combinacionRegistrada("RONCO", "RZ 250", "ROJO")).thenReturn(true);
         var registrar = new RegistrarMotocicleta(repository);
 
         registrar.ejecutar(2L, " RONCO ", " RZ 250 ", " ROJO ", " DEMO-A-0042 ",
@@ -70,6 +72,16 @@ class RegistrarMotocicletaTest {
 
         verify(repository).guardar(2L, "RONCO", "RZ 250", "ROJO", "DEMO-A-0042",
             "MOTOR-0001", "000123", "004", "inventarios");
+    }
+    @Test
+    void rechazaModeloNoRegistradoEnCatalogo() {
+        var repository = mock(MotocicletaRepository.class);
+        when(repository.existeLlegada(2L)).thenReturn(true);
+        var error = assertThrows(RegistrarMotocicleta.DatosInvalidos.class,
+            () -> new RegistrarMotocicleta(repository).ejecutar(2L, "RONCO", "NUEVO", "ROJO",
+                "DEMO-A-0042", "MOTOR-0001", "000123", "004", "inventarios"));
+        assertTrue(error.errores().containsKey("modelo"));
+        verify(repository, never()).guardar(anyLong(), any(), any(), any(), any(), any(), any(), any(), any());
     }
     @Test
     void noGuardaFichaSiLlegadaNoExiste() {

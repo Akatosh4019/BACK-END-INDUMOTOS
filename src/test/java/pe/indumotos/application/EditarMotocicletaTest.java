@@ -15,6 +15,7 @@ class EditarMotocicletaTest {
             "MOTOR-01", "DUA-01", "01", "admin", OffsetDateTime.now());
         when(repo.buscarPorId(5L)).thenReturn(ficha);
         when(repo.buscarIdPorChasis("CHASIS-001")).thenReturn(Optional.of(5L));
+        when(repo.combinacionRegistrada("Honda", "XR", "Azul")).thenReturn(true);
         when(repo.actualizar(5L, "Honda", "XR", "Azul", "CHASIS-001", "MOTOR-01", "DUA-01", "01"))
             .thenReturn(new Motocicleta(5L, 2L, "Honda", "XR", "Azul", "CHASIS-001",
                 "MOTOR-01", "DUA-01", "01", "admin", ficha.creadoEn()));

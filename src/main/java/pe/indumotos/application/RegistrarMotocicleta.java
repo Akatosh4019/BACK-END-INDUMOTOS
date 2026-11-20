@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import pe.indumotos.domain.Motocicleta;
 
@@ -38,6 +39,7 @@ public class RegistrarMotocicleta {
         this.repository = repository;
     }
 
+    @Transactional
     public Motocicleta ejecutar(long llegadaId, String marca, String modelo, String color,
         String chasisCompleto, String numeroMotor, String dua, String itemDua,
         String creadorUsuario) {
@@ -56,6 +58,9 @@ public class RegistrarMotocicleta {
         if (!repository.existeLlegada(llegadaId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Llegada no encontrada");
         }
+        repository.bloquearLlegada(llegadaId);
+        if (repository.registroTerminado(llegadaId))
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "El registro de esta guía ya terminó.");
         String chasis = chasisCompleto.trim();
         repository.buscarIdPorChasis(chasis).ifPresent(id -> { throw new ChasisDuplicado(id); });
         if (!repository.combinacionRegistrada(marca.trim(), modelo.trim(), color.trim()))

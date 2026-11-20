@@ -6,6 +6,8 @@ import pe.indumotos.domain.Motocicleta;
 
 public interface MotocicletaRepository {
     boolean existeLlegada(long llegadaId);
+    void bloquearLlegada(long llegadaId);
+    boolean registroTerminado(long llegadaId);
     boolean combinacionRegistrada(String marca, String modelo, String color);
     Optional<Long> buscarIdPorChasis(String chasisCompleto);
     Motocicleta guardar(long llegadaId, String marca, String modelo, String color,

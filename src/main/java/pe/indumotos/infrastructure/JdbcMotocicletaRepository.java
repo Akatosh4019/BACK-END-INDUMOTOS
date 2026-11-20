@@ -37,6 +37,18 @@ public class JdbcMotocicletaRepository implements MotocicletaRepository {
     }
 
     @Override
+    public void bloquearLlegada(long llegadaId) {
+        jdbc.query("SELECT id_llegada FROM llegada WHERE id_llegada=? FOR UPDATE",
+            rs -> { while (rs.next()) { /* se mantiene el bloqueo hasta cerrar la transacción */ } }, llegadaId);
+    }
+
+    @Override
+    public boolean registroTerminado(long llegadaId) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM registro_guia " +
+            "WHERE id_llegada=? AND terminado_en IS NOT NULL)",Boolean.class,llegadaId));
+    }
+
+    @Override
     public Optional<Long> buscarIdPorChasis(String chasisCompleto) {
         return jdbc.query("SELECT id_motocicleta FROM motocicleta " +
             "WHERE upper(btrim(chasis_completo)) = upper(btrim(?)) ORDER BY id_motocicleta LIMIT 1",

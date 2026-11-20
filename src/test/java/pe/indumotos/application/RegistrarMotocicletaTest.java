@@ -11,6 +11,17 @@ import org.springframework.dao.DuplicateKeyException;
 
 class RegistrarMotocicletaTest {
     @Test
+    void impideRegistrarOtraMotoCuandoLaGuiaYaTermino() {
+        var repository = mock(MotocicletaRepository.class);
+        when(repository.existeLlegada(2L)).thenReturn(true);
+        when(repository.registroTerminado(2L)).thenReturn(true);
+        var error = assertThrows(ResponseStatusException.class,
+            () -> new RegistrarMotocicleta(repository).ejecutar(2L,"RONCO","RZ 250","ROJO",
+                "DEMO-A-0042","MOTOR-0001","000123","004","inventarios"));
+        assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
+        verify(repository,never()).guardar(anyLong(),any(),any(),any(),any(),any(),any(),any(),any());
+    }
+    @Test
     void rechazaChasisExistenteAntesDeGuardar() {
         var repository = mock(MotocicletaRepository.class);
         when(repository.existeLlegada(2L)).thenReturn(true);

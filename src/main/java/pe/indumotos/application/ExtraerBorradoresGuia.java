@@ -17,13 +17,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ExtraerBorradoresGuia {
-    private static final Pattern CHASIS = Pattern.compile("(?i)Chasis\\s*[:.]?\\s*([A-Z0-9]{12,24})");
-    private static final Pattern MOTOR = Pattern.compile("(?i)Motor\\s*[:.]?\\s*([A-Z0-9]{8,30})");
-    private static final Pattern MARCA = Pattern.compile("(?i)Marca\\s*[:.]?\\s*([A-Z][A-Z0-9 ]{1,25})");
-    private static final Pattern MODELO = Pattern.compile("(?i)Modelo\\s*[:.]?\\s*([A-Z][A-Z0-9 .]{1,25})");
-    private static final Pattern COLOR = Pattern.compile("(?i)Color\\s*[:.]?\\s*([A-Z][A-Z, /]{1,25})");
-    private static final Pattern DUA = Pattern.compile("\\b(\\d{3}-\\d{4}-\\d{2}-\\d{5,}[^\\s]{0,22})");
-    private static final Pattern ITEM = Pattern.compile("(?i)(?:IT|LT)[ .:_-]*(\\d{1,4})");
+    private static final Pattern CHASIS = Pattern.compile("(?i)Chasis[^A-Z0-9\\r\\n]{0,4}([A-Z0-9]{12,24})");
+    private static final Pattern MOTOR = Pattern.compile("(?i)Motor[^A-Z0-9\\r\\n]{0,4}([A-Z0-9]{8,30})");
+    private static final Pattern MARCA = Pattern.compile("(?i)Marca[^A-Z0-9\\r\\n]{0,4}([A-Z][A-Z0-9 ]{1,25}?)(?=\\s*Chasis|\\r?\\n|$)");
+    private static final Pattern MODELO = Pattern.compile("(?i)Modelo[^A-Z0-9\\r\\n]{0,4}([A-Z][A-Z0-9 .]{1,25}?)(?=\\s*Color|\\s*Marca|\\r?\\n|$)");
+    private static final Pattern COLOR = Pattern.compile("(?i)Color[^A-Z0-9\\r\\n]{0,4}([A-Z][A-Z, /]{1,25}?)(?=\\s*Marca|\\s*Chasis|\\r?\\n|$)");
+    private static final Pattern DUA = Pattern.compile("\\b(\\d{3}-\\d{4}-\\d{2}-\\d{5,6}[-:]\\d{2})");
+    private static final Pattern ITEM = Pattern.compile("(?i)(?:IT|1T)[ .:_-]*(\\d{1,4})");
 
     public record Sugerencia(int pagina, String marca, String modelo, String color,
         String chasisCompleto, String numeroMotor, String dua, String itemDua) {}
@@ -91,8 +91,8 @@ public class ExtraerBorradoresGuia {
         List<Sugerencia> resultado = new ArrayList<>();
         Matcher chasis = CHASIS.matcher(texto);
         while (chasis.find()) {
-            int inicio = Math.max(0, chasis.start() - 170);
-            int fin = Math.min(texto.length(), chasis.end() + 150);
+            int inicio = Math.max(0, chasis.start() - 220);
+            int fin = Math.min(texto.length(), chasis.end() + 180);
             String antes = texto.substring(inicio, chasis.start());
             String despues = texto.substring(chasis.end(), fin);
             resultado.add(new Sugerencia(pagina,

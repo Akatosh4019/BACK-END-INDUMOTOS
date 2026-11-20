@@ -10,4 +10,6 @@ public interface LlegadaRepository {
     List<Llegada> buscarPorGuia(String numeroGuia);
     List<Llegada> listar(String numeroGuia, int limite, long desplazamiento);
     long contar(String numeroGuia);
+    List<Llegada> listarPorEstado(String numeroGuia, String estado, int limite, long desplazamiento);
+    long contarPorEstado(String numeroGuia, String estado);
 }

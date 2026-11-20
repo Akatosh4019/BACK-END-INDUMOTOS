@@ -50,7 +50,7 @@ class ConsultarDetalleLlegadaTest {
 
     private Llegada llegada(long id, int recibida) {
         return new Llegada(id, "GUIA-" + id, OffsetDateTime.now(), 2L, "almacen", recibida,
-            recibida, null);
+            recibida, null, "PENDIENTE");
     }
 
     private Motocicleta ficha(long id, long llegadaId) {

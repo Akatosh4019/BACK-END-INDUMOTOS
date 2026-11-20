@@ -28,4 +28,20 @@ class ListarLlegadasTest {
         assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
         verifyNoInteractions(repository);
     }
+
+    @Test
+    void separaPendientesYConfirmadasAntesDePaginar() {
+        when(repository.contarPorEstado("", "PENDIENTE")).thenReturn(12L);
+        when(repository.listarPorEstado("", "PENDIENTE", 10, 10)).thenReturn(List.of());
+        var pagina = servicio.listar("", 1, "PENDIENTE");
+        assertEquals(12, pagina.totalElementos());
+        assertEquals(2, pagina.totalPaginas());
+        verify(repository).listarPorEstado("", "PENDIENTE", 10, 10);
+    }
+
+    @Test
+    void rechazaEstadoDesconocido() {
+        assertThrows(ResponseStatusException.class, () -> servicio.listar("", 0, "CANCELADA"));
+        verifyNoInteractions(repository);
+    }
 }

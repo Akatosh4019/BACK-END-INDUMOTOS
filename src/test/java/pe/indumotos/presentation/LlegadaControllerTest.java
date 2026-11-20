@@ -31,7 +31,7 @@ class LlegadaControllerTest {
     @Test
     void aceptaFormularioConFotoEnLaRutaPrincipal() throws Exception {
         var guias = mock(RegistrarGuiaLlegada.class);
-        var llegada = new Llegada(7L, "G-1", OffsetDateTime.now(), 2L, "almacen", 1, 1, null);
+        var llegada = new Llegada(7L, "G-1", OffsetDateTime.now(), 2L, "almacen", 1, 1, null, "PENDIENTE");
         when(guias.registrar(org.mockito.ArgumentMatchers.eq("G-1"),
             org.mockito.ArgumentMatchers.eq("almacen"), org.mockito.ArgumentMatchers.eq(1),
             org.mockito.ArgumentMatchers.eq(1), org.mockito.ArgumentMatchers.isNull(),

@@ -24,7 +24,7 @@ public class JdbcLlegadaRepository implements LlegadaRepository {
             "WITH nueva AS (INSERT INTO llegada " +
             "(numero_guia, id_receptor, cantidad_declarada, cantidad_recibida, observacion) " +
             "SELECT ?, u.id_usuario, ?, ?, ? FROM usuario u WHERE u.nombre_usuario = ? AND u.estado = 'ACTIVO' " +
-            "RETURNING id_llegada, numero_guia, fecha_llegada, id_receptor, cantidad_declarada, cantidad_recibida, observacion) " +
+            "RETURNING id_llegada, numero_guia, fecha_llegada, id_receptor, cantidad_declarada, cantidad_recibida, observacion, estado_registro) " +
             "SELECT n.*, u.nombre_usuario FROM nueva n JOIN usuario u ON u.id_usuario = n.id_receptor",
             this::mapear, numeroGuia, declarada, recibida, observacion, receptorUsuario);
     }
@@ -61,10 +61,28 @@ public class JdbcLlegadaRepository implements LlegadaRepository {
         return total == null ? 0 : total;
     }
 
+    @Override
+    public List<Llegada> listarPorEstado(String numeroGuia, String estado, int limite, long desplazamiento) {
+        return jdbc.query("SELECT l.*, u.nombre_usuario FROM llegada l " +
+            "JOIN usuario u ON u.id_usuario=l.id_receptor " +
+            "WHERE l.visible_en_listado AND l.estado_registro=? " +
+            "AND (? = '' OR lower(l.numero_guia) LIKE lower(?)) " +
+            "ORDER BY l.fecha_llegada DESC, l.id_llegada DESC LIMIT ? OFFSET ?",
+            this::mapear, estado, numeroGuia, "%" + numeroGuia + "%", limite, desplazamiento);
+    }
+
+    @Override
+    public long contarPorEstado(String numeroGuia, String estado) {
+        Long total = jdbc.queryForObject("SELECT count(*) FROM llegada WHERE visible_en_listado " +
+            "AND estado_registro=? AND (? = '' OR lower(numero_guia) LIKE lower(?))",
+            Long.class, estado, numeroGuia, "%" + numeroGuia + "%");
+        return total == null ? 0 : total;
+    }
+
     private Llegada mapear(ResultSet rs, int rowNum) throws SQLException {
         return new Llegada(rs.getLong("id_llegada"), rs.getString("numero_guia"),
             rs.getObject("fecha_llegada", OffsetDateTime.class), rs.getLong("id_receptor"),
             rs.getString("nombre_usuario"), rs.getInt("cantidad_declarada"),
-            rs.getInt("cantidad_recibida"), rs.getString("observacion"));
+            rs.getInt("cantidad_recibida"), rs.getString("observacion"), rs.getString("estado_registro"));
     }
 }

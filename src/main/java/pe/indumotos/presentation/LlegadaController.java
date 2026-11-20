@@ -35,8 +35,9 @@ public class LlegadaController {
 
     @GetMapping("/pagina")
     public RegistrarLlegada.PaginaLlegadas listar(@RequestParam(defaultValue="") String numeroGuia,
-        @RequestParam(defaultValue="0") int pagina) {
-        return registrar.listar(numeroGuia, pagina);
+        @RequestParam(defaultValue="0") int pagina,
+        @RequestParam(defaultValue="") String estado) {
+        return registrar.listar(numeroGuia, pagina, estado);
     }
 
     @ExceptionHandler(RegistrarLlegada.DatosInvalidos.class)

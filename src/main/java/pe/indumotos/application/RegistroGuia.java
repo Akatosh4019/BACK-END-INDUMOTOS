@@ -28,7 +28,7 @@ public class RegistroGuia {
         if (recibidas == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Guía no encontrada.");
         int registradas = jdbc.queryForObject("SELECT count(*) FROM motocicleta WHERE id_llegada=?", Integer.class, id);
         boolean terminado = Boolean.TRUE.equals(jdbc.queryForObject(
-            "SELECT EXISTS(SELECT 1 FROM registro_guia WHERE id_llegada=? AND terminado_en IS NOT NULL)",
+            "SELECT EXISTS(SELECT 1 FROM llegada WHERE id_llegada=? AND estado_registro='CONFIRMADA')",
             Boolean.class, id));
         List<Borrador> borradores = jdbc.query("SELECT posicion,marca,modelo,color,chasis_completo,numero_motor,dua,item_dua " +
             "FROM borrador_motocicleta WHERE id_llegada=? ORDER BY posicion", (rs, row) ->
@@ -84,6 +84,7 @@ public class RegistroGuia {
         jdbc.update("INSERT INTO registro_guia(id_llegada,terminado_en,terminado_por) " +
             "SELECT ?,CURRENT_TIMESTAMP,id_usuario FROM usuario WHERE nombre_usuario=? " +
             "ON CONFLICT(id_llegada) DO UPDATE SET terminado_en=excluded.terminado_en,terminado_por=excluded.terminado_por",id,usuario);
+        jdbc.update("UPDATE llegada SET estado_registro='CONFIRMADA' WHERE id_llegada=?",id);
         return consultar(id);
     }
 
@@ -97,8 +98,8 @@ public class RegistroGuia {
         return jdbc.queryForObject("SELECT count(*) FROM motocicleta WHERE id_llegada=?",Integer.class,id);
     }
     private boolean terminado(long id) {
-        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM registro_guia " +
-            "WHERE id_llegada=? AND terminado_en IS NOT NULL)",Boolean.class,id));
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM llegada " +
+            "WHERE id_llegada=? AND estado_registro='CONFIRMADA')",Boolean.class,id));
     }
     private ResponseStatusException conflicto(String mensaje) {
         return new ResponseStatusException(HttpStatus.CONFLICT,mensaje);

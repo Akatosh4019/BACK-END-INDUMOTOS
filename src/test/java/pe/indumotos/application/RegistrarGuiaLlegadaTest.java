@@ -29,7 +29,7 @@ class RegistrarGuiaLlegadaTest {
         byte[] paginaJpg = imagen("jpg");
         byte[] paginaPng = imagen("png");
         Llegada llegada = new Llegada(8L, "TG01-38337", OffsetDateTime.now(), 2L,
-            "almacen", 19, 19, null);
+            "almacen", 19, 19, null, "PENDIENTE");
         when(llegadas.ejecutar("TG01-38337", "almacen", 19, 19, null)).thenReturn(llegada);
 
         assertEquals(llegada, servicio.registrar("TG01-38337", "almacen", 19, 19, null,

@@ -57,11 +57,20 @@ public class RegistrarLlegada {
         long totalPaginas) {}
 
     public PaginaLlegadas listar(String numeroGuia, int pagina) {
+        return listar(numeroGuia, pagina, "");
+    }
+
+    public PaginaLlegadas listar(String numeroGuia, int pagina, String estado) {
         String filtro = numeroGuia == null ? "" : numeroGuia.trim();
         if (filtro.length() > 120 || pagina < 0 || (long) pagina * 10 > Integer.MAX_VALUE)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Filtro o página no válidos");
-        long total = repository.contar(filtro);
-        return new PaginaLlegadas(repository.listar(filtro, 10, (long) pagina * 10),
+        String estadoSeguro = estado == null ? "" : estado.trim().toUpperCase(java.util.Locale.ROOT);
+        if (!estadoSeguro.isEmpty() && !estadoSeguro.equals("PENDIENTE") && !estadoSeguro.equals("CONFIRMADA"))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado de guía no válido");
+        long total = estadoSeguro.isEmpty() ? repository.contar(filtro) : repository.contarPorEstado(filtro,estadoSeguro);
+        List<Llegada> items = estadoSeguro.isEmpty() ? repository.listar(filtro,10,(long) pagina * 10)
+            : repository.listarPorEstado(filtro,estadoSeguro,10,(long) pagina * 10);
+        return new PaginaLlegadas(items,
             pagina, 10, total, (total + 9) / 10);
     }
 }

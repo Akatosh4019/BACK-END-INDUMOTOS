@@ -72,6 +72,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/llegadas").access(exige("LLEGADAS_REGISTRAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/llegadas/con-guia").access(exige("LLEGADAS_REGISTRAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/llegadas").access(exige("INVENTARIO_CONSULTAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/llegadas/*/sugerencias-ocr")
+                    .access(exigeTodos("FICHAS_REGISTRAR", "INVENTARIO_CONSULTAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/llegadas/**").access(exige("INVENTARIO_CONSULTAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/motocicletas").access(exige("FICHAS_REGISTRAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/catalogo-motocicletas")
@@ -124,6 +126,14 @@ public class SecurityConfig {
             var actual = authentication.get();
             return new AuthorizationDecision(actual != null && actual.isAuthenticated()
                 && java.util.Arrays.stream(codigos).anyMatch(codigo -> permisos.permitido(actual.getName(), codigo)));
+        };
+    }
+
+    private AuthorizationManager<RequestAuthorizationContext> exigeTodos(String... codigos) {
+        return (authentication, context) -> {
+            var actual = authentication.get();
+            return new AuthorizationDecision(actual != null && actual.isAuthenticated()
+                && java.util.Arrays.stream(codigos).allMatch(codigo -> permisos.permitido(actual.getName(), codigo)));
         };
     }
 

@@ -40,6 +40,7 @@ $env:ADMIN_PASSWORD = $password
 $env:JWT_SECRET_BASE64 = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
 $env:PORT = '18080'
 $process = $null
+$imageFile = Join-Path ([System.IO.Path]::GetTempPath()) "s2-guia-$suffix.png"
 try {
     $process = Start-Process -FilePath $JavaExe -ArgumentList @('-cp', ('"' + $classpath + '"'), 'pe.indumotos.BackendIndumotosApplication') -PassThru -WindowStyle Hidden
     $base = 'http://127.0.0.1:18080'
@@ -114,10 +115,25 @@ try {
     Expect (Request 'POST' "/api/v1/solicitudes/$id/seguimiento" $adminToken @{
         estado = 'EN_PREPARACION'
     }).status 200 'Iniciar preparación'
-    $arrival = Request 'POST' '/api/v1/llegadas' $warehouseToken @{
+    Expect (Request 'POST' '/api/v1/llegadas' $warehouseToken @{
         numeroGuia="S2_HTTP_$suffix"; cantidadDeclarada=1; cantidadRecibida=1
+    }).status 415 'Bloquear llegada JSON sin foto'
+    $bitmap = [System.Drawing.Bitmap]::new(800, 1000)
+    try {
+        $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+        try {
+            $graphics.Clear([System.Drawing.Color]::White)
+            for ($y = 80; $y -lt 920; $y += 24) {
+                $graphics.FillRectangle([System.Drawing.Brushes]::Black, 40, $y, 550, 6)
+            }
+        } finally { $graphics.Dispose() }
+        $bitmap.Save($imageFile, [System.Drawing.Imaging.ImageFormat]::Png)
     }
-    Expect $arrival.status 201 'Registrar llegada del Sprint 1'
+    finally { $bitmap.Dispose() }
+    $arrivalResponse = Invoke-WebRequest "$base/api/v1/llegadas" -Method Post -Headers @{ Authorization = "Bearer $warehouseToken" } -Form @{ numeroGuia = "S2_HTTP_$suffix"; cantidadDeclarada = '1'; cantidadRecibida = '1'; imagenes = (Get-Item $imageFile) } -SkipHttpErrorCheck -TimeoutSec 8
+    Expect ([int]$arrivalResponse.StatusCode) 201 'Registrar llegada con foto'
+    $arrival = @{ body = ($arrivalResponse.Content | ConvertFrom-Json) }
+    Expect (Request 'GET' "/api/v1/llegadas/$($arrival.body.id)/guias" $warehouseToken $null).body.Count 1 'Foto vinculada'
     $motorcycle = Request 'POST' '/api/v1/motocicletas' $inventoryToken @{
         llegadaId=$arrival.body.id; marca='Marca ensayo'; modelo='Modelo ensayo'; color='Rojo';
         chasisCompleto="S2_CHASIS_$suffix"; numeroMotor="S2_MOTOR_$suffix";
@@ -170,5 +186,6 @@ try {
 }
 finally {
     if ($process -and !$process.HasExited) { Stop-Process -Id $process.Id -Force }
+    Remove-Item -LiteralPath $imageFile -ErrorAction SilentlyContinue
     Remove-Item Env:JWT_SECRET_BASE64, Env:ADMIN_PASSWORD, Env:DB_PASSWORD, Env:PGPASSWORD -ErrorAction SilentlyContinue
 }

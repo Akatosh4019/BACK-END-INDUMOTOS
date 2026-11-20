@@ -1,6 +1,12 @@
 package pe.indumotos.application;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +17,8 @@ import pe.indumotos.domain.Llegada;
 public class RegistrarGuiaLlegada {
     public static final int MAX_IMAGENES = 3;
     public static final int MAX_BYTES = 5 * 1024 * 1024;
+    private static final int MIN_LADO = 600;
+    private static final long MAX_PIXELES = 20_000_000;
 
     public record ImagenNueva(String nombreArchivo, String tipoMime, byte[] contenido) {}
 
@@ -64,6 +72,60 @@ public class RegistrarGuiaLlegada {
         if (!(jpeg && "image/jpeg".equals(archivo.tipoMime())
             || png && "image/png".equals(archivo.tipoMime())))
             throw invalido("Solo se permiten fotos JPG o PNG válidas.");
+        if (jpeg && (bytes.length < 4 || (bytes[bytes.length - 2] & 0xff) != 0xff
+            || (bytes[bytes.length - 1] & 0xff) != 0xd9))
+            throw invalido("La foto JPG está incompleta o dañada.");
+        if (png && (bytes.length < 20 || bytes[bytes.length - 8] != 0x49
+            || bytes[bytes.length - 7] != 0x45 || bytes[bytes.length - 6] != 0x4e
+            || bytes[bytes.length - 5] != 0x44))
+            throw invalido("La foto PNG está incompleta o dañada.");
+        try (ImageInputStream entrada = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
+            if (entrada == null) throw invalido("No se pudo abrir la foto de la guía.");
+            var lectores = ImageIO.getImageReaders(entrada);
+            if (!lectores.hasNext()) throw invalido("No se pudo interpretar la foto de la guía.");
+            ImageReader lector = lectores.next();
+            try {
+                lector.setInput(entrada, true, true);
+                String formato = lector.getFormatName();
+                if (!(jpeg && "JPEG".equalsIgnoreCase(formato)
+                    || png && "PNG".equalsIgnoreCase(formato)))
+                    throw invalido("El contenido de la foto no coincide con su tipo.");
+                int ancho = lector.getWidth(0);
+                int alto = lector.getHeight(0);
+                if (ancho < MIN_LADO || alto < MIN_LADO || (long) ancho * alto > MAX_PIXELES)
+                    throw invalido("La foto debe medir al menos 600 px por lado y no superar 20 megapíxeles.");
+                BufferedImage imagen = lector.read(0);
+                if (imagen == null) throw invalido("La foto no se puede decodificar.");
+                if (!tieneContraste(imagen)) {
+                    imagen.flush();
+                    throw invalido("La foto está vacía o tiene demasiado poco contraste.");
+                }
+                imagen.flush();
+            } finally {
+                lector.dispose();
+            }
+        } catch (IOException | IllegalArgumentException ex) {
+            throw invalido("La foto está dañada o no se puede decodificar.");
+        }
+    }
+
+    private boolean tieneContraste(BufferedImage imagen) {
+        int paso = Math.max(1, Math.min(imagen.getWidth(), imagen.getHeight()) / 150);
+        long suma = 0;
+        long sumaCuadrados = 0;
+        long muestras = 0;
+        for (int y = 0; y < imagen.getHeight(); y += paso) {
+            for (int x = 0; x < imagen.getWidth(); x += paso) {
+                int color = imagen.getRGB(x, y);
+                int luz = (77 * ((color >> 16) & 255) + 150 * ((color >> 8) & 255)
+                    + 29 * (color & 255)) >> 8;
+                suma += luz;
+                sumaCuadrados += (long) luz * luz;
+                muestras++;
+            }
+        }
+        double media = (double) suma / muestras;
+        return (double) sumaCuadrados / muestras - media * media >= 100;
     }
 
     private String nombreSeguro(ImagenNueva archivo, int orden) {

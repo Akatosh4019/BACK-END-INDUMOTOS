@@ -31,7 +31,7 @@ public class GuiaLlegadaController {
 
     public GuiaLlegadaController(RegistrarGuiaLlegada guias) { this.guias = guias; }
 
-    @PostMapping(path = "/con-guia", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(path = {"", "/con-guia"}, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Llegada> registrar(@RequestParam String numeroGuia,
         @RequestParam int cantidadDeclarada, @RequestParam int cantidadRecibida,
         @RequestParam(required = false) String observacion,

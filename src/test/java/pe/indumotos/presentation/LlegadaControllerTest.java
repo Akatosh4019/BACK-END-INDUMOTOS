@@ -1,53 +1,47 @@
 package pe.indumotos.presentation;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import java.time.OffsetDateTime;
-import java.math.BigDecimal;
-import jakarta.validation.Validation;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import java.time.OffsetDateTime;
+import pe.indumotos.application.RegistrarGuiaLlegada;
 import pe.indumotos.application.RegistrarLlegada;
 import pe.indumotos.domain.Llegada;
 
 class LlegadaControllerTest {
     @Test
-    void creaLlegadaConUsuarioAutenticadoYDosCantidades() {
-        var registrar = mock(RegistrarLlegada.class);
-        var llegada = new Llegada(7L, "GR-PRUEBA-001", OffsetDateTime.now(), 3L,
-            "almacen_prueba", 2, 1, null);
-        when(registrar.ejecutar("GR-PRUEBA-001", "almacen_prueba", 2, 1, null))
-            .thenReturn(llegada);
-        var controller = new LlegadaController(registrar);
-        var auth = UsernamePasswordAuthenticationToken.authenticated(
-            "almacen_prueba", null, java.util.List.of());
-
-        var response = controller.crear(
-            new LlegadaController.NuevaLlegada("GR-PRUEBA-001", BigDecimal.valueOf(2),
-                BigDecimal.ONE, null), auth);
-
-        assertEquals(201, response.getStatusCode().value());
-        assertEquals("/api/v1/llegadas/7", response.getHeaders().getLocation().toString());
-        assertEquals(2, response.getBody().cantidadDeclarada());
-        assertEquals(1, response.getBody().cantidadRecibida());
-        verify(registrar).ejecutar("GR-PRUEBA-001", "almacen_prueba", 2, 1, null);
+    void rechazaRegistroJsonSinImagen() throws Exception {
+        var mvc = MockMvcBuilders.standaloneSetup(
+            new LlegadaController(mock(RegistrarLlegada.class)),
+            new GuiaLlegadaController(mock(RegistrarGuiaLlegada.class))).build();
+        mvc.perform(post("/api/v1/llegadas")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"numeroGuia\":\"G-1\",\"cantidadDeclarada\":1,\"cantidadRecibida\":1}"))
+            .andExpect(status().isUnsupportedMediaType());
     }
 
     @Test
-    void rechazaCamposBasicosInvalidos() {
-        var validator = Validation.buildDefaultValidatorFactory().getValidator();
-        var errores = validator.validate(new LlegadaController.NuevaLlegada(" ", BigDecimal.ZERO, null, null));
-        assertEquals(3, errores.size());
-        assertTrue(errores.stream().anyMatch(e -> e.getPropertyPath().toString().equals("numeroGuia")));
-        assertTrue(errores.stream().anyMatch(e -> e.getPropertyPath().toString().equals("cantidadDeclarada")));
-        assertTrue(errores.stream().anyMatch(e -> e.getPropertyPath().toString().equals("cantidadRecibida")));
-    }
-
-    @Test
-    void rechazaCantidadesFraccionarias() {
-        var validator = Validation.buildDefaultValidatorFactory().getValidator();
-        var errores = validator.validate(new LlegadaController.NuevaLlegada("GR-PRUEBA-001",
-            new BigDecimal("1.5"), BigDecimal.ONE, null));
-        assertTrue(errores.stream().anyMatch(e -> e.getPropertyPath().toString().equals("cantidadDeclarada")));
+    void aceptaFormularioConFotoEnLaRutaPrincipal() throws Exception {
+        var guias = mock(RegistrarGuiaLlegada.class);
+        var llegada = new Llegada(7L, "G-1", OffsetDateTime.now(), 2L, "almacen", 1, 1, null);
+        when(guias.registrar(org.mockito.ArgumentMatchers.eq("G-1"),
+            org.mockito.ArgumentMatchers.eq("almacen"), org.mockito.ArgumentMatchers.eq(1),
+            org.mockito.ArgumentMatchers.eq(1), org.mockito.ArgumentMatchers.isNull(),
+            org.mockito.ArgumentMatchers.anyList())).thenReturn(llegada);
+        var mvc = MockMvcBuilders.standaloneSetup(
+            new LlegadaController(mock(RegistrarLlegada.class)), new GuiaLlegadaController(guias)).build();
+        var foto = new MockMultipartFile("imagenes", "guia.jpg", "image/jpeg", new byte[]{1, 2, 3});
+        var usuario = UsernamePasswordAuthenticationToken.authenticated("almacen", null, java.util.List.of());
+        mvc.perform(multipart("/api/v1/llegadas").file(foto).principal(usuario)
+            .param("numeroGuia", "G-1").param("cantidadDeclarada", "1").param("cantidadRecibida", "1"))
+            .andExpect(status().isCreated());
     }
 }

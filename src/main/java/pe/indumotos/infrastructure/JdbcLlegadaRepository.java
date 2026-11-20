@@ -40,7 +40,7 @@ public class JdbcLlegadaRepository implements LlegadaRepository {
     public List<Llegada> buscarPorGuia(String numeroGuia) {
         return jdbc.query(
             "SELECT l.*, u.nombre_usuario FROM llegada l JOIN usuario u ON u.id_usuario = l.id_receptor " +
-            "WHERE lower(l.numero_guia) LIKE lower(?) ORDER BY l.fecha_llegada DESC, l.id_llegada DESC LIMIT 20",
+            "WHERE l.visible_en_listado AND lower(l.numero_guia) LIKE lower(?) ORDER BY l.fecha_llegada DESC, l.id_llegada DESC LIMIT 20",
             this::mapear, "%" + numeroGuia + "%");
     }
 
@@ -48,7 +48,7 @@ public class JdbcLlegadaRepository implements LlegadaRepository {
     public List<Llegada> listar(String numeroGuia, int limite, long desplazamiento) {
         return jdbc.query("SELECT l.*, u.nombre_usuario FROM llegada l " +
             "JOIN usuario u ON u.id_usuario=l.id_receptor " +
-            "WHERE (? = '' OR lower(l.numero_guia) LIKE lower(?)) " +
+            "WHERE l.visible_en_listado AND (? = '' OR lower(l.numero_guia) LIKE lower(?)) " +
             "ORDER BY l.fecha_llegada DESC, l.id_llegada DESC LIMIT ? OFFSET ?",
             this::mapear, numeroGuia, "%" + numeroGuia + "%", limite, desplazamiento);
     }
@@ -56,7 +56,7 @@ public class JdbcLlegadaRepository implements LlegadaRepository {
     @Override
     public long contar(String numeroGuia) {
         Long total = jdbc.queryForObject("SELECT count(*) FROM llegada " +
-            "WHERE (? = '' OR lower(numero_guia) LIKE lower(?))", Long.class,
+            "WHERE visible_en_listado AND (? = '' OR lower(numero_guia) LIKE lower(?))", Long.class,
             numeroGuia, "%" + numeroGuia + "%");
         return total == null ? 0 : total;
     }

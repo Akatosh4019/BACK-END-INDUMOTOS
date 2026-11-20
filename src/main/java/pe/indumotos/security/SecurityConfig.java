@@ -70,6 +70,7 @@ public class SecurityConfig {
                     "/api/v1/usuarios/*/permisos/*")
                     .access(exige("PERMISOS_ASIGNAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/llegadas").access(exige("LLEGADAS_REGISTRAR"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/llegadas/con-guia").access(exige("LLEGADAS_REGISTRAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/llegadas").access(exige("INVENTARIO_CONSULTAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/llegadas/**").access(exige("INVENTARIO_CONSULTAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/motocicletas").access(exige("FICHAS_REGISTRAR"))

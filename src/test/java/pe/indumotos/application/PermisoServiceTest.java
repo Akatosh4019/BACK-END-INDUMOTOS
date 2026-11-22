@@ -42,6 +42,14 @@ class PermisoServiceTest {
     }
 
     @Test
+    void soloAdministracionPuedeGestionarCatalogoAunqueSeIntenteAsignarExcepcion() {
+        assertTrue(service.permitido("admin", "CATALOGO_GESTIONAR"));
+        assertFalse(service.permitido("miguel", "CATALOGO_GESTIONAR"));
+        assertThrows(ResponseStatusException.class,
+            () -> service.guardarExcepcion(2, "CATALOGO_GESTIONAR", "PERMITIR"));
+    }
+
+    @Test
     void privilegiosAdministrativosNoSeConcedenAUnRolOperativo() {
         assertThrows(ResponseStatusException.class,
             () -> service.guardarExcepcion(2, "USUARIOS_CREAR", "PERMITIR"));
@@ -56,7 +64,7 @@ class PermisoServiceTest {
         private final Map<String, String> excepciones = new HashMap<>();
         private boolean activo = true;
         private final List<String> codigos = List.of("USUARIOS_CREAR", "PERMISOS_ASIGNAR",
-            "LLEGADAS_REGISTRAR", "FICHAS_REGISTRAR", "INVENTARIO_CONSULTAR");
+            "LLEGADAS_REGISTRAR", "FICHAS_REGISTRAR", "INVENTARIO_CONSULTAR", "CATALOGO_GESTIONAR");
 
         @Override public Cuenta buscarPorNombre(String nombre) {
             return switch (nombre) {
@@ -77,7 +85,7 @@ class PermisoServiceTest {
         @Override public List<Asignacion> asignaciones(long usuarioId) {
             return codigos.stream().map(c -> new Asignacion(c,
                 switch (roles.get(usuarioId)) {
-                    case "ADMIN" -> List.of("USUARIOS_CREAR", "PERMISOS_ASIGNAR", "INVENTARIO_CONSULTAR").contains(c);
+                    case "ADMIN" -> List.of("USUARIOS_CREAR", "PERMISOS_ASIGNAR", "INVENTARIO_CONSULTAR", "CATALOGO_GESTIONAR").contains(c);
                     case "ALMACEN" -> List.of("LLEGADAS_REGISTRAR", "INVENTARIO_CONSULTAR").contains(c);
                     default -> List.of("FICHAS_REGISTRAR", "INVENTARIO_CONSULTAR").contains(c);
                 }, excepciones.get(usuarioId + ":" + c))).toList();

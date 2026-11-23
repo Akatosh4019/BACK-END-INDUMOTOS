@@ -52,4 +52,20 @@ class VentasServiceTest {
             "facturador",null,8L,"PAGO-8","F001-8",java.math.BigDecimal.TEN));
         assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
     }
+
+    @Test
+    @SuppressWarnings({"unchecked","rawtypes"})
+    void motoConDiferenciaPendienteNoSeVende() {
+        when(jdbc.query(anyString(),(RowMapper)any(RowMapper.class),eq("facturador")))
+            .thenReturn(java.util.Collections.singletonList(new Object[]{"FACTURACION",4L}));
+        when(jdbc.queryForObject(anyString(),eq(Boolean.class),eq(4L))).thenReturn(true);
+        when(jdbc.query(anyString(),(RowMapper)any(RowMapper.class),eq(8L)))
+            .thenReturn(List.of(8L));
+        when(jdbc.queryForObject(org.mockito.ArgumentMatchers.contains("diferencia_datos"),eq(Boolean.class),eq(8L)))
+            .thenReturn(true);
+        var error=assertThrows(ResponseStatusException.class,()->ventas.registrar(
+            "facturador",null,8L,"PAGO-8","F001-8",java.math.BigDecimal.TEN));
+        assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
+        assertEquals("La moto tiene una diferencia de datos en revisión",error.getReason());
+    }
 }

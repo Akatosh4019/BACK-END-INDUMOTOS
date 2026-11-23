@@ -1,5 +1,7 @@
 # Sprint 2 · Indumotos
 
+> Este expediente recoge el estado de las tareas originales cuando se escribió. Para los ajustes posteriores de catálogo, OCR, borradores, estados de guías, pruebas y Docker, consulta [la guía vigente](../SISTEMA_IMPLEMENTADO.md).
+
 Trabajo realizado sobre la rama `sprint-2` de los repositorios existentes de backend y web. No se han modificado Android ni modelos manuales.
 
 | Historia | Entrega verificable | Estado |

@@ -5,7 +5,7 @@ Esta guía describe el código actual del backend y su relación con la web. Cub
 ## Arquitectura y datos
 
 - Java 21 y Spring Boot. `presentation` expone la API HTTP, `application` contiene los casos de uso, `domain` los registros del negocio e `infrastructure` la persistencia JDBC y la seguridad.
-- PostgreSQL almacena cuentas, permisos, llegadas, fotos, borradores, motocicletas, catálogo, solicitudes, asignaciones, ubicaciones, envíos y eventos. Flyway aplica migraciones V1 a V25; no se editan migraciones ya aplicadas.
+- PostgreSQL almacena cuentas, permisos, llegadas, fotos, borradores, motocicletas, catálogo, solicitudes, asignaciones, ubicaciones, envíos, ventas, disponibilidad y casos de diferencias. Flyway aplica migraciones V1 a V29; no se editan migraciones ya aplicadas.
 - En Docker Compose, `api` se conecta a `db` por la red interna y PostgreSQL usa el volumen `indumotos_pgdata`. Reiniciar o reconstruir contenedores no borra el volumen. `docker compose down -v` sí lo elimina.
 - La web Angular usa JWT Bearer. En Docker: navegador → Nginx (`127.0.0.1:4200`) → gateway (`gateway:8030`) → API (`api:8080`) → PostgreSQL. La API comprueba los permisos; el gateway no reemplaza esa comprobación.
 
@@ -66,9 +66,18 @@ V25 precarga las ubicaciones `PURUCHUCO_ALM` y `PURUCHUCO_TIENDA`, que represent
 3. Comprobar `http://127.0.0.1:8080/api/health` y revisar `docker compose logs --tail=100 api` si falla.
 4. Para pruebas con Maven y Java 21: `mvn test`. Si Maven no está instalado localmente, usar el contenedor Maven con el repositorio montado.
 
-En la última ejecución observada de esta rama pasaron **84 pruebas backend** y Flyway llegó a **V25** en PostgreSQL local. Eso no reemplaza la revisión visual ni una prueba de cierre real de guía con datos aprobados. Los resúmenes fechados en `docs/SPRINT 2/` documentan el estado de sus entregas originales y pueden contener verificaciones pendientes que después se resolvieron.
+En la última ejecución observada de esta rama pasaron **89 pruebas backend** y Flyway llegó a **V29** en PostgreSQL local. Eso no reemplaza la revisión visual ni una prueba de cierre real de guía con datos aprobados. Los resúmenes fechados en `docs/SPRINT 2/` documentan el estado de sus entregas originales y pueden contener verificaciones pendientes que después se resolvieron.
 
 ## Trabajo aún abierto
+
+### Modos laborales y ventas agregados después de Sprint 2
+
+Administración usa `GET /api/v1/modos/compania` para ver stock y ventas por tienda y `PUT /api/v1/usuarios/{id}/tienda` para asignar una sede a Comercial o Facturación. Esas cuentas solo consultan `GET /api/v1/modos/tienda`, `/stock` y `/ventas` de su tienda asignada; Administración elige `tiendaId`. Las listas de unidades y ventas son de 10 por página. `POST /api/v1/modos/tienda/ventas` exige `VENTAS_REGISTRAR`, que corresponde a Facturación y Administración, y recibe una moto concreta, referencia de pago confirmado, referencia de boleta/factura e importe. La API bloquea la ficha en la transacción y rechaza otra sede, tránsito, moto vendida o comprobante repetido. La venta deja la moto fuera del stock y bloquea nuevos traslados o asignaciones. Flyway V26–V28 conserva las migraciones anteriores y distingue quién registró la venta de quien trató al cliente.
+
+Este módulo **no cobra ni emite comprobantes**: el trabajador debe verificar esos hechos en el proceso externo. La entrevista 4 señala que Comercial inicia reposición y Facturación actualiza stock; la regla de pago más boleta/factura procede de una transcripción automática de la entrevista 5 todavía sin validación del entrevistado.
+
+Sprint 3 agrega V29: `disponibilidad_evento` y `diferencia_datos`. `GET /api/v1/disponibilidad?chasis=...` calcula estado según venta, tránsito, bloqueo, asignación y ubicación; `POST /api/v1/motocicletas/{id}/disponibilidad` registra cambios con motivo e historial. Facturación reporta en `POST /api/v1/diferencias`; Inventarios revisa `GET /api/v1/diferencias` y resuelve mediante `POST /api/v1/diferencias/{id}/resolucion`. La corrección de ficha y el cierre se guardan en una transacción. Comercial solo consulta disponibilidad. La validación visual y una discrepancia real autorizada siguen pendientes.
+
 
 - Probar visualmente cada rol y guardar capturas reales en las carpetas de evidencia correspondientes.
 - Medir OCR con varias guías reales: Tesseract puede confundir caracteres de chasis y DUA. Mantener confirmación humana.

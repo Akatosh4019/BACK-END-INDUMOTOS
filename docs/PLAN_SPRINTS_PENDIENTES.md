@@ -1,4 +1,4 @@
-# Indumotos: análisis para terminar la web
+# Indumotos: alcance y verificación de Sprint 3
 
 Análisis del backlog local `Product Backlog - Indumotos - puntuacion y tarjetas completas.xlsx` (hojas «Sprint 3», «Puntuación general» y «DoR y DoD») frente al código y `docs/SISTEMA_IMPLEMENTADO.md` de la rama `sprint-2`. Es un plan, no una declaración de historias terminadas. Android queda fuera del alcance solicitado.
 
@@ -6,18 +6,18 @@ Análisis del backlog local `Product Backlog - Indumotos - puntuacion y tarjetas
 
 - Sprint 1 y Sprint 2 tienen flujos web y API implementados: acceso por rol, llegadas con fotos, OCR asistido, borradores de fichas, inventario, catálogo, solicitudes, asignación, despacho, recepción y ubicación confirmada. El cierre de Sprint 2 aún necesita revisión visual por rol, evidencia y prueba de punta a punta con una guía autorizada. La regla de anulación de HU-27 sigue por acordar.
 - El backlog **solo asigna un sprint posterior: Sprint 3** (HU-10 a HU-13, 16 puntos propuestos). Las otras 11 HU son candidatas **sin sprint ni fecha**; los puntos son estimaciones preliminares, no compromiso. No existe un Sprint 4 formal en esta fuente.
-- No se encontró en el código un flujo de estado comercial de disponibilidad ni de incidencias por datos para HU-10 a HU-13. `usuario.estado` sí existe, y la lista paginada de cuentas también, pero falta el flujo auditado de desactivar/reactivar.
+- Después de este análisis se implementaron disponibilidad y diferencias (V29, API y web). `usuario.estado` sí existe, y la lista paginada de cuentas también, pero falta el flujo auditado de desactivar/reactivar.
 
 ## Sprint 3: disponibilidad e inconsistencias
 
-| HU | Qué falta implementar | Conexión con el sistema actual | Acordar antes de programar |
+| HU | Código implementado | Conexión con el sistema actual | Verificación o decisión pendiente |
 | --- | --- | --- | --- |
-| HU-10 Consultar disponibilidad | Mostrar estado vigente, motivo/fuente y fecha de cada unidad al buscarla por chasis o abrir su ficha. Avisar si no hay dato confiable. | Añadir al detalle/listado de `motocicleta` una proyección del último evento de disponibilidad. Comercial y facturación solo consultan según permiso; conservar la búsqueda por chasis/filtros, nunca exigir ID al trabajador. | Estados exactos y cuándo una unidad cuenta como disponible. |
-| HU-11 Cambiar disponibilidad | Cambio autorizado con estado previo/nuevo, fecha, actor y fuente o motivo; evitar sobrescribir historial. | Nueva tabla de eventos ligada por FK a `motocicleta`; endpoint de transición con validación de estados y permiso propio; web en ficha o módulo de disponibilidad. No inferir «vendida» solo porque salió de almacén o fue recibida en tienda. | Quién confirma pago/venta y qué comprobante o sistema externo aporta la verdad; sin integración automática presupuestada. |
-| HU-12 Reportar diferencia | Facturación registra moto, campo discrepante, valor observado, explicación y autor; Inventarios ve el caso pendiente. | Tabla de casos y eventos ligada a `motocicleta`; búsqueda por chasis, alta y bandeja paginada por estado; notificación dentro del sistema a Inventarios. | Campos obligatorios y responsable receptor. |
-| HU-13 Resolver diferencia | Investigación, fuente comprobada, valores anterior/corregido, responsable y cierre; aviso al reportante. | Vincular el caso a la edición existente de ficha (`FICHAS_EDITAR`), pero exigir permiso de resolución y transacción que guarde corrección y auditoría juntas. El caso se consulta desde la ficha. | Quién autoriza corregir y valida el cierre. |
+| HU-10 Consultar disponibilidad | Búsqueda por chasis y estado derivado de venta, tránsito, bloqueo, asignación y ubicación. Muestra motivo y sede. | Panel «Disponibilidad y datos» ligado a `motocicleta`, venta, envío y ubicación. | Validar con trabajadores los nombres de estados y casos sin dato confiable. |
+| HU-11 Cambiar disponibilidad | Facturación/Admin registra eventos `BLOQUEADA` o `HABILITADA` con motivo, autor y fecha; conserva historial. | V29 y API de disponibilidad; una venta se registra por el flujo de Facturación con pago y comprobante verificados. | Probar transiciones con casos reales; acordar estados comerciales adicionales. |
+| HU-12 Reportar diferencia | Facturación/Admin abre caso por moto y campo; Inventarios ve la bandeja de pendientes. | V29, API y panel con búsqueda por chasis; cada caso conserva autor y fecha. | Probar reporte real y confirmar si se necesita aviso externo. |
+| HU-13 Resolver diferencia | Inventarios/Admin contrasta fuente, corrige ficha y cierra caso en una transacción con valor anterior, nuevo, actor y fecha. | Reutiliza `EditarMotocicleta` y `FICHAS_EDITAR`; reportante ve el caso resuelto en su bandeja. | Validar corrección y cierre con una discrepancia autorizada. |
 
-**Secuencia técnica sugerida:** definir estados y permisos → migración Flyway V26 o posterior para eventos de disponibilidad y casos de diferencia, índices/FK y restricciones → API de consulta/transición/reporte/resolución → Angular con búsqueda y bandejas por rol → pruebas de permisos, transiciones, concurrencia, auditoría y flujo completo por gateway. No modificar migraciones V1–V25 ya aplicadas. Mantener `motocicleta` como entidad central; `llegada`, ubicación, solicitud y envío siguen representando hechos distintos.
+**Implementación:** Flyway V29 agrega eventos y casos; la API valida permisos y transiciones; Angular usa búsqueda y bandeja paginada por rol. Las pruebas automáticas y consultas de solo lectura por gateway pasaron; faltan pruebas visuales y un caso real autorizado. No se modificaron migraciones ya aplicadas. `motocicleta` sigue siendo la entidad central; llegada, ubicación, solicitud y envío son hechos distintos.
 
 **Regla de negocio clave:** ubicación física, reserva/asignación y disponibilidad comercial no son sinónimos. Una moto puede estar confirmada en una tienda y aun así no estar disponible para venta. La pantalla debe mostrar cada dimensión con su fuente y fecha.
 
@@ -45,3 +45,11 @@ Estas historias no se deben marcar `Done` solo por tener una pantalla parecida. 
 2. Confirmar reglas abiertas: anulación HU-27, disponibilidad/venta, correcciones, recepción con diferencias y responsabilidades. Registrar decisiones en este plan antes de cambiar el esquema.
 3. Ejecutar pruebas backend, compilación y pruebas Angular, migraciones en PostgreSQL y prueba por gateway; guardar capturas verdaderas en las carpetas de evidencia de cada tarea. No alterar datos reales para hacer coincidir una demo.
 4. Cuando el incremento esté aceptado, integrar `sprint-2` a `main` según el flujo del equipo. Este análisis no fusiona ramas ni implementa Sprint 3.
+
+## Ampliación: dos modos para trabajadores y ventas internas
+
+El enfoque acordado es para **trabajadores**. `Modo compañía` permite a Administración ver tiendas, stock y ventas y asignar una tienda a cuentas de Comercial o Facturación. `Modo tienda` limita a cada trabajador al stock y ventas de su sede; Administración puede abrir una tienda concreta. V26 guarda la asignación y las ventas por motocicleta, comprobante, importe, usuario y fecha; V27 agrega referencia del pago y mueve el permiso de registro a Facturación. V28 nombra al usuario como registrador, sin asumir que atendió al cliente.
+
+Según el resumen consolidado de la entrevista 4, Comercial origina la reposición y Facturación actualiza el estado del stock. La transcripción automática de la entrevista 5, aún sin validación del entrevistado, indica que la moto deja de estar disponible cuando el cliente paga y se emite boleta o factura. Por ello Facturación registra la venta solo después de verificar ambos hechos y aporta sus referencias. El sistema **no cobra** ni emite comprobantes. La API comprueba que la moto esté físicamente confirmada en esa tienda, sin tránsito ni venta anterior, y la bloquea durante la operación para evitar duplicados. Una moto vendida desaparece del stock y no puede asignarse o trasladarse como inventario disponible.
+
+La integración futura con Yape/banco exige definir proveedor, credenciales, conciliación y confirmación segura del pago; no se representa un cobro externo como si ya existiera. El catálogo público y checkout quedan fuera de esta etapa laboral. HU-10/11 todavía requieren decidir estados comerciales adicionales, como reserva, exhibición o indisponibilidad temporal.

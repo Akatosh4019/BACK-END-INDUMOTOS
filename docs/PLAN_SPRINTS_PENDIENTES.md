@@ -12,7 +12,7 @@ Análisis del backlog local `Product Backlog - Indumotos - puntuacion y tarjetas
 
 | HU | Código implementado | Conexión con el sistema actual | Verificación o decisión pendiente |
 | --- | --- | --- | --- |
-| HU-10 Consultar disponibilidad | Búsqueda por chasis y estado derivado de venta, tránsito, bloqueo, asignación y ubicación. Muestra motivo y sede. | Panel «Disponibilidad y datos» ligado a `motocicleta`, venta, envío y ubicación. | Validar con trabajadores los nombres de estados y casos sin dato confiable. |
+| HU-10 Consultar disponibilidad | Búsqueda por chasis y estado derivado de venta, tránsito, bloqueo, asignación y ubicación. Muestra motivo, fecha y sede. | Panel «Disponibilidad y datos» ligado a `motocicleta`, venta, envío y ubicación. | Validar con trabajadores los nombres de estados y casos sin dato confiable. |
 | HU-11 Cambiar disponibilidad | Facturación/Admin registra eventos `BLOQUEADA` o `HABILITADA` con motivo, autor y fecha; conserva historial. | V29 y API de disponibilidad; una venta se registra por el flujo de Facturación con pago y comprobante verificados. | Probar transiciones con casos reales; acordar estados comerciales adicionales. |
 | HU-12 Reportar diferencia | Facturación/Admin abre caso por moto y campo; Inventarios ve la bandeja de pendientes. | V29, API y panel con búsqueda por chasis; cada caso conserva autor y fecha. | Probar reporte real y confirmar si se necesita aviso externo. |
 | HU-13 Resolver diferencia | Inventarios/Admin contrasta fuente, corrige ficha y cierra caso en una transacción con valor anterior, nuevo, actor y fecha. | Reutiliza `EditarMotocicleta` y `FICHAS_EDITAR`; reportante ve el caso resuelto en su bandeja. | Validar corrección y cierre con una discrepancia autorizada. |

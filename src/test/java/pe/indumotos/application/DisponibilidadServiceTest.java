@@ -30,7 +30,7 @@ class DisponibilidadServiceTest {
         when(jdbc.query(anyString(),(RowMapper)org.mockito.ArgumentMatchers.any(RowMapper.class),eq(8L)))
             .thenReturn(List.of(8L))
             .thenReturn(List.of(new DisponibilidadService.Unidad(8,"IND-0008","Ronco","RZ","Negro",
-                "Tienda Puruchuco","VENDIDA","Pago y comprobante registrados")));
+                "Tienda Puruchuco","VENDIDA","Pago y comprobante registrados",null)));
         var error=assertThrows(ResponseStatusException.class,
             ()->servicio.cambiar(8,"HABILITADA","Revisión","facturador"));
         assertEquals(HttpStatus.CONFLICT,error.getStatusCode());

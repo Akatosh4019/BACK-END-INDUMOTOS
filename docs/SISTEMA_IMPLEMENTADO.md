@@ -1,6 +1,6 @@
 # Indumotos: sistema implementado en `sprint-2`
 
-Esta guía describe el código actual del backend y su relación con la web. Cubre los incrementos desarrollados de Sprint 1 y Sprint 2, más ajustes posteriores en la misma rama. No declara terminado todo el producto ni sustituye las historias, bitácoras o evidencias visuales.
+Esta guía describe el código actual del backend y su relación con la web. Cubre los incrementos desarrollados de Sprint 1 a Sprint 3 en la rama `sprint-2`. La aceptación visual y las historias sin sprint siguen pendientes; esta guía no sustituye las bitácoras ni las evidencias.
 
 ## Arquitectura y datos
 
@@ -13,10 +13,11 @@ Esta guía describe el código actual del backend y su relación con la web. Cub
 
 | Rol | Flujo principal |
 | --- | --- |
-| Administración | Crea cuentas, asigna roles y excepciones de permisos, gestiona marcas/modelos/colores y consulta módulos habilitados. `CATALOGO_GESTIONAR` está reservado a `ADMIN` desde V23. |
+| Administración | Crea cuentas, asigna roles y excepciones de permisos, gestiona catálogo y tiendas, consulta todas las sedes y puede registrar ventas y resolver casos según permisos. `CATALOGO_GESTIONAR` está reservado a `ADMIN` desde V23. |
 | Almacén | Registra una llegada con los datos y fotos de la guía; atiende solicitudes y prepara unidades según sus permisos. |
-| Inventarios | Consulta el inventario, registra fichas vinculadas a una guía pendiente, revisa borradores y finaliza el registro. Puede consultar ubicación e historial según sus permisos. |
-| Comercial | Solicita combinaciones del catálogo, cantidades y sede de destino; consulta el seguimiento. No modifica el catálogo. |
+| Inventarios | Consulta el inventario, registra fichas vinculadas a una guía pendiente, revisa borradores, finaliza el registro y resuelve diferencias de datos con fuente y corrección. |
+| Comercial | Solicita combinaciones del catálogo, cantidades y sede de destino; consulta seguimiento, stock y disponibilidad de su tienda. No modifica catálogo ni confirma ventas. |
+| Facturación | Consulta su tienda; tras verificar pago y boleta/factura registra la venta y reporta diferencias de datos. |
 | Ensamblaje | Participa en operaciones de seguimiento según los permisos asignados. |
 
 La matriz efectiva se calcula desde `rol_permiso` y `usuario_permiso`; `DENEGAR` prevalece. Un permiso administrativo sensible no puede concederse por excepción a un rol no administrador. La API relee el estado de la cuenta y sus permisos para cada solicitud protegida.

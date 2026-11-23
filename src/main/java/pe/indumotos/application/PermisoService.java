@@ -109,6 +109,7 @@ public class PermisoService {
     private boolean sensible(String codigo) {
         return "USUARIOS_CREAR".equals(codigo) || "PERMISOS_ASIGNAR".equals(codigo)
             || "CATALOGO_GESTIONAR".equals(codigo)
-            || "COMPANIA_CONSULTAR".equals(codigo);
+            || "COMPANIA_CONSULTAR".equals(codigo)
+            || "USUARIOS_CONSULTAR".equals(codigo) || "USUARIOS_DESACTIVAR".equals(codigo);
     }
 }

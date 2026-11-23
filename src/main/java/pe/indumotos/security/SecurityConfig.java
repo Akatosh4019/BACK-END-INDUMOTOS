@@ -84,7 +84,11 @@ public class SecurityConfig {
                     .access(exigeTodos("DIFERENCIAS_RESOLVER","FICHAS_EDITAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/modos/tienda", "/api/v1/modos/tienda/**")
                     .access(exige("TIENDA_CONSULTAR"))
-                .requestMatchers(HttpMethod.GET, "/api/v1/usuarios").access(exigeAlguno("USUARIOS_CREAR", "PERMISOS_ASIGNAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/usuarios")
+                    .access(exigeAlguno("USUARIOS_CREAR", "PERMISOS_ASIGNAR", "USUARIOS_CONSULTAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/usuarios/*", "/api/v1/usuarios/*/estado/historial")
+                    .access(exige("USUARIOS_CONSULTAR"))
+                .requestMatchers(HttpMethod.PUT, "/api/v1/usuarios/*/estado").access(exige("USUARIOS_DESACTIVAR"))
                 .requestMatchers("/api/v1/usuarios/*/rol", "/api/v1/usuarios/*/permisos",
                     "/api/v1/usuarios/*/permisos/*")
                     .access(exige("PERMISOS_ASIGNAR"))
@@ -172,9 +176,15 @@ public class SecurityConfig {
         org.springframework.security.core.userdetails.UserDetails user;
         try { user = userDetailsService(jdbc).loadUserByUsername(jwt.getSubject()); }
         catch (org.springframework.security.core.userdetails.UsernameNotFoundException ex) {
-            throw new org.springframework.security.oauth2.jwt.BadJwtException("Cuenta no disponible");
+            throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Cuenta no disponible");
         }
-        if (!user.isEnabled()) throw new org.springframework.security.oauth2.jwt.BadJwtException("Cuenta inactiva");
+        if (!user.isEnabled()) throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Cuenta inactiva");
+        // HU-16: un cambio de estado cierra las sesiones abiertas antes de ese momento.
+        java.time.OffsetDateTime validasDesde = jdbc.query(
+            "SELECT sesiones_validas_desde FROM usuario WHERE nombre_usuario = ?",
+            rs -> rs.next() ? rs.getObject(1, java.time.OffsetDateTime.class) : null, jwt.getSubject());
+        if (validasDesde != null && (jwt.getIssuedAt() == null || jwt.getIssuedAt().isBefore(validasDesde.toInstant())))
+            throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Sesión cerrada por cambio de estado");
         return new JwtAuthenticationToken(jwt, user.getAuthorities(), user.getUsername());
     }
 }

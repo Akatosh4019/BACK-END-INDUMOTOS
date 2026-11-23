@@ -16,6 +16,6 @@ PostgreSQL usa el volumen `indumotos_pgdata`; no ejecutes `docker compose down -
 
 ## Pruebas
 
-Con Java 21 y Maven: `mvn test`. La última suite observada en esta rama completó **81 pruebas** sin fallos y Flyway llegó a **V23** en la base local. La revisión visual por rol y la finalización de una guía real siguen pendientes de validación humana.
+Con Java 21 y Maven: `mvn test`. La última suite observada en esta rama completó **84 pruebas** sin fallos y Flyway llegó a **V25** en la base local. La revisión visual por rol y la finalización de una guía real siguen pendientes de validación humana.
 
 La web Angular y el gateway están en el repositorio `SISTEMA-WEB-INDUMOTOS` y se inician después del backend.

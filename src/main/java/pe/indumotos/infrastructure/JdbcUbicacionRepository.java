@@ -48,6 +48,25 @@ public class JdbcUbicacionRepository implements UbicacionRepository {
     }
 
     @Override
+    public boolean enTransito(long id) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM " +
+            "envio_solicitud_motocicleta WHERE id_motocicleta=? AND recibido_en IS NULL)",
+            Boolean.class,id));
+    }
+
+    @Override
+    public boolean reservadaSinEntrega(long id) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM " +
+            "solicitud_ensamblaje_unidad a JOIN solicitud_ensamblaje_detalle d " +
+            "ON d.id_detalle=a.id_detalle JOIN solicitud_ensamblaje_estado_actual e " +
+            "ON e.id_solicitud=d.id_solicitud WHERE a.id_motocicleta=? AND a.retirada_en IS NULL " +
+            "AND e.estado IN ('EN_PREPARACION','ATENDIDA') AND NOT EXISTS " +
+            "(SELECT 1 FROM envio_solicitud_motocicleta t WHERE t.id_solicitud=d.id_solicitud " +
+            "AND t.id_motocicleta=a.id_motocicleta AND t.recibido_en IS NOT NULL))",
+            Boolean.class,id));
+    }
+
+    @Override
     public Movimiento actual(long motocicletaId) {
         return jdbc.query("SELECT m.id_movimiento, m.id_motocicleta, m.id_origen, m.id_destino, " +
                 "d.nombre AS destino_nombre, m.tipo, u.nombre_usuario, m.ocurrido_en " +

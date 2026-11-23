@@ -5,7 +5,7 @@ Esta guía describe el código actual del backend y su relación con la web. Cub
 ## Arquitectura y datos
 
 - Java 21 y Spring Boot. `presentation` expone la API HTTP, `application` contiene los casos de uso, `domain` los registros del negocio e `infrastructure` la persistencia JDBC y la seguridad.
-- PostgreSQL almacena cuentas, permisos, llegadas, fotos, borradores, motocicletas, catálogo, solicitudes, asignaciones, ubicaciones y eventos. Flyway aplica migraciones V1 a V23; no se editan migraciones ya aplicadas.
+- PostgreSQL almacena cuentas, permisos, llegadas, fotos, borradores, motocicletas, catálogo, solicitudes, asignaciones, ubicaciones, envíos y eventos. Flyway aplica migraciones V1 a V25; no se editan migraciones ya aplicadas.
 - En Docker Compose, `api` se conecta a `db` por la red interna y PostgreSQL usa el volumen `indumotos_pgdata`. Reiniciar o reconstruir contenedores no borra el volumen. `docker compose down -v` sí lo elimina.
 - La web Angular usa JWT Bearer. En Docker: navegador → Nginx (`127.0.0.1:4200`) → gateway (`gateway:8030`) → API (`api:8080`) → PostgreSQL. La API comprueba los permisos; el gateway no reemplaza esa comprobación.
 
@@ -28,7 +28,7 @@ La matriz efectiva se calcula desde `rol_permiso` y `usuario_permiso`; `DENEGAR`
 3. Inventarios consulta `GET /api/v1/llegadas/pagina?estado=PENDIENTE&pagina=0`. El filtro por número de guía es opcional. La paginación de llegadas usa 10 registros. `GET /api/v1/llegadas/{id}/detalle` devuelve fichas vinculadas y diferencia entre recibidas y fichas.
 4. `GET /api/v1/llegadas/{id}/sugerencias-ocr` ejecuta Tesseract local sobre **todas** las fotos. Solo propone campos; puede omitir o leer mal caracteres. No registra motocicletas. Una persona debe comparar chasis, motor, DUA, ítem, marca, modelo y color con la guía.
 5. Cada bloque se conserva mediante `PUT /api/v1/llegadas/{id}/registro/borradores/{posicion}` en `borrador_motocicleta` (V21). `GET /api/v1/llegadas/{id}/registro` permite reanudar desde otra sesión o equipo. Guardar un borrador todavía no crea una fila en `motocicleta`.
-6. `POST /api/v1/llegadas/{id}/registro/finalizar` comprueba que el número de borradores más las fichas existentes iguale la cantidad recibida. En una transacción valida e incorpora las motos, elimina los borradores, conserva quién y cuándo terminó en `registro_guia` y cambia `llegada.estado_registro` a `CONFIRMADA`. Ante un error, el lote se revierte. La guía pasa a la lista de confirmadas y ya no admite registros nuevos.
+6. `POST /api/v1/llegadas/{id}/registro/finalizar` recibe `almacenId` y comprueba que el número de borradores más las fichas existentes iguale la cantidad recibida. En una transacción valida e incorpora las motos, registra su primera ubicación confirmada en ese almacén, elimina los borradores, conserva quién y cuándo terminó en `registro_guia` y cambia `llegada.estado_registro` a `CONFIRMADA`. Ante un error, el lote se revierte. La guía pasa a la lista de confirmadas y ya no admite registros nuevos.
 
 Los identificadores `id` de las rutas relacionan registros internamente. El trabajador busca por **número de guía** o **chasis/filtros**, no necesita buscar por ID. El catálogo (`catalogo_motocicleta`, V18) ofrece las combinaciones válidas y solo Administración puede agregar nuevas.
 
@@ -49,8 +49,15 @@ Los identificadores `id` de las rutas relacionan registros internamente. El trab
 | `GET /api/v1/motocicletas` | Buscar por chasis completo/últimos cuatro dígitos, marca, modelo, color | `INVENTARIO_CONSULTAR` |
 | `POST /api/v1/catalogo-motocicletas` | Agregar combinación | `CATALOGO_GESTIONAR`, exclusivo de `ADMIN` |
 | `GET/POST /api/v1/solicitudes`, rutas de seguimiento y asignación | Solicitudes y preparación | Permisos específicos de cada acción |
+| `GET /api/v1/solicitudes/{id}/envios` y `GET /api/v1/motocicletas/{id}/envio-activo` | Consultar salida y tránsito | `SOLICITUDES_CONSULTAR` y `UBICACIONES_CONSULTAR` respectivamente |
+| `POST /api/v1/solicitudes/{id}/envios/despacho` | Almacén registra la salida de las unidades asignadas | `TRASLADOS_REGISTRAR` |
+| `POST /api/v1/solicitudes/{id}/envios/recepcion` con `motocicletaId` | Solicitante o admin confirma una unidad físicamente recibida | `RECEPCIONES_CONFIRMAR` |
 
 La lista completa de rutas y reglas está en `src/main/java/pe/indumotos/security/SecurityConfig.java` y los controladores de `presentation`. El backend devuelve 401 sin sesión válida y 403 cuando falta permiso.
+
+La preparación `ATENDIDA` no mueve físicamente las motos. V24 guarda un envío por moto asociada a la solicitud. Almacén puede registrar la salida solo si todas están asignadas y su última ubicación confirmada es un almacén; durante el tránsito esa ubicación no se sustituye. La recepción de cada moto requiere a quien hizo la solicitud o a Administración y crea un movimiento `TRASLADO` con origen, tienda de destino, usuario y fecha. Un traslado manual se bloquea mientras exista un envío abierto. No se inventaron ubicaciones para fichas históricas: al finalizar una guía se elige explícitamente el almacén receptor.
+
+V25 precarga las ubicaciones `PURUCHUCO_ALM` y `PURUCHUCO_TIENDA`, que representan almacén y tienda en Puruchuco. Se distinguen como áreas de custodia aunque compartan local. Administración puede añadir otras ubicaciones reales desde la web.
 
 ## Arranque y verificación
 
@@ -59,7 +66,7 @@ La lista completa de rutas y reglas está en `src/main/java/pe/indumotos/securit
 3. Comprobar `http://127.0.0.1:8080/api/health` y revisar `docker compose logs --tail=100 api` si falla.
 4. Para pruebas con Maven y Java 21: `mvn test`. Si Maven no está instalado localmente, usar el contenedor Maven con el repositorio montado.
 
-En la última ejecución observada de esta rama pasaron **81 pruebas backend** y Flyway llegó a **V23** en PostgreSQL local. Eso no reemplaza la revisión visual ni una prueba de cierre real de guía con datos aprobados. Los resúmenes fechados en `docs/SPRINT 2/` documentan el estado de sus entregas originales y pueden contener verificaciones pendientes que después se resolvieron.
+En la última ejecución observada de esta rama pasaron **84 pruebas backend** y Flyway llegó a **V25** en PostgreSQL local. Eso no reemplaza la revisión visual ni una prueba de cierre real de guía con datos aprobados. Los resúmenes fechados en `docs/SPRINT 2/` documentan el estado de sus entregas originales y pueden contener verificaciones pendientes que después se resolvieron.
 
 ## Trabajo aún abierto
 

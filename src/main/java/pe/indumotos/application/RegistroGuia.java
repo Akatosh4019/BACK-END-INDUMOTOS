@@ -16,10 +16,12 @@ public class RegistroGuia {
 
     private final JdbcTemplate jdbc;
     private final RegistrarMotocicleta registrar;
+    private final UbicacionRepository ubicaciones;
 
-    public RegistroGuia(JdbcTemplate jdbc, RegistrarMotocicleta registrar) {
+    public RegistroGuia(JdbcTemplate jdbc, RegistrarMotocicleta registrar, UbicacionRepository ubicaciones) {
         this.jdbc = jdbc;
         this.registrar = registrar;
+        this.ubicaciones = ubicaciones;
     }
 
     public Estado consultar(long id) {
@@ -67,9 +69,12 @@ public class RegistroGuia {
     }
 
     @Transactional
-    public Estado finalizar(long id, String usuario) {
+    public Estado finalizar(long id, long almacenId, String usuario) {
         int recibidas = bloquear(id);
         if (terminado(id)) throw conflicto("Esta guía ya está terminada.");
+        var almacen = ubicaciones.sede(almacenId);
+        if (almacen == null || !"ALMACEN".equals(almacen.tipo()))
+            throw invalido("Selecciona el almacén que recibió la guía.");
         Estado estado = consultar(id);
         int pendientes = recibidas - estado.registradas();
         if (pendientes < 0 || estado.borradores().size() != pendientes)
@@ -80,6 +85,15 @@ public class RegistroGuia {
             registrar.ejecutar(id,b.marca(),b.modelo(),b.color(),b.chasisCompleto(),
                 b.numeroMotor(),b.dua(),b.itemDua(),usuario);
         }
+        var motos = jdbc.query("SELECT id_motocicleta FROM motocicleta WHERE id_llegada=? ORDER BY id_motocicleta",
+            (rs, fila) -> rs.getLong(1), id);
+        for (long motoId : motos) {
+            var actual = ubicaciones.actual(motoId);
+            if (actual == null) ubicaciones.registrar(motoId, almacenId, usuario);
+            else if (actual.destinoId() != almacenId)
+                throw conflicto("Una moto de la guía figura en otro lugar. Revisa su ubicación antes de finalizar.");
+        }
+        jdbc.update("UPDATE llegada SET id_almacen_recepcion=? WHERE id_llegada=?", almacenId, id);
         jdbc.update("DELETE FROM borrador_motocicleta WHERE id_llegada=?",id);
         jdbc.update("INSERT INTO registro_guia(id_llegada,terminado_en,terminado_por) " +
             "SELECT ?,CURRENT_TIMESTAMP,id_usuario FROM usuario WHERE nombre_usuario=? " +

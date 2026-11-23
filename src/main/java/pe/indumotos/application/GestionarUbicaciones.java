@@ -37,6 +37,9 @@ public class GestionarUbicaciones {
     public UbicacionRepository.Movimiento registrar(long motocicletaId, long destinoId, String usuario) {
         verificarMotocicleta(motocicletaId);
         repository.bloquearMotocicleta(motocicletaId);
+        if (repository.enTransito(motocicletaId))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "La moto está en tránsito; confirma su recepción desde la solicitud.");
         var sede = repository.sede(destinoId);
         if (sede == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ubicación inexistente o inactiva");
         var actual = repository.actual(motocicletaId);
@@ -49,12 +52,18 @@ public class GestionarUbicaciones {
     public UbicacionRepository.Movimiento trasladar(long motocicletaId, long destinoId, String usuario) {
         verificarMotocicleta(motocicletaId);
         repository.bloquearMotocicleta(motocicletaId);
+        if (repository.enTransito(motocicletaId))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "La moto está en tránsito; confirma su recepción desde la solicitud.");
         var anterior=repository.actual(motocicletaId);
+        if (repository.reservadaSinEntrega(motocicletaId))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "La moto está asignada a una solicitud; registra su salida desde esa solicitud.");
         if (anterior == null)
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Registre primero la ubicación conocida");
         var destino=repository.sede(destinoId);
-        if (destino == null || !java.util.Set.of("TIENDA","DESPACHO").contains(destino.tipo()))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"El destino debe ser una tienda o despacho activo");
+        if (destino == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"El destino debe ser una ubicación activa");
         if (anterior.destinoId() == destinoId)
             throw new ResponseStatusException(HttpStatus.CONFLICT,"La motocicleta ya está en ese destino");
         return repository.trasladar(motocicletaId,anterior.destinoId(),destinoId,usuario);

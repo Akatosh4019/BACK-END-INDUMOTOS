@@ -94,6 +94,12 @@ public class SecurityConfig {
                     .access(exige("SOLICITUDES_ANULAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes/*/seguimiento")
                     .access(exige("SOLICITUDES_AVANZAR"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes/*/envios/despacho")
+                    .access(exige("TRASLADOS_REGISTRAR"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes/*/envios/recepcion")
+                    .access(exige("RECEPCIONES_CONFIRMAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/solicitudes/*/envios")
+                    .access(exige("SOLICITUDES_CONSULTAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/motocicletas/elegibles")
                     .access(exige("UNIDADES_ASIGNAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes/*/lineas/*/unidades")
@@ -107,7 +113,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/motocicletas/*/traslados")
                     .access(exige("TRASLADOS_REGISTRAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/motocicletas/*/ubicacion",
-                    "/api/v1/motocicletas/*/ubicacion/historial")
+                    "/api/v1/motocicletas/*/ubicacion/historial",
+                    "/api/v1/motocicletas/*/envio-activo")
                     .access(exige("UBICACIONES_CONSULTAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/motocicletas/**").access(exige("INVENTARIO_CONSULTAR"))
                 .anyRequest().denyAll())

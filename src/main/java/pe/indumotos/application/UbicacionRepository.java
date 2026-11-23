@@ -13,6 +13,8 @@ public interface UbicacionRepository {
     boolean existeMotocicleta(long id);
     Sede sede(long id);
     void bloquearMotocicleta(long id);
+    boolean enTransito(long id);
+    boolean reservadaSinEntrega(long id);
     Movimiento actual(long motocicletaId);
     List<Movimiento> historial(long motocicletaId);
     Movimiento registrar(long motocicletaId, long destinoId, String usuario);

@@ -24,7 +24,9 @@ public class VentasService {
         return jdbc.query("SELECT t.id_ubicacion,t.nombre,"+
             "(SELECT count(*) FROM motocicleta_ubicacion_actual a WHERE a.id_ubicacion=t.id_ubicacion " +
             "AND NOT EXISTS(SELECT 1 FROM venta_motocicleta v WHERE v.id_motocicleta=a.id_motocicleta) " +
-            "AND NOT EXISTS(SELECT 1 FROM envio_solicitud_motocicleta e WHERE e.id_motocicleta=a.id_motocicleta AND e.recibido_en IS NULL)),"+
+            "AND NOT EXISTS(SELECT 1 FROM envio_solicitud_motocicleta e WHERE e.id_motocicleta=a.id_motocicleta AND e.recibido_en IS NULL) " +
+            "AND coalesce((SELECT d.estado FROM disponibilidad_evento d WHERE d.id_motocicleta=a.id_motocicleta " +
+            "ORDER BY d.id_evento DESC LIMIT 1),'HABILITADA') <> 'BLOQUEADA'),"+
             "(SELECT count(*) FROM venta_motocicleta v WHERE v.id_tienda=t.id_ubicacion) " +
             "FROM ubicacion t WHERE t.tipo='TIENDA' AND t.activo ORDER BY t.nombre",
             (rs,n)->new Tienda(rs.getLong(1),rs.getString(2),rs.getLong(3),rs.getLong(4)));
@@ -73,7 +75,9 @@ public class VentasService {
         long id=tienda(usuario,elegida); validarPagina(pagina);
         String from=" FROM motocicleta m JOIN motocicleta_ubicacion_actual a ON a.id_motocicleta=m.id_motocicleta " +
             "WHERE a.id_ubicacion=? AND NOT EXISTS(SELECT 1 FROM venta_motocicleta v WHERE v.id_motocicleta=m.id_motocicleta) " +
-            "AND NOT EXISTS(SELECT 1 FROM envio_solicitud_motocicleta e WHERE e.id_motocicleta=m.id_motocicleta AND e.recibido_en IS NULL)";
+            "AND NOT EXISTS(SELECT 1 FROM envio_solicitud_motocicleta e WHERE e.id_motocicleta=m.id_motocicleta AND e.recibido_en IS NULL) " +
+            "AND coalesce((SELECT d.estado FROM disponibilidad_evento d WHERE d.id_motocicleta=m.id_motocicleta " +
+            "ORDER BY d.id_evento DESC LIMIT 1),'HABILITADA') <> 'BLOQUEADA'";
         long total=jdbc.queryForObject("SELECT count(*)"+from,Long.class,id);
         var items=jdbc.query("SELECT m.id_motocicleta,m.chasis_completo,m.marca,m.modelo,m.color"+from+
             " ORDER BY m.marca,m.modelo,m.chasis_completo LIMIT 10 OFFSET ?",
@@ -107,7 +111,9 @@ public class VentasService {
         boolean disponible=Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM " +
             "motocicleta_ubicacion_actual a WHERE a.id_motocicleta=? AND a.id_ubicacion=? " +
             "AND NOT EXISTS(SELECT 1 FROM venta_motocicleta v WHERE v.id_motocicleta=a.id_motocicleta) " +
-            "AND NOT EXISTS(SELECT 1 FROM envio_solicitud_motocicleta e WHERE e.id_motocicleta=a.id_motocicleta AND e.recibido_en IS NULL))",
+            "AND NOT EXISTS(SELECT 1 FROM envio_solicitud_motocicleta e WHERE e.id_motocicleta=a.id_motocicleta AND e.recibido_en IS NULL) " +
+            "AND coalesce((SELECT d.estado FROM disponibilidad_evento d WHERE d.id_motocicleta=a.id_motocicleta " +
+            "ORDER BY d.id_evento DESC LIMIT 1),'HABILITADA') <> 'BLOQUEADA')",
             Boolean.class,motoId,id));
         if(!disponible) throw error(HttpStatus.CONFLICT,"Moto vendida, en tránsito o fuera de esta tienda");
         try { jdbc.update("INSERT INTO venta_motocicleta(id_motocicleta,id_tienda,id_registrador,referencia_pago,referencia_comprobante,importe) " +

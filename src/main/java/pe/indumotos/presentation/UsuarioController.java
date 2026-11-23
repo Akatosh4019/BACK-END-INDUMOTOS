@@ -39,7 +39,7 @@ public class UsuarioController {
         @NotBlank @Size(max=50) @Pattern(regexp="[A-Za-z_]+") String rolCodigo) {}
     public record UsuarioCreado(Long id, String nombreCompleto, String nombreUsuario, String rolCodigo) {}
     public record UsuarioListado(Long id, String nombreCompleto, String nombreUsuario,
-        String rolCodigo, String estado) {}
+        String rolCodigo, String estado, Long tiendaId, String tiendaNombre) {}
     public record PaginaUsuarios(List<UsuarioListado> items, int pagina, int tamano, long totalElementos) {}
 
     @GetMapping
@@ -59,16 +59,18 @@ public class UsuarioController {
             && !filtroEstado.equals("ACTIVO") && !filtroEstado.equals("INACTIVO")))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Filtro no válido");
         String condiciones = " FROM usuario u JOIN rol r ON r.id_rol=u.id_rol "
+            + "LEFT JOIN usuario_tienda ut ON ut.id_usuario=u.id_usuario "
+            + "LEFT JOIN ubicacion ti ON ti.id_ubicacion=ut.id_tienda "
             + "WHERE (? = '' OR strpos(lower(u.nombre_usuario), lower(?)) > 0 "
             + "OR strpos(lower(u.nombre_completo), lower(?)) > 0) "
             + "AND (? = '' OR r.codigo = ?) AND (? = '' OR u.estado = ?)";
         Object[] parametros = {filtro, filtro, filtro, filtroRol, filtroRol, filtroEstado, filtroEstado};
         Long total = jdbc.queryForObject("SELECT count(*)" + condiciones, Long.class, parametros);
         List<UsuarioListado> cuentas = jdbc.query(
-            "SELECT u.id_usuario,u.nombre_completo,u.nombre_usuario,r.codigo,u.estado"
+            "SELECT u.id_usuario,u.nombre_completo,u.nombre_usuario,r.codigo,u.estado,ut.id_tienda,ti.nombre"
                 + condiciones + " ORDER BY u.nombre_usuario,u.id_usuario LIMIT ? OFFSET ?",
             (rs, row) -> new UsuarioListado(rs.getLong(1), rs.getString(2), rs.getString(3),
-                rs.getString(4), rs.getString(5)),
+                rs.getString(4), rs.getString(5),rs.getObject(6,Long.class),rs.getString(7)),
             filtro, filtro, filtro, filtroRol, filtroRol, filtroEstado, filtroEstado,
             tamano, (long) pagina * tamano);
         return new PaginaUsuarios(cuentas, pagina, tamano, total == null ? 0 : total);

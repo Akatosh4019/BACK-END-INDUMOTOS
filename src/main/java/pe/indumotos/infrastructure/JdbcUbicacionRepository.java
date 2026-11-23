@@ -55,6 +55,13 @@ public class JdbcUbicacionRepository implements UbicacionRepository {
     }
 
     @Override
+    public boolean vendida(long id) {
+        return Boolean.TRUE.equals(jdbc.queryForObject(
+            "SELECT EXISTS(SELECT 1 FROM venta_motocicleta WHERE id_motocicleta=?)",
+            Boolean.class,id));
+    }
+
+    @Override
     public boolean reservadaSinEntrega(long id) {
         return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM " +
             "solicitud_ensamblaje_unidad a JOIN solicitud_ensamblaje_detalle d " +

@@ -37,6 +37,8 @@ public class GestionarUbicaciones {
     public UbicacionRepository.Movimiento registrar(long motocicletaId, long destinoId, String usuario) {
         verificarMotocicleta(motocicletaId);
         repository.bloquearMotocicleta(motocicletaId);
+        if (repository.vendida(motocicletaId))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"La motocicleta ya fue vendida");
         if (repository.enTransito(motocicletaId))
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "La moto está en tránsito; confirma su recepción desde la solicitud.");
@@ -52,6 +54,8 @@ public class GestionarUbicaciones {
     public UbicacionRepository.Movimiento trasladar(long motocicletaId, long destinoId, String usuario) {
         verificarMotocicleta(motocicletaId);
         repository.bloquearMotocicleta(motocicletaId);
+        if (repository.vendida(motocicletaId))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"La motocicleta ya fue vendida");
         if (repository.enTransito(motocicletaId))
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "La moto está en tránsito; confirma su recepción desde la solicitud.");

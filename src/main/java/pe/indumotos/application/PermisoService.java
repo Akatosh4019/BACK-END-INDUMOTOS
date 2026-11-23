@@ -59,6 +59,10 @@ public class PermisoService {
         if (valor.equals("PERMITIR") && sensible(codigo) && !cuenta.rolCodigo().equals("ADMIN"))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                 "Este permiso está reservado al rol administrador");
+        if (valor.equals("PERMITIR") && codigo.equals("VENTAS_REGISTRAR")
+            && !java.util.Set.of("ADMIN", "FACTURACION").contains(cuenta.rolCodigo()))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                "Solo Facturación o Administración puede registrar ventas");
         repository.guardarExcepcion(usuarioId, codigo, valor);
         return consultar(usuarioId);
     }
@@ -93,6 +97,8 @@ public class PermisoService {
         if (!activa(cuenta)) return false;
         if ("DENEGAR".equals(p.excepcion())) return false;
         if (sensible(p.codigo()) && !"ADMIN".equals(cuenta.rolCodigo())) return false;
+        if ("VENTAS_REGISTRAR".equals(p.codigo())
+            && !java.util.Set.of("ADMIN", "FACTURACION").contains(cuenta.rolCodigo())) return false;
         return "PERMITIR".equals(p.excepcion()) || p.porRol();
     }
 
@@ -102,6 +108,7 @@ public class PermisoService {
 
     private boolean sensible(String codigo) {
         return "USUARIOS_CREAR".equals(codigo) || "PERMISOS_ASIGNAR".equals(codigo)
-            || "CATALOGO_GESTIONAR".equals(codigo);
+            || "CATALOGO_GESTIONAR".equals(codigo)
+            || "COMPANIA_CONSULTAR".equals(codigo);
     }
 }

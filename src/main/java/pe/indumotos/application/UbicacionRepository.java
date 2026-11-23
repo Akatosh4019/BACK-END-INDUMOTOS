@@ -14,6 +14,7 @@ public interface UbicacionRepository {
     Sede sede(long id);
     void bloquearMotocicleta(long id);
     boolean enTransito(long id);
+    boolean vendida(long id);
     boolean reservadaSinEntrega(long id);
     Movimiento actual(long motocicletaId);
     List<Movimiento> historial(long motocicletaId);

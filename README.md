@@ -2,6 +2,8 @@
 
 API compartida por la web de Indumotos. Implementa los incrementos existentes de Sprint 1 y Sprint 2 en la rama `sprint-2` con Java 21, Spring Boot, PostgreSQL, Flyway y Docker.
 
+**Rama de trabajo de Roberto Samuel Valencia Saavedra:** `sprint-2`. Los cambios de backend y base de datos de este incremento se integran y revisan desde esa rama antes de publicarlos en la rama principal.
+
 **Empieza por [la guía del sistema implementado](docs/SISTEMA_IMPLEMENTADO.md).** Explica arquitectura, roles, permisos, llegada → borradores → fichas, solicitudes, ubicaciones, API, pruebas y trabajo pendiente. El [expediente original de Sprint 2](docs/SPRINT%202/README.md) y las carpetas de evidencias conservan el contexto de cada historia; algunas notas históricas tienen estados de prueba anteriores.
 
 ## Iniciar con Docker

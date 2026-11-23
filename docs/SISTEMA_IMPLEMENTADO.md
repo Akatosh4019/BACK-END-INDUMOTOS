@@ -67,7 +67,7 @@ V25 precarga las ubicaciones `PURUCHUCO_ALM` y `PURUCHUCO_TIENDA`, que represent
 3. Comprobar `http://127.0.0.1:8080/api/health` y revisar `docker compose logs --tail=100 api` si falla.
 4. Para pruebas con Maven y Java 21: `mvn test`. Si Maven no está instalado localmente, usar el contenedor Maven con el repositorio montado.
 
-En la última ejecución observada de esta rama pasaron **89 pruebas backend** y Flyway llegó a **V29** en PostgreSQL local. Eso no reemplaza la revisión visual ni una prueba de cierre real de guía con datos aprobados. Los resúmenes fechados en `docs/SPRINT 2/` documentan el estado de sus entregas originales y pueden contener verificaciones pendientes que después se resolvieron.
+En la última ejecución observada de la rama `feature/gutierrez-hu16-hu17-hu22` pasaron **101 pruebas backend** y Flyway llegó a **V30** en un PostgreSQL 17 temporal. Eso no reemplaza la revisión visual ni una prueba de cierre real de guía con datos aprobados. Los resúmenes fechados en `docs/SPRINT 2/` documentan el estado de sus entregas originales y pueden contener verificaciones pendientes que después se resolvieron.
 
 ## Trabajo aún abierto
 
@@ -78,6 +78,16 @@ Administración usa `GET /api/v1/modos/compania` para ver stock y ventas por tie
 Este módulo **no cobra ni emite comprobantes**: el trabajador debe verificar esos hechos en el proceso externo. La entrevista 4 señala que Comercial inicia reposición y Facturación actualiza stock; la regla de pago más boleta/factura procede de una transcripción automática de la entrevista 5 todavía sin validación del entrevistado.
 
 Sprint 3 agrega V29: `disponibilidad_evento` y `diferencia_datos`. `GET /api/v1/disponibilidad?chasis=...` calcula estado según venta, tránsito, bloqueo, asignación y ubicación; `POST /api/v1/motocicletas/{id}/disponibilidad` registra cambios con motivo e historial. Facturación reporta en `POST /api/v1/diferencias`; Inventarios revisa `GET /api/v1/diferencias` y resuelve mediante `POST /api/v1/diferencias/{id}/resolucion`. La corrección de ficha y el cierre se guardan en una transacción. Comercial solo consulta disponibilidad. La validación visual y una discrepancia real autorizada siguen pendientes.
+
+#### HU-16, HU-17 y HU-22 adelantadas del backlog (`feature/gutierrez-hu16-hu17-hu22`)
+
+Estas historias no pertenecen al Sprint 3 oficial (HU-10 a HU-13); estaban en el backlog sin sprint asignado. La rama parte de `sprint-2` porque HU-22 usa V29.
+
+
+- **HU-17 Consultar cuenta.** `GET /api/v1/usuarios/{id}` devuelve estado, rol, tienda, fecha de creación, permisos efectivos, excepciones PERMITIR/DENEGAR y el último cambio de estado. Requiere `USUARIOS_CONSULTAR`, que solo puede tener Administración.
+- **HU-16 Desactivar o reactivar.** `PUT /api/v1/usuarios/{id}/estado` con `{estado, motivo}` requiere `USUARIOS_DESACTIVAR`. La cuenta no se borra. V30 guarda cada cambio en `usuario_estado_evento` (estado anterior y nuevo, motivo, quién y cuándo), consultable en `GET /api/v1/usuarios/{id}/estado/historial`. El cambio fija `usuario.sesiones_validas_desde`, por lo que los tokens emitidos antes responden 401 incluso tras reactivar. Se rechaza con 409 desactivar la propia cuenta, dejar sin administradores activos o repetir el estado actual.
+- **HU-22 Motivo de no disponibilidad.** La disponibilidad se decide con una función pura probada (`DisponibilidadService.derivar`) con prioridad VENDIDA, EN_TRANSITO, BLOQUEADA, EN_REVISION, ASIGNADA, SIN_UBICACION, DISPONIBLE. Cada unidad informa motivo, fecha, `registradoPor` y `puedeOfrecerse`. Una diferencia de datos pendiente pone la moto EN_REVISION, la retira del stock de tienda e impide venderla o habilitarla hasta resolver el caso.
+- **Corrección de seguridad.** Un token de una cuenta inactiva o con sesión cerrada respondía 500; ahora responde 401 para que la web cierre la sesión.
 
 
 - Probar visualmente cada rol y guardar capturas reales en las carpetas de evidencia correspondientes.

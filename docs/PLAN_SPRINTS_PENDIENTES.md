@@ -32,10 +32,10 @@ Análisis del backlog local `Product Backlog - Indumotos - puntuacion y tarjetas
 | HU-18 Consultar historial | Hay historial de ubicación y seguimiento de solicitud; definir si el DoD exige un historial unificado de **todos** los eventos de una moto, retención y actores visibles. |
 | HU-19 Seguir solicitud | Seguimiento y eventos implementados; verificar que Comercial solo vea sus solicitudes y no edite trabajo logístico. |
 | HU-20 Ver trabajo pendiente | Hay listas de guías y solicitudes; falta confirmar si se requiere una bandeja única con tipo, antigüedad, prioridad y enlace al original. |
-| HU-22 Ver motivo de no disponibilidad | Depende de HU-10/11: mostrar motivo registrado o «sin motivo registrado», sin inventarlo. |
+| HU-22 Ver motivo de no disponibilidad | Adelantada del backlog sin sprint e implementada en `feature/gutierrez-hu16-hu17-hu22`: cada consulta devuelve un solo estado (VENDIDA, EN_TRANSITO, BLOQUEADA, EN_REVISION, ASIGNADA, SIN_UBICACION o DISPONIBLE), su motivo, fecha, quién lo registró y `puedeOfrecerse`. Una diferencia de datos pendiente deja la moto EN_REVISION y bloquea su venta. Falta validación visual con usuarios. |
 | HU-24 Reportar incidencia física | No confundir con error de datos (HU-12); definir incidentes por moto/movimiento, evidencias, estado y resolución. |
-| HU-16 Desactivar/reactivar cuenta | Existe `usuario.estado` y seguridad relee cuenta activa; faltan acciones autorizadas, revocación de sesiones y bitácora de cambios. |
-| HU-17 Consultar usuarios | Lista paginada de 10 y permisos implementados; comprobar acceso exclusivo de Administración y exposición mínima de datos personales. |
+| HU-16 Desactivar/reactivar cuenta | Adelantada del backlog sin sprint e implementada en `feature/gutierrez-hu16-hu17-hu22` (V30): `PUT /api/v1/usuarios/{id}/estado` con motivo obligatorio, bitácora `usuario_estado_evento`, cierre de sesiones abiertas, sin desactivar la propia cuenta ni al último administrador activo. Falta validación visual con usuarios. |
+| HU-17 Consultar usuarios | Adelantada del backlog sin sprint e implementada en `feature/gutierrez-hu16-hu17-hu22`: `GET /api/v1/usuarios/{id}` muestra estado, rol, tienda, permisos efectivos, excepciones y último cambio; permiso `USUARIOS_CONSULTAR` exclusivo de Administración. No expone contraseña ni datos personales adicionales. |
 
 Estas historias no se deben marcar `Done` solo por tener una pantalla parecida. Primero comparar cada DoD del Excel con pruebas y evidencia; después asignar las brechas a un sprint nuevo con capacidad y prioridad acordadas.
 

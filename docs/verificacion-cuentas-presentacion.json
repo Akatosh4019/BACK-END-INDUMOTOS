@@ -1,0 +1,98 @@
+{
+  "fecha": "2026-11-23T23:27:08-05:00",
+  "cuentas": [
+    {
+      "usuario": "admin.indumotos",
+      "rol": "ADMIN",
+      "login": 200,
+      "permisos": [
+        "CATALOGO_GESTIONAR",
+        "FICHAS_EDITAR",
+        "INVENTARIO_CONSULTAR",
+        "PERMISOS_ASIGNAR",
+        "SOLICITUDES_ANULAR",
+        "SOLICITUDES_AVANZAR",
+        "SOLICITUDES_CONSULTAR",
+        "SOLICITUDES_CREAR",
+        "TRASLADOS_REGISTRAR",
+        "UBICACIONES_CONSULTAR",
+        "UBICACIONES_REGISTRAR",
+        "UNIDADES_ASIGNAR",
+        "USUARIOS_CREAR"
+      ]
+    },
+    {
+      "usuario": "almacen.indumotos",
+      "rol": "ALMACEN",
+      "login": 200,
+      "permisos": [
+        "INVENTARIO_CONSULTAR",
+        "LLEGADAS_REGISTRAR",
+        "SOLICITUDES_AVANZAR",
+        "SOLICITUDES_CONSULTAR",
+        "TRASLADOS_REGISTRAR",
+        "UBICACIONES_CONSULTAR",
+        "UBICACIONES_REGISTRAR",
+        "UNIDADES_ASIGNAR"
+      ]
+    },
+    {
+      "usuario": "inventarios.indumotos",
+      "rol": "INVENTARIOS",
+      "login": 200,
+      "permisos": [
+        "FICHAS_EDITAR",
+        "FICHAS_REGISTRAR",
+        "INVENTARIO_CONSULTAR",
+        "UBICACIONES_CONSULTAR",
+        "UBICACIONES_REGISTRAR"
+      ]
+    },
+    {
+      "usuario": "comercial.indumotos",
+      "rol": "COMERCIAL",
+      "login": 200,
+      "permisos": [
+        "SOLICITUDES_ANULAR",
+        "SOLICITUDES_CONSULTAR",
+        "SOLICITUDES_CREAR",
+        "UBICACIONES_CONSULTAR"
+      ]
+    },
+    {
+      "usuario": "facturacion.indumotos",
+      "rol": "FACTURACION",
+      "login": 200,
+      "permisos": [
+        "INVENTARIO_CONSULTAR"
+      ]
+    },
+    {
+      "usuario": "ensamblaje.indumotos",
+      "rol": "ENSAMBLAJE",
+      "login": 200,
+      "permisos": [
+        "SOLICITUDES_AVANZAR",
+        "SOLICITUDES_CONSULTAR",
+        "UNIDADES_ASIGNAR"
+      ]
+    }
+  ],
+  "catalogo": [
+    {
+      "marca": "Honda",
+      "modelo": "Wave",
+      "color": "Rojo"
+    },
+    {
+      "marca": "Suzuki",
+      "modelo": "GN 125",
+      "color": "Amarillo"
+    },
+    {
+      "marca": "Yamaha",
+      "modelo": "FZ",
+      "color": "Azul"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "fecha": "2026-11-23T23:19:56-05:00",
+  "base": "indumotos_s2_paridad_20261123",
+  "respaldoBytes": 266483,
+  "respaldoSha256": "0539dadc57530e109c80bea3b14c1281871887e44f2d3d282685de271e446fac",
+  "respaldoVerificado": "pg_restore --list: tablas usuario y catalogo presentes",
+  "usuarios": [
+    {
+      "id": 1,
+      "usuario": "admin.indumotos",
+      "rol": "ADMIN",
+      "estado": "ACTIVO"
+    },
+    {
+      "id": 2,
+      "usuario": "administracion.indumotos",
+      "rol": "ADMIN",
+      "estado": "INACTIVO"
+    },
+    {
+      "id": 3,
+      "usuario": "almacen.indumotos",
+      "rol": "ALMACEN",
+      "estado": "ACTIVO"
+    },
+    {
+      "id": 4,
+      "usuario": "inventarios.indumotos",
+      "rol": "INVENTARIOS",
+      "estado": "ACTIVO"
+    },
+    {
+      "id": 5,
+      "usuario": "comercial.indumotos",
+      "rol": "COMERCIAL",
+      "estado": "ACTIVO"
+    },
+    {
+      "id": 6,
+      "usuario": "facturacion.indumotos",
+      "rol": "FACTURACION",
+      "estado": "ACTIVO"
+    },
+    {
+      "id": 7,
+      "usuario": "ensamblaje.indumotos",
+      "rol": "ENSAMBLAJE",
+      "estado": "ACTIVO"
+    }
+  ],
+  "catalogo": {
+    "id": 3,
+    "marca": "Suzuki",
+    "modelo": "GN 125",
+    "color": "Amarillo"
+  },
+  "conservado": "IDs, relaciones, roles, permisos, historial; sin migraciones ni recrear base",
+  "password": "Actualizada localmente por instrucción del responsable; BCrypt, no texto plano",
+  "sedes": [
+    {
+      "id": 1,
+      "nombre": "Almacén central",
+      "codigo": "ALMACEN-CENTRAL"
+    },
+    {
+      "id": 2,
+      "nombre": "Tienda principal",
+      "codigo": "TIENDA-PRINCIPAL"
+    },
+    {
+      "id": 3,
+      "nombre": "Almacén auxiliar",
+      "codigo": "ALMACEN-AUXILIAR"
+    },
+    {
+      "id": 4,
+      "nombre": "Tienda de apoyo",
+      "codigo": "TIENDA-APOYO"
+    }
+  ],
+  "guias": [
+    {
+      "id": 1,
+      "nombre": "Prueba 1",
+      "nombreAnterior": "ACADEMICO-S2-20261119161232"
+    },
+    {
+      "id": 2,
+      "nombre": "Prueba 2",
+      "nombreAnterior": "QA20261123185147"
+    },
+    {
+      "id": 3,
+      "nombre": "Prueba 3",
+      "nombreAnterior": "QA-CAS-20261123223029"
+    }
+  ],
+  "permisoFacturacion": {
+    "codigo": "INVENTARIO_CONSULTAR",
+    "autorizacion": "Responsable aprobó solo consulta",
+    "escrituras": "Sin nuevos permisos; cinco rechazos403 verificados"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "fecha": "2026-11-23T23:27:34-05:00",
+  "cuenta": "facturacion.indumotos",
+  "permiso": "INVENTARIO_CONSULTAR",
+  "casos": [
+    {
+      "caso": "Consultar inventario",
+      "http": 200,
+      "esperado": 200
+    },
+    {
+      "caso": "Consultar ficha",
+      "http": 200,
+      "esperado": 200
+    },
+    {
+      "caso": "Crear ficha",
+      "http": 403,
+      "esperado": 403
+    },
+    {
+      "caso": "Editar ficha",
+      "http": 403,
+      "esperado": 403
+    },
+    {
+      "caso": "Registrar llegada",
+      "http": 403,
+      "esperado": 403
+    },
+    {
+      "caso": "Trasladar",
+      "http": 403,
+      "esperado": 403
+    },
+    {
+      "caso": "Crear cuenta",
+      "http": 403,
+      "esperado": 403
+    }
+  ]
+}

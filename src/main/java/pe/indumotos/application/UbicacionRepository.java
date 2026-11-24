@@ -8,8 +8,17 @@ public interface UbicacionRepository {
     record Movimiento(long id, long motocicletaId, Long origenId, long destinoId,
         String destinoNombre, String tipo, String registrador, OffsetDateTime fecha) {}
 
+    record SedeDetalle(long id, String codigo, String nombre, String tipo, String referencia, boolean activo) {}
+
     List<Sede> sedes();
-    Sede crearSede(String codigo, String nombre, String tipo);
+    List<SedeDetalle> todasLasSedes();
+    SedeDetalle bloquearSede(long id);
+    Sede crearSede(String codigo, String nombre, String tipo, String referencia);
+    SedeDetalle actualizarSede(long id, String nombre, String tipo, String referencia);
+    SedeDetalle cambiarEstadoSede(long id, boolean activo);
+    /** Motivo por el que la sede no puede desactivarse todavía, o null si está libre. */
+    String usoVigente(long id);
+    boolean tieneHistorial(long id);
     boolean existeMotocicleta(long id);
     Sede sede(long id);
     void bloquearMotocicleta(long id);

@@ -16,12 +16,48 @@ public class GestionarUbicaciones {
 
     public List<UbicacionRepository.Sede> sedes() { return repository.sedes(); }
 
+    private static final java.util.Set<String> TIPOS = java.util.Set.of("ALMACEN", "TIENDA", "TALLER", "DESPACHO");
+
+    public List<UbicacionRepository.SedeDetalle> todasLasSedes() { return repository.todasLasSedes(); }
+
     public UbicacionRepository.Sede crearSede(String codigo, String nombre, String tipo) {
-        if (codigo == null || codigo.isBlank() || nombre == null || nombre.isBlank() ||
-            tipo == null || !java.util.Set.of("ALMACEN", "TIENDA", "TALLER", "DESPACHO").contains(tipo))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datos de ubicación no válidos");
-        return repository.crearSede(codigo.trim(), nombre.trim(), tipo);
+        return crearSede(codigo, nombre, tipo, null);
     }
+
+    public UbicacionRepository.Sede crearSede(String codigo, String nombre, String tipo, String referencia) {
+        if (codigo == null || codigo.isBlank() || nombre == null || nombre.isBlank() ||
+            tipo == null || !TIPOS.contains(tipo) || (referencia != null && referencia.length() > 300))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datos de ubicación no válidos");
+        return repository.crearSede(codigo.trim(), nombre.trim(), tipo, limpiar(referencia));
+    }
+
+    /** El código no cambia porque identifica a la sede; el tipo solo cambia si la sede aún no se usó. */
+    @Transactional
+    public UbicacionRepository.SedeDetalle editarSede(long id, String nombre, String tipo, String referencia) {
+        if (nombre == null || nombre.isBlank() || nombre.length() > 120 || tipo == null || !TIPOS.contains(tipo)
+            || (referencia != null && referencia.length() > 300))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datos de ubicación no válidos");
+        var actual = repository.bloquearSede(id);
+        if (actual == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ubicación no encontrada");
+        if (!actual.tipo().equals(tipo) && repository.tieneHistorial(id))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "No se puede cambiar el tipo de una sede que ya tiene movimientos, solicitudes o cuentas");
+        return repository.actualizarSede(id, nombre.trim(), tipo, limpiar(referencia));
+    }
+
+    @Transactional
+    public UbicacionRepository.SedeDetalle cambiarEstadoSede(long id, boolean activo) {
+        var actual = repository.bloquearSede(id);
+        if (actual == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ubicación no encontrada");
+        if (actual.activo() == activo) return actual;
+        if (!activo) {
+            String uso = repository.usoVigente(id);
+            if (uso != null) throw new ResponseStatusException(HttpStatus.CONFLICT, uso);
+        }
+        return repository.cambiarEstadoSede(id, activo);
+    }
+
+    private String limpiar(String texto) { return texto == null || texto.isBlank() ? null : texto.trim(); }
 
     public UbicacionRepository.Movimiento actual(long motocicletaId) {
         verificarMotocicleta(motocicletaId);

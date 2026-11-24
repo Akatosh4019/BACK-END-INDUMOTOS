@@ -12,6 +12,7 @@ import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.stereotype.Component;
 
 import java.sql.PreparedStatement;
+import java.io.IOException;
 
 /** Loads predictable sample data only for the local Docker demo profile. */
 @Component
@@ -39,5 +40,21 @@ public class DemoDataBootstrap implements ApplicationRunner {
                     new ClassPathResource("db/demo/datos_prueba_visual.sql"));
             return null;
         });
+        cargarFoto("GUIA-DEMO-001", 1, "GUIA-DEMO-001.png");
+        cargarFoto("GUIA-DEMO-002", 1, "GUIA-DEMO-002.png");
+    }
+
+    private void cargarFoto(String numeroGuia, int orden, String nombre) {
+        try (var archivo = new ClassPathResource("db/demo/guias/" + nombre).getInputStream()) {
+            byte[] contenido = archivo.readAllBytes();
+            jdbc.update("INSERT INTO llegada_guia_imagen " +
+                "(id_llegada,orden,nombre_archivo,tipo_mime,tamano,contenido) " +
+                "SELECT l.id_llegada,?::smallint,?,'image/png',?,? FROM llegada l " +
+                "WHERE l.id_llegada=(SELECT min(id_llegada) FROM llegada WHERE numero_guia=?) " +
+                "ON CONFLICT (id_llegada,orden) DO NOTHING",
+                orden, nombre, contenido.length, contenido, numeroGuia);
+        } catch (IOException ex) {
+            throw new IllegalStateException("No se pudo cargar la imagen de demostración de " + numeroGuia, ex);
+        }
     }
 }

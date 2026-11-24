@@ -16,7 +16,7 @@ public class JdbcSolicitudRepository implements SolicitudRepository {
     @Override
     public boolean destinoActivo(long id) {
         return Boolean.TRUE.equals(jdbc.queryForObject(
-            "SELECT EXISTS(SELECT 1 FROM ubicacion WHERE id_ubicacion = ? AND activo)", Boolean.class, id));
+            "SELECT EXISTS(SELECT 1 FROM ubicacion WHERE id_ubicacion = ? AND activo AND tipo='TIENDA')", Boolean.class, id));
     }
 
     @Override

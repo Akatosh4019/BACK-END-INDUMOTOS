@@ -79,7 +79,7 @@ class GestionarUbicacionesTest {
         when(repository.existeMotocicleta(9)).thenReturn(true);
         when(repository.actual(9)).thenReturn(new UbicacionRepository.Movimiento(
             1, 9, null, 2, "Almacen", "UBICACION", "almacen", null));
-        when(repository.sede(3)).thenReturn(new UbicacionRepository.Sede(3, "TAL", "Taller", "TALLER"));
+        when(repository.sede(3)).thenReturn(null);
         assertEquals(HttpStatus.BAD_REQUEST, assertThrows(ResponseStatusException.class,
             () -> servicio.trasladar(9, 3, "almacen")).getStatusCode());
         when(repository.sede(2)).thenReturn(new UbicacionRepository.Sede(2, "ALM", "Almacen", "TIENDA"));
@@ -97,5 +97,25 @@ class GestionarUbicacionesTest {
         servicio.trasladar(9, 3, "roberto");
         verify(repository).bloquearMotocicleta(9);
         verify(repository).trasladar(9, 2, 3, "roberto");
+    }
+
+    @Test
+    void noPermiteTrasladoManualMientrasLaMotoEstaEnTransito() {
+        when(repository.existeMotocicleta(9)).thenReturn(true);
+        when(repository.enTransito(9)).thenReturn(true);
+        var error = assertThrows(ResponseStatusException.class,
+            () -> servicio.trasladar(9,3,"almacen"));
+        assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
+        verify(repository,never()).trasladar(anyLong(),anyLong(),anyLong(),anyString());
+    }
+
+    @Test
+    void noPermiteSaltarseElDespachoDeUnaMotoAsignada() {
+        when(repository.existeMotocicleta(9)).thenReturn(true);
+        when(repository.reservadaSinEntrega(9)).thenReturn(true);
+        var error = assertThrows(ResponseStatusException.class,
+            () -> servicio.trasladar(9,3,"almacen"));
+        assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
+        verify(repository,never()).trasladar(anyLong(),anyLong(),anyLong(),anyString());
     }
 }

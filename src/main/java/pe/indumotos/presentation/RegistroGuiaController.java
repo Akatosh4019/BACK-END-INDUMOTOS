@@ -1,6 +1,9 @@
 package pe.indumotos.presentation;
 
 import java.util.Map;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -32,9 +35,12 @@ public class RegistroGuiaController {
     }
 
     @PostMapping("/finalizar")
-    public RegistroGuia.Estado finalizar(@PathVariable long id, Authentication usuario) {
-        return registro.finalizar(id,usuario.getName());
+    public RegistroGuia.Estado finalizar(@PathVariable long id, @Valid @RequestBody AlmacenRecepcion datos,
+        Authentication usuario) {
+        return registro.finalizar(id,datos.almacenId(),usuario.getName());
     }
+
+    public record AlmacenRecepcion(@NotNull @Positive Long almacenId) {}
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String,String>> error(ResponseStatusException ex) {

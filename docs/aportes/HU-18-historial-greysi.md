@@ -59,3 +59,9 @@ En el esquema main: 93 pruebas pasaron, cero omitidas, con PostgreSQL habilitado
 Mostrar búsqueda por chasis, elección de una moto y respuesta de historial con fecha/actor. Demostrar una búsqueda por fechas y una cuenta sin permiso. Explicar que el aporte lee los eventos del sistema existente y no vuelve a implementar usuarios, disponibilidad o ventas.
 
 Para atribución en GitHub: el commit debe usar el correo vinculado a GreysiLL. La rama y el PR evidencian el aporte antes de integrarlo; el panel Contributors solo lo cuenta tras integrarlo a la rama predeterminada, según las reglas de GitHub. La aprobación y fusión corresponden al equipo.
+
+## Cómo verlo y demostrarlo en IntelliJ
+
+Esta entrega todavía no añade una pantalla en Angular. Su salida es JSON y se consulta desde IntelliJ HTTP Client o Postman. El archivo HU-18-demostracion.http deja preparadas las peticiones en orden: health, login, búsqueda existente, historial completo, filtro por fecha y comprobación sin sesión. Reemplazar las variables en el cliente, sin versionar credenciales. No suponer que health ok confirma que la imagen ejecutada ya contiene este aporte.
+
+Para demostrar el backend inmediatamente sin reconstruir Docker ni modificar datos, abrir src/test/java/pe/indumotos/presentation/HistorialMotocicletaAccesoTest.java y ejecutar la clase con la flecha verde: prueba la API y su seguridad con datos simulados. La prueba SQL real está en HistorialMotocicletaPostgresTest.java, con tablas temporales y rollback; requiere las variables PostgreSQL indicadas arriba. El servicio de la rama debe estar ejecutándose para demostrarlo con datos del sistema mediante HTTP.

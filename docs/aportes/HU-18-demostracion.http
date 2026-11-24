@@ -1,0 +1,33 @@
+### HU-18 — demostración del backend desde IntelliJ HTTP Client / Postman
+# Ejecutar la API desde feature/greysi-hu18-historial antes de esta demostración.
+# La API que ya está en 8080 puede ser una imagen anterior sin este endpoint.
+# Configurar usuario, clave, token, chasis y motoId en un entorno privado del cliente.
+# No guardar contraseñas ni tokens en el repositorio.
+
+### 1. Comprobar que la API responde
+GET http://127.0.0.1:8080/api/health
+
+### 2. Iniciar sesión con una cuenta que tenga INVENTARIO_CONSULTAR
+POST http://127.0.0.1:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "nombreUsuario": "{{usuario}}",
+  "clave": "{{clave}}"
+}
+
+### 3. Usar accessToken de la respuesta anterior como token
+# Elegir una coincidencia por modelo, color y chasis; no asumir que un sufijo es único.
+GET http://127.0.0.1:8080/api/v1/motocicletas?chasis={{chasis}}&pagina=0&tamano=20
+Authorization: Bearer {{token}}
+
+### 4. Consultar el ID de la moto elegida, sin limitar fechas
+GET http://127.0.0.1:8080/api/v1/motocicletas/{{motoId}}/historial-integral?pagina=0&tamano=20
+Authorization: Bearer {{token}}
+
+### 5. Demostrar filtro por días completos (hora de Perú)
+GET http://127.0.0.1:8080/api/v1/motocicletas/{{motoId}}/historial-integral?desde=2026-11-01&hasta=2026-11-24&pagina=0&tamano=20
+Authorization: Bearer {{token}}
+
+### 6. Demostrar protección: debe responder 401 sin sesión
+GET http://127.0.0.1:8080/api/v1/motocicletas/{{motoId}}/historial-integral

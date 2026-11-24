@@ -44,7 +44,7 @@ class VentasServiceTest {
         when(jdbc.query(anyString(),(RowMapper)any(RowMapper.class),eq("facturador")))
             .thenReturn(java.util.Collections.singletonList(new Object[]{"FACTURACION",4L}));
         when(jdbc.queryForObject(anyString(),eq(Boolean.class),eq(4L))).thenReturn(true);
-        when(jdbc.query(anyString(),(RowMapper)any(RowMapper.class),eq(8L)))
+        when(jdbc.query(org.mockito.ArgumentMatchers.contains("FOR UPDATE"),(RowMapper)any(RowMapper.class),eq(8L)))
             .thenReturn(List.of(8L));
         when(jdbc.queryForObject(anyString(),eq(Boolean.class),eq(8L),eq(4L)))
             .thenReturn(false);
@@ -59,7 +59,7 @@ class VentasServiceTest {
         when(jdbc.query(anyString(),(RowMapper)any(RowMapper.class),eq("facturador")))
             .thenReturn(java.util.Collections.singletonList(new Object[]{"FACTURACION",4L}));
         when(jdbc.queryForObject(anyString(),eq(Boolean.class),eq(4L))).thenReturn(true);
-        when(jdbc.query(anyString(),(RowMapper)any(RowMapper.class),eq(8L)))
+        when(jdbc.query(org.mockito.ArgumentMatchers.contains("FOR UPDATE"),(RowMapper)any(RowMapper.class),eq(8L)))
             .thenReturn(List.of(8L));
         when(jdbc.queryForObject(org.mockito.ArgumentMatchers.contains("diferencia_datos"),eq(Boolean.class),eq(8L)))
             .thenReturn(true);

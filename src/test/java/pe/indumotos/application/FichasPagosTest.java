@@ -1,0 +1,8 @@
+package pe.indumotos.application;
+import org.junit.jupiter.api.Test;import static org.junit.jupiter.api.Assertions.*;import java.math.BigDecimal;import java.io.ByteArrayOutputStream;import java.awt.image.BufferedImage;import javax.imageio.ImageIO;
+class FichasPagosTest {
+ @Test void imagenDebeSerRealYNoSoloExtension()throws Exception{assertThrows(org.springframework.web.server.ResponseStatusException.class,()->ImagenAdjunta.validar("imagen-falsa".getBytes()));var out=new ByteArrayOutputStream();ImageIO.write(new BufferedImage(32,32,BufferedImage.TYPE_INT_RGB),"png",out);assertEquals("image/png",ImagenAdjunta.validar(out.toByteArray()));}
+ @Test void rechazaImagenGigante(){assertThrows(org.springframework.web.server.ResponseStatusException.class,()->ImagenAdjunta.validar(new byte[5*1024*1024+1]));}
+ @Test void validaCamposTecnicosOpcionales(){FichaAmpliada.validar(new FichaAmpliada.Datos(null,null,null,null,null,0));assertThrows(org.springframework.web.server.ResponseStatusException.class,()->FichaAmpliada.validar(new FichaAmpliada.Datos(1800,125,"Manual","Gasolina",null,0)));}
+ @Test void soloMetodosYMontosPermitidos(){PagosManuales.validar("YAPE","Yape","Prueba1",new BigDecimal("100.25"));assertThrows(org.springframework.web.server.ResponseStatusException.class,()->PagosManuales.validar("OTRO","Banco","Prueba1",BigDecimal.ONE));assertThrows(org.springframework.web.server.ResponseStatusException.class,()->PagosManuales.validar("PLIN","Plin","Prueba1",new BigDecimal("1.001")));assertThrows(org.springframework.web.server.ResponseStatusException.class,()->PagosManuales.validar("PLIN","Plin","Prueba1",new BigDecimal("1e20")));}
+}

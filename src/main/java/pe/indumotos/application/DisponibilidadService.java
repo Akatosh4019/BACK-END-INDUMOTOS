@@ -65,7 +65,10 @@ public class DisponibilidadService {
                 rs.getString(17),rs.getObject(18,OffsetDateTime.class),rs.getString(19),
                 rs.getObject(20,OffsetDateTime.class),rs.getString(21)),id);
         if(lista.isEmpty())throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Moto no encontrada");
-        return derivar(lista.getFirst());
+        var unidad=derivar(lista.getFirst());
+        if(unidad.puedeOfrecerse()&&Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM pago_venta WHERE id_motocicleta=? AND estado='PENDIENTE')",Boolean.class,id)))
+            return new Unidad(unidad.id(),unidad.chasis(),unidad.marca(),unidad.modelo(),unidad.color(),unidad.ubicacion(),"PAGO_PENDIENTE","Comprobante de pago en revisión",unidad.actualizadoEn(),unidad.registradoPor(),false);
+        return unidad;
     }
 
     /**

@@ -24,6 +24,7 @@ public class VentasService {
         return jdbc.query("SELECT t.id_ubicacion,t.nombre,"+
             "(SELECT count(*) FROM motocicleta_ubicacion_actual a WHERE a.id_ubicacion=t.id_ubicacion " +
             "AND NOT EXISTS(SELECT 1 FROM venta_motocicleta v WHERE v.id_motocicleta=a.id_motocicleta) " +
+            "AND NOT EXISTS(SELECT 1 FROM pago_venta pv WHERE pv.id_motocicleta=a.id_motocicleta AND pv.estado='PENDIENTE') " +
             "AND NOT EXISTS(SELECT 1 FROM envio_solicitud_motocicleta e WHERE e.id_motocicleta=a.id_motocicleta AND e.recibido_en IS NULL) " +
             "AND coalesce((SELECT d.estado FROM disponibilidad_evento d WHERE d.id_motocicleta=a.id_motocicleta " +
             "ORDER BY d.id_evento DESC LIMIT 1),'HABILITADA') <> 'BLOQUEADA' " +
@@ -75,7 +76,7 @@ public class VentasService {
     public Pagina<Moto> stock(String usuario,Long elegida,int pagina) {
         long id=tienda(usuario,elegida); validarPagina(pagina);
         String from=" FROM motocicleta m JOIN motocicleta_ubicacion_actual a ON a.id_motocicleta=m.id_motocicleta " +
-            "WHERE a.id_ubicacion=? AND NOT EXISTS(SELECT 1 FROM venta_motocicleta v WHERE v.id_motocicleta=m.id_motocicleta) " +
+            "WHERE a.id_ubicacion=? AND NOT EXISTS(SELECT 1 FROM pago_venta pv WHERE pv.id_motocicleta=m.id_motocicleta AND pv.estado='PENDIENTE') AND NOT EXISTS(SELECT 1 FROM venta_motocicleta v WHERE v.id_motocicleta=m.id_motocicleta) " +
             "AND NOT EXISTS(SELECT 1 FROM envio_solicitud_motocicleta e WHERE e.id_motocicleta=m.id_motocicleta AND e.recibido_en IS NULL) " +
             "AND coalesce((SELECT d.estado FROM disponibilidad_evento d WHERE d.id_motocicleta=m.id_motocicleta " +
             "ORDER BY d.id_evento DESC LIMIT 1),'HABILITADA') <> 'BLOQUEADA' " +
@@ -103,6 +104,11 @@ public class VentasService {
 
     @Transactional
     public void registrar(String usuario,Long elegida,long motoId,String referenciaPago,String referencia,BigDecimal importe) {
+        registrar(usuario,elegida,motoId,referenciaPago,referencia,importe,null);
+    }
+
+    @Transactional
+    public void registrar(String usuario,Long elegida,long motoId,String referenciaPago,String referencia,BigDecimal importe,Long pagoPermitido) {
         long id=tienda(usuario,elegida);
         if(motoId<=0 || referenciaPago==null || referenciaPago.isBlank() || referenciaPago.trim().length()>100 ||
             referencia==null || referencia.isBlank() || referencia.trim().length()>100 ||
@@ -110,6 +116,8 @@ public class VentasService {
             throw error(HttpStatus.BAD_REQUEST,"Revisa la moto, confirmación de pago, comprobante e importe");
         if(jdbc.query("SELECT id_motocicleta FROM motocicleta WHERE id_motocicleta=? FOR UPDATE",
             (rs,n)->rs.getLong(1),motoId).isEmpty()) throw error(HttpStatus.NOT_FOUND,"Moto no encontrada");
+        var pendientes=jdbc.query("SELECT id_pago FROM pago_venta WHERE id_motocicleta=? AND estado='PENDIENTE'",(rs,n)->rs.getLong(1),motoId);
+        if(pendientes.stream().anyMatch(x->!x.equals(pagoPermitido)))throw error(HttpStatus.CONFLICT,"Hay un pago pendiente de revisión para esta moto");
         // HU-22: una moto con datos en revisión no se ofrece ni se vende hasta resolver la diferencia.
         if(Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM diferencia_datos " +
             "WHERE id_motocicleta=? AND estado='PENDIENTE')",Boolean.class,motoId)))

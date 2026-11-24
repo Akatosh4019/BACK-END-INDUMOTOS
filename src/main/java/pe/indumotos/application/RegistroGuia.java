@@ -50,7 +50,7 @@ public class RegistroGuia {
         for (String campo : campos) if (campo == null || campo.isBlank() || campo.length() > 120)
             throw invalido("Completa los siete campos; máximo 120 caracteres cada uno.");
         if (!Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM catalogo_motocicleta " +
-            "WHERE lower(btrim(marca))=lower(?) AND lower(btrim(modelo))=lower(?) AND lower(btrim(color))=lower(?))",
+            "WHERE habilitado AND lower(btrim(marca))=lower(?) AND lower(btrim(modelo))=lower(?) AND lower(btrim(color))=lower(?))",
             Boolean.class,b.marca().trim(),b.modelo().trim(),b.color().trim())))
             throw invalido("Selecciona una marca, modelo y color del catálogo.");
         if (Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM motocicleta WHERE upper(btrim(chasis_completo))=upper(btrim(?)))",

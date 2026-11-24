@@ -4,6 +4,9 @@ import java.util.List;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +28,17 @@ public class CatalogoMotocicletaController {
 
     @GetMapping
     public List<CatalogoMotocicletas.Opcion> listar() { return catalogo.listar(); }
+
+    @GetMapping("/administracion")
+    public List<CatalogoMotocicletas.Entrada> administrar() { return catalogo.administrar(); }
+
+    public record CambioEstado(@NotNull Boolean habilitado) {}
+
+    @PutMapping("/{id}/estado")
+    public CatalogoMotocicletas.Entrada cambiarEstado(@PathVariable long id,
+        @Valid @RequestBody CambioEstado datos) {
+        return catalogo.cambiarEstado(id, datos.habilitado());
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

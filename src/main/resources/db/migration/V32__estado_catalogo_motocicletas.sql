@@ -1,0 +1,1 @@
+ALTER TABLE catalogo_motocicleta ADD COLUMN habilitado BOOLEAN NOT NULL DEFAULT TRUE;

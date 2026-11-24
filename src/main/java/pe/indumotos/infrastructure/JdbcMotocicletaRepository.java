@@ -25,7 +25,7 @@ public class JdbcMotocicletaRepository implements MotocicletaRepository {
     @Override
     public boolean combinacionRegistrada(String marca, String modelo, String color) {
         return Boolean.TRUE.equals(jdbc.queryForObject(
-            "SELECT EXISTS(SELECT 1 FROM catalogo_motocicleta WHERE lower(btrim(marca))=lower(?) " +
+            "SELECT EXISTS(SELECT 1 FROM catalogo_motocicleta WHERE habilitado AND lower(btrim(marca))=lower(?) " +
             "AND lower(btrim(modelo))=lower(?) AND lower(btrim(color))=lower(?))",
             Boolean.class, marca, modelo, color));
     }

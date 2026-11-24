@@ -9,6 +9,30 @@ import pe.indumotos.domain.Motocicleta;
 
 class EditarMotocicletaTest {
     @Test
+    void permiteConservarUnaCombinacionHistoricaAunqueSeDeshabilite() {
+        var repo = mock(MotocicletaRepository.class);
+        var ficha = new Motocicleta(5L, 2L, "Honda", "XR", "Rojo", "CHASIS-001",
+            "MOTOR-01", "DUA-01", "01", "admin", OffsetDateTime.now());
+        when(repo.buscarPorId(5L)).thenReturn(ficha);
+        when(repo.buscarIdPorChasis("CHASIS-001")).thenReturn(Optional.of(5L));
+        when(repo.actualizar(5L, "Honda", "XR", "Rojo", "CHASIS-001", "MOTOR-02", "DUA-01", "01"))
+            .thenReturn(ficha);
+        assertNotNull(new EditarMotocicleta(repo).ejecutar(5L, "Honda", "XR", "Rojo",
+            "CHASIS-001", "MOTOR-02", "DUA-01", "01"));
+        verify(repo, never()).combinacionRegistrada(any(), any(), any());
+    }
+
+    @Test
+    void rechazaCambiarLaFichaAUnaCombinacionDeshabilitada() {
+        var repo = mock(MotocicletaRepository.class);
+        when(repo.buscarPorId(5L)).thenReturn(new Motocicleta(5L, 2L, "Honda", "XR", "Rojo",
+            "CHASIS-001", "MOTOR-01", "DUA-01", "01", "admin", OffsetDateTime.now()));
+        assertThrows(RegistrarMotocicleta.DatosInvalidos.class,
+            () -> new EditarMotocicleta(repo).ejecutar(5L, "Honda", "XR", "Azul",
+                "CHASIS-001", "MOTOR-01", "DUA-01", "01"));
+        verify(repo, never()).actualizar(anyLong(), any(), any(), any(), any(), any(), any(), any());
+    }
+    @Test
     void actualizaLaFichaExistenteSinCambiarSuLlegada() {
         var repo = mock(MotocicletaRepository.class);
         var ficha = new Motocicleta(5L, 2L, "Honda", "XR", "Rojo", "CHASIS-001",

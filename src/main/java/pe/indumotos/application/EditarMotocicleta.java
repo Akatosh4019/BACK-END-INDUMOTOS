@@ -16,7 +16,7 @@ public class EditarMotocicleta {
 
     public Motocicleta ejecutar(long id, String marca, String modelo, String color,
         String chasisCompleto, String numeroMotor, String dua, String itemDua) {
-        repository.buscarPorId(id);
+        var actual = repository.buscarPorId(id);
         Map<String, String> errores = new LinkedHashMap<>();
         obligatorio(errores, "marca", marca);
         obligatorio(errores, "modelo", modelo);
@@ -29,7 +29,9 @@ public class EditarMotocicleta {
         String chasis = chasisCompleto.trim();
         repository.buscarIdPorChasis(chasis).filter(otroId -> otroId != id)
             .ifPresent(otroId -> { throw new RegistrarMotocicleta.ChasisDuplicado(otroId); });
-        if (!repository.combinacionRegistrada(marca.trim(), modelo.trim(), color.trim()))
+        boolean conservaCombinacion = actual.marca().equalsIgnoreCase(marca.trim())
+            && actual.modelo().equalsIgnoreCase(modelo.trim()) && actual.color().equalsIgnoreCase(color.trim());
+        if (!conservaCombinacion && !repository.combinacionRegistrada(marca.trim(), modelo.trim(), color.trim()))
             throw new RegistrarMotocicleta.DatosInvalidos(Map.of(
                 "modelo", "Selecciona una combinación registrada en el catálogo."));
         try {

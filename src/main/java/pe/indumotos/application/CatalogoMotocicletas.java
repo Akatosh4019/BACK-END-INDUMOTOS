@@ -14,9 +14,27 @@ public class CatalogoMotocicletas {
     public CatalogoMotocicletas(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
     public record Opcion(String marca, String modelo, String color) {}
+    public record Entrada(long id, String marca, String modelo, String color, boolean habilitado) {}
+
+    public List<Entrada> administrar() {
+        return jdbc.query("SELECT id_catalogo,marca,modelo,color,habilitado FROM catalogo_motocicleta " +
+            "ORDER BY lower(marca),lower(modelo),lower(color),id_catalogo",
+            (rs,n) -> new Entrada(rs.getLong(1),rs.getString(2),rs.getString(3),rs.getString(4),rs.getBoolean(5)));
+    }
+
+    @Transactional
+    public Entrada cambiarEstado(long id, boolean habilitado) {
+        var entradas = jdbc.query("UPDATE catalogo_motocicleta SET habilitado=? WHERE id_catalogo=? " +
+            "RETURNING id_catalogo,marca,modelo,color,habilitado",
+            (rs,n) -> new Entrada(rs.getLong(1),rs.getString(2),rs.getString(3),rs.getString(4),rs.getBoolean(5)),
+            habilitado,id);
+        if (entradas.isEmpty())
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Combinación del catálogo no encontrada");
+        return entradas.getFirst();
+    }
 
     public List<Opcion> listar() {
-        return jdbc.query("SELECT marca,modelo,color FROM catalogo_motocicleta ORDER BY marca,modelo,color",
+        return jdbc.query("SELECT marca,modelo,color FROM catalogo_motocicleta WHERE habilitado ORDER BY marca,modelo,color",
             (rs,n) -> new Opcion(rs.getString(1),rs.getString(2),rs.getString(3)));
     }
 

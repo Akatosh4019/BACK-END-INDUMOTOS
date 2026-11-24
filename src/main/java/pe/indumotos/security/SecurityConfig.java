@@ -147,10 +147,11 @@ public class SecurityConfig {
         org.springframework.security.core.userdetails.UserDetails user;
         try { user = userDetailsService(jdbc).loadUserByUsername(jwt.getSubject()); }
         catch (org.springframework.security.core.userdetails.UsernameNotFoundException ex) {
-            throw new org.springframework.security.oauth2.jwt.BadJwtException("Cuenta no disponible");
+            throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Cuenta no disponible");
         }
-        if (!user.isEnabled()) throw new org.springframework.security.oauth2.jwt.BadJwtException("Cuenta inactiva");
-        if(!CredentialStamp.matches(jwt.getClaimAsString("credential"),user.getPassword()))throw new org.springframework.security.oauth2.jwt.BadJwtException("La contraseña cambió; inicia sesión nuevamente");
+        if (!user.isEnabled()) throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Cuenta inactiva");
+        if(!CredentialStamp.matches(jwt.getClaimAsString("credential"),user.getPassword()))throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("La contraseña cambió; inicia sesión nuevamente");
         return new JwtAuthenticationToken(jwt, user.getAuthorities(), user.getUsername());
     }
 }
+

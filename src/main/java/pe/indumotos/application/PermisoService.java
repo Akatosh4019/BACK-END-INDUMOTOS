@@ -56,6 +56,9 @@ public class PermisoService {
         String valor = codigo(decision);
         if (!valor.equals("PERMITIR") && !valor.equals("DENEGAR"))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Decisión no válida");
+        if (valor.equals("DENEGAR") && cuenta.rolCodigo().equals("ADMIN"))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "El administrador conserva todos los permisos");
         if (valor.equals("PERMITIR") && sensible(codigo) && !cuenta.rolCodigo().equals("ADMIN"))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                 "Este permiso está reservado al rol administrador");

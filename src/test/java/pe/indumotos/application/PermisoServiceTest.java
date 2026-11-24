@@ -33,10 +33,11 @@ class PermisoServiceTest {
     }
 
     @Test
-    void denegarPrevaleceSobreRolYCuentaInactivaNuncaTieneAcceso() {
+    void administradorNoPierdePermisosYCuentaInactivaNuncaTieneAcceso() {
         assertTrue(service.permitido("admin", "USUARIOS_CREAR"));
-        service.guardarExcepcion(1, "USUARIOS_CREAR", "DENEGAR");
-        assertFalse(service.permitido("admin", "USUARIOS_CREAR"));
+        assertThrows(ResponseStatusException.class,
+            () -> service.guardarExcepcion(1, "USUARIOS_CREAR", "DENEGAR"));
+        assertTrue(service.permitido("admin", "USUARIOS_CREAR"));
         repository.activo = false;
         assertFalse(service.permitido("miguel", "FICHAS_REGISTRAR"));
     }

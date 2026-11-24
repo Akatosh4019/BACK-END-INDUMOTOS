@@ -1,5 +1,5 @@
--- Datos de demostración para una base local. Ejecutar manualmente; nunca como migración.
--- Repetir este archivo no duplica las diez motos ni sus ubicaciones iniciales.
+-- Datos de demostración para una base local. Se cargan solo con el perfil demo.
+-- Repetir este archivo no duplica las motos, guías ni ubicaciones iniciales.
 BEGIN;
 
 INSERT INTO ubicacion (codigo, nombre, tipo, referencia)
@@ -18,6 +18,15 @@ AND NOT EXISTS (SELECT 1 FROM llegada l WHERE l.numero_guia='GR-DEMO-VISUAL-10')
 
 UPDATE llegada SET cantidad_declarada=20,cantidad_recibida=20
 WHERE numero_guia='GR-DEMO-VISUAL-10' AND observacion LIKE '%pruebas visuales del Sprint 2%';
+
+-- Dos guías completamente ficticias para practicar el registro sin datos de terceros.
+INSERT INTO llegada (numero_guia,id_receptor,cantidad_declarada,cantidad_recibida,observacion)
+SELECT v.numero,u.id_usuario,v.cantidad,v.cantidad,
+    'Guía ficticia para pruebas de software; fecha_llegada indica la carga de la demo'
+FROM (VALUES ('GUIA-DEMO-001',2),('GUIA-DEMO-002',3)) v(numero,cantidad)
+CROSS JOIN usuario u
+WHERE u.nombre_usuario=current_setting('indumotos.demo_admin')
+AND NOT EXISTS (SELECT 1 FROM llegada l WHERE l.numero_guia=v.numero);
 
 INSERT INTO motocicleta (id_llegada,marca,modelo,color,chasis_completo,numero_motor,dua,item_dua,id_creador)
 SELECT l.id_llegada,v.marca,v.modelo,v.color,v.chasis,v.motor,'DUA-DEMO-2026',v.item,u.id_usuario
@@ -53,6 +62,37 @@ FROM motocicleta m CROSS JOIN ubicacion d CROSS JOIN usuario u
 WHERE m.chasis_completo LIKE 'IND-DEMO-S2-%' AND d.codigo='DEMO_ALM_CENTRAL'
 AND u.nombre_usuario=current_setting('indumotos.demo_admin')
 AND NOT EXISTS (SELECT 1 FROM movimiento_motocicleta mm WHERE mm.id_motocicleta=m.id_motocicleta);
+
+-- Las 20 fichas de prueba ya existen: cerrar su guía evita mostrarla como incompleta.
+INSERT INTO registro_guia(id_llegada,terminado_en,terminado_por)
+SELECT l.id_llegada,CURRENT_TIMESTAMP,u.id_usuario FROM llegada l CROSS JOIN usuario u
+WHERE l.numero_guia='GR-DEMO-VISUAL-10'
+AND l.observacion LIKE '%pruebas visuales del Sprint 2%'
+AND u.nombre_usuario=current_setting('indumotos.demo_admin')
+AND (SELECT count(*) FROM motocicleta m WHERE m.id_llegada=l.id_llegada)=20
+ON CONFLICT (id_llegada) DO NOTHING;
+
+UPDATE llegada l SET estado_registro='CONFIRMADA'
+WHERE l.numero_guia='GR-DEMO-VISUAL-10'
+AND EXISTS (SELECT 1 FROM registro_guia r WHERE r.id_llegada=l.id_llegada AND r.terminado_en IS NOT NULL);
+
+-- El catálogo se crea tras Flyway V18; los datos demo deben cargarse por separado.
+INSERT INTO catalogo_motocicleta(marca,modelo,color,id_creador)
+SELECT DISTINCT m.marca,m.modelo,m.color,u.id_usuario FROM motocicleta m CROSS JOIN usuario u
+WHERE m.chasis_completo LIKE 'IND-DEMO-S2-%'
+AND u.nombre_usuario=current_setting('indumotos.demo_admin')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO catalogo_motocicleta(marca,modelo,color,id_creador)
+SELECT v.marca,v.modelo,v.color,u.id_usuario FROM (VALUES
+ ('DEMO','Urbana 150','Azul'),
+ ('DEMO','Urbana 150','Rojo'),
+ ('DEMO','Ruta 250','Negro'),
+ ('DEMO','Ruta 250','Gris'),
+ ('DEMO','Ruta 250','Azul')
+) v(marca,modelo,color) CROSS JOIN usuario u
+WHERE u.nombre_usuario=current_setting('indumotos.demo_admin')
+ON CONFLICT DO NOTHING;
 
 COMMIT;
 

@@ -12,6 +12,8 @@ Esta es la API y la base de datos del sistema Indumotos. El trabajo está en la 
 
 La API comprueba el JWT, los permisos y las reglas de cada operación. Las fotos de guías y los borradores quedan en PostgreSQL, por lo que sobreviven a reinicios de contenedores. El OCR de Tesseract solo propone datos: una persona debe verificarlos. La base incluye migraciones Flyway **V1–V30**. Las tablas y API internas de ventas se conservan por compatibilidad, aunque **Modo tienda** y el registro de ventas se retiraron de la interfaz web de esta entrega. No hay cobro en línea.
 
+Al iniciar Docker con el perfil `demo` se cargan automáticamente 20 motocicletas de prueba, un catálogo utilizable y dos guías **completamente ficticias** con imágenes para practicar el registro y el OCR. No son documentos comerciales. [Detalles de los datos de demostración](src/main/resources/db/demo/README.md).
+
 **Aporte incorporado de Luciana Gutiérrez:** Administración puede consultar el detalle, permisos e historial de una cuenta, y desactivarla o reactivarla con motivo. El cambio de estado conserva los registros e invalida sesiones anteriores. La consulta de disponibilidad indica quién registró el estado, por qué una moto no se puede ofrecer y si tiene una diferencia pendiente.
 
 ## Iniciar en Docker
@@ -25,7 +27,7 @@ docker compose up -d --build api
 docker compose ps
 ```
 
-Comprueba `http://127.0.0.1:8080/api/health`. Si hay un problema, ejecuta `docker compose logs --tail=100 api`. PostgreSQL usa el volumen `indumotos_pgdata`; `docker compose down -v` lo eliminaría.
+Comprueba `http://127.0.0.1:8080/api/health`. Si hay un problema, ejecuta `docker compose logs --tail=100 api`. `compose.yaml` usa el perfil `demo` por defecto; establece `SPRING_PROFILES_ACTIVE=default` en `.env` para iniciar sin datos de ejemplo. PostgreSQL usa el volumen `indumotos_pgdata`; `docker compose down -v` lo eliminaría.
 
 ## Pruebas y alcance
 

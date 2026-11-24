@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -27,8 +28,9 @@ public class RegistroGuiaController {
 
     @PutMapping("/borradores/{posicion}")
     public RegistroGuia.Estado guardar(@PathVariable long id, @PathVariable int posicion,
-        @RequestBody RegistroGuia.Borrador borrador, Authentication usuario) {
-        return registro.guardar(id,posicion,borrador,usuario.getName());
+        @RequestBody RegistroGuia.Borrador borrador, Authentication usuario,
+        @RequestHeader(value="If-Match",required=false) String ifMatch) {
+        return registro.guardar(id,posicion,borrador,usuario.getName(),ifMatch);
     }
 
     @PostMapping("/finalizar")

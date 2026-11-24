@@ -12,7 +12,15 @@ public class RegistroGuia {
     public record Borrador(int posicion, String marca, String modelo, String color,
         String chasisCompleto, String numeroMotor, String dua, String itemDua) {}
     public record Estado(boolean terminado, int recibidas, int registradas,
-        List<Borrador> borradores) {}
+        List<Borrador> borradores) {
+        /** Content version; no schema change and no client timestamps. */
+        public String getVersion() {
+            try {
+                return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(toString().getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+            } catch (java.security.NoSuchAlgorithmException ex) { throw new IllegalStateException(ex); }
+        }
+    }
 
     private final JdbcTemplate jdbc;
     private final RegistrarMotocicleta registrar;
@@ -39,7 +47,15 @@ public class RegistroGuia {
 
     @Transactional
     public Estado guardar(long id, int posicion, Borrador b, String usuario) {
+        return guardar(id,posicion,b,usuario,null);
+    }
+
+    @Transactional
+    public Estado guardar(long id, int posicion, Borrador b, String usuario, String ifMatch) {
         int recibidas = bloquear(id);
+        if (ifMatch != null && !ifMatch.equals('"' + consultar(id).getVersion() + '"'))
+            throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED,
+                "La guía cambió en otro dispositivo. Revisa los borradores antes de sincronizar.");
         if (terminado(id)) throw conflicto("Esta guía ya está terminada.");
         int registradas = contarRegistradas(id);
         if (posicion < 1 || posicion > recibidas - registradas || b == null)

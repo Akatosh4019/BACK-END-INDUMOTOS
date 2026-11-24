@@ -13,7 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class PerfilService {
     public record Perfil(String nombreCompleto, String nombreUsuario, String rolCodigo,
-        String rolNombre, String estado, String tiendaNombre, OffsetDateTime creadoEn,
+        String rolNombre, String estado, String tiendaNombre, String documento, String telefono, OffsetDateTime creadoEn,
         OffsetDateTime actualizadoEn) {}
     private record Cuenta(long id, String nombreUsuario, String claveHash) {}
 
@@ -28,13 +28,14 @@ public class PerfilService {
     @Transactional(readOnly = true)
     public Perfil consultar(String actor) {
         var perfiles = jdbc.query("SELECT u.nombre_completo,u.nombre_usuario,r.codigo,r.nombre,u.estado," +
-            "t.nombre,u.creado_en,u.actualizado_en FROM usuario u JOIN rol r ON r.id_rol=u.id_rol " +
+            "t.nombre,u.documento,u.telefono,u.creado_en,u.actualizado_en FROM usuario u JOIN rol r ON r.id_rol=u.id_rol " +
             "LEFT JOIN usuario_tienda ut ON ut.id_usuario=u.id_usuario " +
             "LEFT JOIN ubicacion t ON t.id_ubicacion=ut.id_tienda " +
             "WHERE u.nombre_usuario=? AND u.estado='ACTIVO'",
             (rs, n) -> new Perfil(rs.getString(1), rs.getString(2), rs.getString(3),
                 rs.getString(4), rs.getString(5), rs.getString(6),
-                rs.getObject(7, OffsetDateTime.class), rs.getObject(8, OffsetDateTime.class)), actor);
+                rs.getString(7), rs.getString(8), rs.getObject(9, OffsetDateTime.class),
+                rs.getObject(10, OffsetDateTime.class)), actor);
         if (perfiles.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cuenta no disponible");
         return perfiles.getFirst();
     }
@@ -65,6 +66,17 @@ public class PerfilService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña nueva debe ser diferente");
         jdbc.update("UPDATE usuario SET clave_hash=?, actualizado_en=CURRENT_TIMESTAMP, " +
             "sesion_version=sesion_version+1 WHERE id_usuario=?", encoder.encode(claveNueva), cuenta.id());
+    }
+
+    @Transactional
+    public Perfil cambiarTelefono(String actor, String claveActual, String telefono) {
+        Cuenta cuenta = verificarClave(actor, claveActual);
+        String valor = telefono == null ? "" : telefono.trim();
+        if (!valor.isEmpty() && !valor.matches("[+0-9 -]{6,30}"))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El teléfono debe tener entre 6 y 30 caracteres válidos");
+        jdbc.update("UPDATE usuario SET telefono=?,actualizado_en=CURRENT_TIMESTAMP WHERE id_usuario=?",
+            valor.isEmpty() ? null : valor, cuenta.id());
+        return consultar(actor);
     }
 
     private Cuenta verificarClave(String actor, String claveActual) {

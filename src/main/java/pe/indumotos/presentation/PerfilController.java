@@ -29,6 +29,8 @@ public class PerfilController {
         @NotBlank String claveActual) {}
     public record CambiarClave(@NotBlank String claveActual,
         @NotBlank @Size(min = 12, max = 100) String claveNueva) {}
+    public record CambiarTelefono(@NotBlank String claveActual,
+        @Pattern(regexp = "|[+0-9 -]{6,30}") String telefono) {}
 
     @GetMapping
     public PerfilService.Perfil consultar(Authentication actor) {
@@ -46,6 +48,12 @@ public class PerfilController {
         Authentication actor) {
         perfiles.cambiarClave(actor.getName(), cambio.claveActual(), cambio.claveNueva());
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/telefono")
+    public PerfilService.Perfil cambiarTelefono(@Valid @RequestBody CambiarTelefono cambio,
+        Authentication actor) {
+        return perfiles.cambiarTelefono(actor.getName(), cambio.claveActual(), cambio.telefono());
     }
 
     @ExceptionHandler(ResponseStatusException.class)

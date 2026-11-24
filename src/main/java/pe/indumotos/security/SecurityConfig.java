@@ -65,7 +65,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/perfil").authenticated()
-                .requestMatchers(HttpMethod.PUT, "/api/v1/auth/perfil/usuario", "/api/v1/auth/perfil/clave").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/v1/auth/perfil/usuario", "/api/v1/auth/perfil/clave", "/api/v1/auth/perfil/telefono").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").access(exige("USUARIOS_CREAR"))
                 .requestMatchers(HttpMethod.PUT, "/api/v1/usuarios/*/tienda")
                     .access(exige("COMPANIA_CONSULTAR"))
@@ -90,6 +90,8 @@ public class SecurityConfig {
                     .access(exigeAlguno("USUARIOS_CREAR", "PERMISOS_ASIGNAR", "USUARIOS_CONSULTAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/usuarios/*", "/api/v1/usuarios/*/estado/historial")
                     .access(exige("USUARIOS_CONSULTAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/usuarios/*/datos").access(exige("USUARIOS_CONSULTAR"))
+                .requestMatchers(HttpMethod.PUT, "/api/v1/usuarios/*/datos").access(exige("USUARIOS_CREAR"))
                 .requestMatchers(HttpMethod.PUT, "/api/v1/usuarios/*/estado").access(exige("USUARIOS_DESACTIVAR"))
                 .requestMatchers("/api/v1/usuarios/*/rol", "/api/v1/usuarios/*/permisos",
                     "/api/v1/usuarios/*/permisos/*")

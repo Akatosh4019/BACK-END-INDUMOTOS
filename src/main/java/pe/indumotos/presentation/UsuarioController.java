@@ -38,7 +38,9 @@ public class UsuarioController {
         @NotBlank @Size(min=3, max=80) @Pattern(regexp="[A-Za-z0-9._-]+") String nombreUsuario,
         @NotBlank @Size(min=12, max=100) String clave,
         @NotBlank @Size(max=50) @Pattern(regexp="[A-Za-z_]+") String rolCodigo,
-        Long tiendaId) {}
+        Long tiendaId,
+        @Pattern(regexp="|[A-Za-z0-9-]{5,20}") String documento,
+        @Pattern(regexp="|[+0-9 -]{6,30}") String telefono) {}
     public record UsuarioCreado(Long id, String nombreCompleto, String nombreUsuario, String rolCodigo) {}
     public record UsuarioListado(Long id, String nombreCompleto, String nombreUsuario,
         String rolCodigo, String estado, Long tiendaId, String tiendaNombre) {}
@@ -95,9 +97,10 @@ public class UsuarioController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tienda no válida");
         }
         String username = request.nombreUsuario().trim().toLowerCase(Locale.ROOT);
-        Long id = jdbc.queryForObject("INSERT INTO usuario (id_rol, nombre_completo, nombre_usuario, clave_hash) " +
-            "VALUES (?, ?, ?, ?) RETURNING id_usuario", Long.class, rolId,
-            request.nombreCompleto().trim(), username, encoder.encode(request.clave()));
+        Long id = jdbc.queryForObject("INSERT INTO usuario (id_rol, nombre_completo, nombre_usuario, clave_hash, documento, telefono) " +
+            "VALUES (?, ?, ?, ?, ?, ?) RETURNING id_usuario", Long.class, rolId,
+            request.nombreCompleto().trim(), username, encoder.encode(request.clave()),
+            normalizarDocumento(request.documento()), normalizarTelefono(request.telefono()));
         if (request.tiendaId() != null)
             jdbc.update("INSERT INTO usuario_tienda(id_usuario,id_tienda,id_asignador) " +
                 "SELECT ?,?,id_usuario FROM usuario WHERE nombre_usuario=?", id, request.tiendaId(),
@@ -106,10 +109,18 @@ public class UsuarioController {
             .body(new UsuarioCreado(id, request.nombreCompleto().trim(), username, rol));
     }
 
+    private static String normalizarDocumento(String valor) {
+        return valor == null || valor.isBlank() ? null : valor.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private static String normalizarTelefono(String valor) {
+        return valor == null || valor.isBlank() ? null : valor.trim();
+    }
+
     @ExceptionHandler(DuplicateKeyException.class)
     public ResponseEntity<java.util.Map<String, String>> duplicado() {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(java.util.Map.of("error", "El nombre de usuario ya existe"));
+            .body(java.util.Map.of("error", "El usuario o documento ya está registrado"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

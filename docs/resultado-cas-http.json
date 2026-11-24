@@ -1,0 +1,104 @@
+{
+  "fecha": "2026-11-23T22:30:30-05:00",
+  "backend": "95261ad",
+  "base": "indumotos_s2_paridad_20261123",
+  "datos": "Guia sintetica QA; no se finaliza ni crea stock",
+  "casos": [
+    {
+      "caso": "Login QA ALMACEN",
+      "metodo": "POST",
+      "ruta": "auth/login",
+      "esperado": 200,
+      "obtenido": 200,
+      "aprobado": true
+    },
+    {
+      "caso": "Login QA INVENTARIOS",
+      "metodo": "POST",
+      "ruta": "auth/login",
+      "esperado": 200,
+      "obtenido": 200,
+      "aprobado": true
+    },
+    {
+      "caso": "Guia sintetica para concurrencia",
+      "metodo": "POST",
+      "ruta": "llegadas/con-guia",
+      "esperado": 201,
+      "obtenido": 201,
+      "aprobado": true
+    },
+    {
+      "caso": "Leer version original",
+      "metodo": "GET",
+      "ruta": "llegadas/3/registro",
+      "esperado": 200,
+      "obtenido": 200,
+      "aprobado": true
+    },
+    {
+      "caso": "Version SHA256 disponible",
+      "aprobado": true
+    },
+    {
+      "caso": "Primer dispositivo guarda version vigente",
+      "metodo": "PUT",
+      "ruta": "llegadas/3/registro/borradores/1",
+      "esperado": 200,
+      "obtenido": 200,
+      "aprobado": true
+    },
+    {
+      "caso": "La escritura cambia version",
+      "aprobado": true
+    },
+    {
+      "caso": "Segundo dispositivo con version obsoleta no sobrescribe",
+      "metodo": "PUT",
+      "ruta": "llegadas/3/registro/borradores/1",
+      "esperado": 412,
+      "obtenido": 412,
+      "aprobado": true
+    },
+    {
+      "caso": "Confirmar primer cambio conservado",
+      "metodo": "GET",
+      "ruta": "llegadas/3/registro",
+      "esperado": 200,
+      "obtenido": 200,
+      "aprobado": true
+    },
+    {
+      "caso": "412 no modifico borrador",
+      "aprobado": true
+    },
+    {
+      "caso": "Reintento con nueva version revisada",
+      "metodo": "PUT",
+      "ruta": "llegadas/3/registro/borradores/1",
+      "esperado": 200,
+      "obtenido": 200,
+      "aprobado": true
+    },
+    {
+      "caso": "Web sin If-Match mantiene compatibilidad",
+      "metodo": "PUT",
+      "ruta": "llegadas/3/registro/borradores/1",
+      "esperado": 200,
+      "obtenido": 200,
+      "aprobado": true
+    },
+    {
+      "caso": "Verificar que borraror no crea stock",
+      "metodo": "GET",
+      "ruta": "llegadas/3/detalle",
+      "esperado": 200,
+      "obtenido": 200,
+      "aprobado": true
+    },
+    {
+      "caso": "Stock permanece en cero",
+      "aprobado": true
+    }
+  ]
+}

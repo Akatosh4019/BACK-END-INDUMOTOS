@@ -6,4 +6,4 @@ GET /api/v1/llegadas/{id}/registro añade `version`, hash SHA-256 del contenido 
 
 No se basa en reloj del teléfono, no crea stock al guardar y no reintenta finalizaciones. El cliente offline debe exigir versión antes de enviar, refrescar permisos y distinguir red/401/403/409/412.
 
-RegistroGuiaVersionTest: dos pruebas aprobadas para versión estable y cambios de contenido/finalización. Prueba HTTP concurrente real aún pendiente al crear este checkpoint. No presentar las pruebas unitarias como esa validación integral.
+RegistroGuiaVersionTest: dos pruebas aprobadas para versión estable y cambios de contenido/finalización. Además, 14 comprobaciones HTTP reales aprobadas sobre copia aislada V23: escritura vigente, rechazo412 sin sobrescribir, reintento revisado, compatibilidad web y stock0. Evidencia: resultado-cas-http.json. Samsung0.3.2 confirmó posteriormente envío del borrador offline; el informe detallado permanece en el repositorio móvil.

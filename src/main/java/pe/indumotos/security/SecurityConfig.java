@@ -183,7 +183,8 @@ public class SecurityConfig {
         java.time.OffsetDateTime validasDesde = jdbc.query(
             "SELECT sesiones_validas_desde FROM usuario WHERE nombre_usuario = ?",
             rs -> rs.next() ? rs.getObject(1, java.time.OffsetDateTime.class) : null, jwt.getSubject());
-        if (validasDesde != null && (jwt.getIssuedAt() == null || jwt.getIssuedAt().isBefore(validasDesde.toInstant())))
+        // JWT codifica iat en segundos: los tokens del mismo segundo del cambio también son anteriores.
+        if (validasDesde != null && (jwt.getIssuedAt() == null || !jwt.getIssuedAt().isAfter(validasDesde.toInstant())))
             throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Sesión cerrada por cambio de estado");
         return new JwtAuthenticationToken(jwt, user.getAuthorities(), user.getUsername());
     }

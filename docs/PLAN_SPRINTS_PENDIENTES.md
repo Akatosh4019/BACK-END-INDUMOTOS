@@ -6,7 +6,7 @@ Análisis del backlog local `Product Backlog - Indumotos - puntuacion y tarjetas
 
 - Sprint 1 y Sprint 2 tienen flujos web y API implementados: acceso por rol, llegadas con fotos, OCR asistido, borradores de fichas, inventario, catálogo, solicitudes, asignación, despacho, recepción y ubicación confirmada. El cierre de Sprint 2 aún necesita revisión visual por rol, evidencia y prueba de punta a punta con una guía autorizada. La regla de anulación de HU-27 sigue por acordar.
 - El backlog **solo asigna un sprint posterior: Sprint 3** (HU-10 a HU-13, 16 puntos propuestos). Las otras 11 HU son candidatas **sin sprint ni fecha**; los puntos son estimaciones preliminares, no compromiso. No existe un Sprint 4 formal en esta fuente.
-- Después de este análisis se implementaron disponibilidad y diferencias (V29, API y web). `usuario.estado` sí existe, y la lista paginada de cuentas también, pero falta el flujo auditado de desactivar/reactivar.
+- Después de este análisis se implementaron disponibilidad y diferencias (V29, API y web). El flujo auditado de desactivar/reactivar cuentas llegó después con V30; faltan pruebas visuales por rol.
 
 ## Sprint 3: disponibilidad e inconsistencias
 

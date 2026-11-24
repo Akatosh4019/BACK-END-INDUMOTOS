@@ -5,7 +5,7 @@ Esta guía describe el código actual del backend y su relación con la web. Cub
 ## Arquitectura y datos
 
 - Java 21 y Spring Boot. `presentation` expone la API HTTP, `application` contiene los casos de uso, `domain` los registros del negocio e `infrastructure` la persistencia JDBC y la seguridad.
-- PostgreSQL almacena cuentas, permisos, llegadas, fotos, borradores, motocicletas, catálogo, solicitudes, asignaciones, ubicaciones, envíos, ventas, disponibilidad y casos de diferencias. Flyway aplica migraciones V1 a V29; no se editan migraciones ya aplicadas.
+- PostgreSQL almacena cuentas, permisos, llegadas, fotos, borradores, motocicletas, catálogo, solicitudes, asignaciones, ubicaciones, envíos, ventas, disponibilidad y casos de diferencias. Flyway aplica migraciones V1 a V30; no se editan migraciones ya aplicadas.
 - En Docker Compose, `api` se conecta a `db` por la red interna y PostgreSQL usa el volumen `indumotos_pgdata`. Reiniciar o reconstruir contenedores no borra el volumen. `docker compose down -v` sí lo elimina.
 - La web Angular usa JWT Bearer. En Docker: navegador → Nginx (`127.0.0.1:4200`) → gateway (`gateway:8030`) → API (`api:8080`) → PostgreSQL. La API comprueba los permisos; el gateway no reemplaza esa comprobación.
 
@@ -67,7 +67,7 @@ V25 precarga las ubicaciones `PURUCHUCO_ALM` y `PURUCHUCO_TIENDA`, que represent
 3. Comprobar `http://127.0.0.1:8080/api/health` y revisar `docker compose logs --tail=100 api` si falla.
 4. Para pruebas con Maven y Java 21: `mvn test`. Si Maven no está instalado localmente, usar el contenedor Maven con el repositorio montado.
 
-En la última ejecución observada de la rama `feature/gutierrez-hu16-hu17-hu22` pasaron **101 pruebas backend** y Flyway llegó a **V30** en un PostgreSQL 17 temporal. Eso no reemplaza la revisión visual ni una prueba de cierre real de guía con datos aprobados. Los resúmenes fechados en `docs/SPRINT 2/` documentan el estado de sus entregas originales y pueden contener verificaciones pendientes que después se resolvieron.
+En la última ejecución observada de `sprint-2` pasaron **101 pruebas backend** y Flyway llegó a **V30** en PostgreSQL local. Eso no reemplaza la revisión visual ni una prueba de cierre real de guía con datos aprobados. Los resúmenes fechados en `docs/SPRINT 2/` documentan el estado de sus entregas originales y pueden contener verificaciones pendientes que después se resolvieron.
 
 ## Trabajo aún abierto
 
@@ -79,9 +79,9 @@ Este módulo **no cobra ni emite comprobantes**: el trabajador debe verificar es
 
 Sprint 3 agrega V29: `disponibilidad_evento` y `diferencia_datos`. `GET /api/v1/disponibilidad?chasis=...` calcula estado según venta, tránsito, bloqueo, asignación y ubicación; `POST /api/v1/motocicletas/{id}/disponibilidad` registra cambios con motivo e historial. Facturación reporta en `POST /api/v1/diferencias`; Inventarios revisa `GET /api/v1/diferencias` y resuelve mediante `POST /api/v1/diferencias/{id}/resolucion`. La corrección de ficha y el cierre se guardan en una transacción. Comercial solo consulta disponibilidad. La validación visual y una discrepancia real autorizada siguen pendientes.
 
-#### HU-16, HU-17 y HU-22 adelantadas del backlog (`feature/gutierrez-hu16-hu17-hu22`)
+#### HU-16, HU-17 y HU-22 adelantadas del backlog (aporte de Luciana Gutiérrez)
 
-Estas historias no pertenecen al Sprint 3 oficial (HU-10 a HU-13); estaban en el backlog sin sprint asignado. La rama parte de `sprint-2` porque HU-22 usa V29.
+Estas historias no pertenecen al Sprint 3 oficial (HU-10 a HU-13); estaban en el backlog sin sprint asignado. El aporte se incorporó a `sprint-2` y HU-22 usa V29.
 
 
 - **HU-17 Consultar cuenta.** `GET /api/v1/usuarios/{id}` devuelve estado, rol, tienda, fecha de creación, permisos efectivos, excepciones PERMITIR/DENEGAR y el último cambio de estado. Requiere `USUARIOS_CONSULTAR`, que solo puede tener Administración.

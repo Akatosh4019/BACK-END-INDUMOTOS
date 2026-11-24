@@ -27,16 +27,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthenticationManager authentication;
     private final JwtEncoder encoder;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbc;
     private final pe.indumotos.application.PermisoService permisos;
     private final JdbcTokenRevocationRepository revocados;
 
     public AuthController(AuthenticationManager authentication, JwtEncoder encoder,
         pe.indumotos.application.PermisoService permisos,
-        JdbcTokenRevocationRepository revocados) {
+        JdbcTokenRevocationRepository revocados, org.springframework.jdbc.core.JdbcTemplate jdbc) {
         this.authentication = authentication;
         this.encoder = encoder;
         this.permisos = permisos;
         this.revocados = revocados;
+        this.jdbc = jdbc;
     }
 
     public record LoginRequest(@NotBlank String nombreUsuario, @NotBlank String clave) {}
@@ -62,6 +64,7 @@ public class AuthController {
         Instant now = Instant.now();
         long seconds = 900;
         var claims = JwtClaimsSet.builder().issuer("https://indumotos.local").subject(result.getName())
+            .claim("credential",pe.indumotos.security.CredentialStamp.of(jdbc.queryForObject("SELECT clave_hash FROM usuario WHERE nombre_usuario=?",String.class,result.getName())))
             .issuedAt(now).expiresAt(now.plus(seconds, ChronoUnit.SECONDS)).build();
         String token = encoder.encode(JwtEncoderParameters.from(
             JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();

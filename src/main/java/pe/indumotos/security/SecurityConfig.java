@@ -64,6 +64,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/*/restablecer-clave").access(exige("PERMISOS_ASIGNAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").access(exige("USUARIOS_CREAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/usuarios").access(exigeAlguno("USUARIOS_CREAR", "PERMISOS_ASIGNAR"))
                 .requestMatchers("/api/v1/usuarios/*/rol", "/api/v1/usuarios/*/permisos",
@@ -149,6 +150,7 @@ public class SecurityConfig {
             throw new org.springframework.security.oauth2.jwt.BadJwtException("Cuenta no disponible");
         }
         if (!user.isEnabled()) throw new org.springframework.security.oauth2.jwt.BadJwtException("Cuenta inactiva");
+        if(!CredentialStamp.matches(jwt.getClaimAsString("credential"),user.getPassword()))throw new org.springframework.security.oauth2.jwt.BadJwtException("La contraseña cambió; inicia sesión nuevamente");
         return new JwtAuthenticationToken(jwt, user.getAuthorities(), user.getUsername());
     }
 }

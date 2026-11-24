@@ -14,6 +14,11 @@ import pe.indumotos.infrastructure.JdbcTokenRevocationRepository;
 class AuthControllerTest {
     private final SecretKeySpec key = new SecretKeySpec(new byte[32], "HmacSHA256");
 
+    private org.springframework.jdbc.core.JdbcTemplate jdbc(){
+        var db=mock(org.springframework.jdbc.core.JdbcTemplate.class);
+        when(db.queryForObject(anyString(),eq(String.class),anyString())).thenReturn("hash-de-prueba");return db;
+    }
+
     @Test
     void loginEmiteTokenFirmadoYExpiraEnQuinceMinutos() {
         AuthenticationManager manager = mock(AuthenticationManager.class);
@@ -21,7 +26,7 @@ class AuthControllerTest {
             UsernamePasswordAuthenticationToken.authenticated("admin", null, java.util.List.of()));
         var controller = new AuthController(manager, new JwtConfig().jwtEncoder(key),
             mock(pe.indumotos.application.PermisoService.class),
-            mock(JdbcTokenRevocationRepository.class));
+            mock(JdbcTokenRevocationRepository.class), jdbc());
         var response = controller.login(new AuthController.LoginRequest("ADMIN", "clave_de_prueba"));
         var jwt = new JwtConfig().jwtDecoder(key,
             mock(JdbcTokenRevocationRepository.class)).decode(response.accessToken());
@@ -39,7 +44,7 @@ class AuthControllerTest {
         when(manager.authenticate(any())).thenThrow(new BadCredentialsException("Incorrectas"));
         var controller = new AuthController(manager, new JwtConfig().jwtEncoder(key),
             mock(pe.indumotos.application.PermisoService.class),
-            mock(JdbcTokenRevocationRepository.class));
+            mock(JdbcTokenRevocationRepository.class), jdbc());
         assertThrows(BadCredentialsException.class,
             () -> controller.login(new AuthController.LoginRequest("admin", "incorrecta")));
     }
@@ -52,7 +57,7 @@ class AuthControllerTest {
         var revocados = mock(JdbcTokenRevocationRepository.class);
         var config = new JwtConfig();
         var controller = new AuthController(manager, config.jwtEncoder(key),
-            mock(pe.indumotos.application.PermisoService.class), revocados);
+            mock(pe.indumotos.application.PermisoService.class), revocados, jdbc());
         String token = controller.login(new AuthController.LoginRequest("admin", "clave")).accessToken();
         var jwt = config.jwtDecoder(key, revocados).decode(token);
         assertEquals(204, controller.logout(new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(jwt))

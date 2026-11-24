@@ -1,6 +1,10 @@
 spring:
   application:
     name: backendIndumotos
+  config:
+    # Desarrollo local (IntelliJ): lee las variables de .env si existe. Docker y las variables
+    # de entorno del sistema siguen teniendo prioridad sobre este archivo.
+    import: optional:file:.env[.properties]
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/indumotos}
     username: ${DB_USER:indumotos}

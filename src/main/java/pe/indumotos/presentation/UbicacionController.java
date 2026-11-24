@@ -31,11 +31,14 @@ public class UbicacionController {
     public record NuevaUbicacion(@NotNull @Positive Long destinoId) {}
     public record NuevaSede(@NotBlank @Size(max = 50) String codigo,
         @NotBlank @Size(max = 120) String nombre,
-        @NotBlank String tipo) {}
+        @NotBlank String tipo, @Size(max = 300) String referencia) {}
+    public record CambioSede(@NotBlank @Size(max = 120) String nombre, @NotBlank String tipo,
+        @Size(max = 300) String referencia) {}
+    public record EstadoSede(@NotNull Boolean activo) {}
 
     @PostMapping("/ubicaciones")
     public ResponseEntity<UbicacionRepository.Sede> crearSede(@Valid @RequestBody NuevaSede datos) {
-        var creada = ubicaciones.crearSede(datos.codigo(), datos.nombre(), datos.tipo());
+        var creada = ubicaciones.crearSede(datos.codigo(), datos.nombre(), datos.tipo(), datos.referencia());
         return ResponseEntity.status(HttpStatus.CREATED).body(creada);
     }
 
@@ -45,8 +48,27 @@ public class UbicacionController {
             .body(java.util.Map.of("error", "El código de ubicación ya existe"));
     }
 
+    /** Por defecto solo las sedes activas (formularios); con todas=true también las desactivadas. */
     @GetMapping("/ubicaciones")
-    public List<UbicacionRepository.Sede> sedes() { return ubicaciones.sedes(); }
+    public List<?> sedes(@org.springframework.web.bind.annotation.RequestParam(defaultValue = "false") boolean todas) {
+        return todas ? ubicaciones.todasLasSedes() : ubicaciones.sedes();
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/ubicaciones/{id}")
+    public UbicacionRepository.SedeDetalle editarSede(@PathVariable long id, @Valid @RequestBody CambioSede datos) {
+        return ubicaciones.editarSede(id, datos.nombre(), datos.tipo(), datos.referencia());
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/ubicaciones/{id}/estado")
+    public UbicacionRepository.SedeDetalle cambiarEstado(@PathVariable long id, @Valid @RequestBody EstadoSede datos) {
+        return ubicaciones.cambiarEstadoSede(id, datos.activo());
+    }
+
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<java.util.Map<String, String>> error(org.springframework.web.server.ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode()).body(java.util.Map.of("error",
+            ex.getReason() == null ? "No se pudo completar la operación" : ex.getReason()));
+    }
 
     @GetMapping("/motocicletas/{id}/ubicacion")
     public UbicacionRepository.Movimiento actual(@PathVariable long id) { return ubicaciones.actual(id); }

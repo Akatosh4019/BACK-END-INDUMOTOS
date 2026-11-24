@@ -38,7 +38,7 @@
               "if (pm.response.code === 200) {",
               "  const data = pm.response.json();",
               "  pm.collectionVariables.set('adminToken', data.accessToken);",
-              "  pm.test('Token Bearer de 15 minutos', () => { pm.expect(data.tokenType).to.eql('Bearer'); pm.expect(data.expiresIn).to.eql(900); });",
+              "  pm.test('Token Bearer de 1 hora', () => { pm.expect(data.tokenType).to.eql('Bearer'); pm.expect(data.expiresIn).to.eql(3600); });",
               "}"
             ],
             "type": "text/javascript"

@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -27,18 +28,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthenticationManager authentication;
     private final JwtEncoder encoder;
-    private final org.springframework.jdbc.core.JdbcTemplate jdbc;
     private final pe.indumotos.application.PermisoService permisos;
     private final JdbcTokenRevocationRepository revocados;
+    private final JdbcTemplate jdbc;
+    // Duración de la sesión: una hora por defecto, configurable con INDUMOTOS_SESION_SEGUNDOS.
+    private long sesionSegundos = 3600;
 
     public AuthController(AuthenticationManager authentication, JwtEncoder encoder,
         pe.indumotos.application.PermisoService permisos,
-        JdbcTokenRevocationRepository revocados, org.springframework.jdbc.core.JdbcTemplate jdbc) {
+        JdbcTokenRevocationRepository revocados, JdbcTemplate jdbc) {
         this.authentication = authentication;
         this.encoder = encoder;
         this.permisos = permisos;
         this.revocados = revocados;
         this.jdbc = jdbc;
+    }
+
+    @org.springframework.beans.factory.annotation.Value("${indumotos.sesion.segundos:3600}")
+    void setSesionSegundos(long segundos) {
+        if (segundos < 300 || segundos > 43200)
+            throw new IllegalStateException("La sesión debe durar entre 5 minutos y 12 horas");
+        this.sesionSegundos = segundos;
     }
 
     public record LoginRequest(@NotBlank String nombreUsuario, @NotBlank String clave) {}
@@ -62,10 +72,13 @@ public class AuthController {
         var result = authentication.authenticate(UsernamePasswordAuthenticationToken.unauthenticated(
             request.nombreUsuario().trim().toLowerCase(java.util.Locale.ROOT), request.clave()));
         Instant now = Instant.now();
-        long seconds = 900;
+        long seconds = sesionSegundos;
+        Long version = jdbc.queryForObject("SELECT sesion_version FROM usuario WHERE nombre_usuario=?",
+            Long.class, result.getName());
+        if (version == null) throw new org.springframework.security.authentication.BadCredentialsException("Cuenta no disponible");
         var claims = JwtClaimsSet.builder().issuer("https://indumotos.local").subject(result.getName())
             .claim("credential",pe.indumotos.security.CredentialStamp.of(jdbc.queryForObject("SELECT clave_hash FROM usuario WHERE nombre_usuario=?",String.class,result.getName())))
-            .issuedAt(now).expiresAt(now.plus(seconds, ChronoUnit.SECONDS)).build();
+            .issuedAt(now).expiresAt(now.plus(seconds, ChronoUnit.SECONDS)).claim("cv", version).build();
         String token = encoder.encode(JwtEncoderParameters.from(
             JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
         return new LoginResponse(token, "Bearer", seconds);

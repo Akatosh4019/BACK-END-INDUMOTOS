@@ -36,7 +36,10 @@ public class JdbcAsignacionRepository implements AsignacionRepository {
     public Candidata candidata(long id) {
         return jdbc.query("SELECT m.id_motocicleta,m.chasis_completo,m.marca,m.modelo,m.color FROM motocicleta m " +
             "WHERE m.id_motocicleta=? AND NOT EXISTS(SELECT 1 FROM solicitud_ensamblaje_unidad a " +
-            "WHERE a.id_motocicleta=m.id_motocicleta AND a.retirada_en IS NULL)",
+            "WHERE a.id_motocicleta=m.id_motocicleta AND a.retirada_en IS NULL) " +
+            "AND NOT EXISTS(SELECT 1 FROM venta_motocicleta v WHERE v.id_motocicleta=m.id_motocicleta) " +
+            "AND coalesce((SELECT x.estado FROM disponibilidad_evento x WHERE x.id_motocicleta=m.id_motocicleta " +
+            "ORDER BY x.id_evento DESC LIMIT 1),'HABILITADA') <> 'BLOQUEADA'",
             (rs,n) -> new Candidata(rs.getLong(1),rs.getString(2),rs.getString(3),rs.getString(4),rs.getString(5)),
             id).stream().findFirst().orElse(null);
     }
@@ -46,6 +49,9 @@ public class JdbcAsignacionRepository implements AsignacionRepository {
         return jdbc.query("SELECT m.id_motocicleta,m.chasis_completo,m.marca,m.modelo,m.color FROM motocicleta m " +
             "WHERE upper(m.chasis_completo) LIKE upper(?) AND NOT EXISTS(SELECT 1 FROM solicitud_ensamblaje_unidad a " +
             "WHERE a.id_motocicleta=m.id_motocicleta AND a.retirada_en IS NULL) " +
+            "AND NOT EXISTS(SELECT 1 FROM venta_motocicleta v WHERE v.id_motocicleta=m.id_motocicleta) " +
+            "AND coalesce((SELECT x.estado FROM disponibilidad_evento x WHERE x.id_motocicleta=m.id_motocicleta " +
+            "ORDER BY x.id_evento DESC LIMIT 1),'HABILITADA') <> 'BLOQUEADA' " +
             "ORDER BY m.id_motocicleta LIMIT ?",
             (rs,n) -> new Candidata(rs.getLong(1),rs.getString(2),rs.getString(3),rs.getString(4),rs.getString(5)),
             "%" + chasis.replace("\\","\\\\").replace("%","\\%").replace("_","\\_") + "%",limite);

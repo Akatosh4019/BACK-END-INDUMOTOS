@@ -8,19 +8,21 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.jdbc.core.JdbcTemplate;
 import pe.indumotos.security.JwtConfig;
 import pe.indumotos.infrastructure.JdbcTokenRevocationRepository;
 
 class AuthControllerTest {
     private final SecretKeySpec key = new SecretKeySpec(new byte[32], "HmacSHA256");
-
-    private org.springframework.jdbc.core.JdbcTemplate jdbc(){
-        var db=mock(org.springframework.jdbc.core.JdbcTemplate.class);
-        when(db.queryForObject(anyString(),eq(String.class),anyString())).thenReturn("hash-de-prueba");return db;
+    private JdbcTemplate jdbc() {
+        JdbcTemplate jdbc = mock(JdbcTemplate.class);
+        when(jdbc.queryForObject(anyString(), eq(Long.class), any())).thenReturn(0L);
+        when(jdbc.queryForObject(anyString(),eq(String.class),any())).thenReturn("hash-de-prueba");
+        return jdbc;
     }
 
     @Test
-    void loginEmiteTokenFirmadoYExpiraEnQuinceMinutos() {
+    void loginEmiteTokenFirmadoYExpiraEnUnaHora() {
         AuthenticationManager manager = mock(AuthenticationManager.class);
         when(manager.authenticate(any())).thenReturn(
             UsernamePasswordAuthenticationToken.authenticated("admin", null, java.util.List.of()));
@@ -31,10 +33,11 @@ class AuthControllerTest {
         var jwt = new JwtConfig().jwtDecoder(key,
             mock(JdbcTokenRevocationRepository.class)).decode(response.accessToken());
         assertEquals("Bearer", response.tokenType());
-        assertEquals(900, response.expiresIn());
+        assertEquals(3600, response.expiresIn());
         assertEquals("admin", jwt.getSubject());
+        assertEquals(0L, ((Number) jwt.getClaim("cv")).longValue());
         assertEquals("https://indumotos.local", jwt.getIssuer().toString());
-        assertEquals(900, jwt.getExpiresAt().getEpochSecond() - jwt.getIssuedAt().getEpochSecond());
+        assertEquals(3600, jwt.getExpiresAt().getEpochSecond() - jwt.getIssuedAt().getEpochSecond());
         verify(manager).authenticate(any(UsernamePasswordAuthenticationToken.class));
     }
 

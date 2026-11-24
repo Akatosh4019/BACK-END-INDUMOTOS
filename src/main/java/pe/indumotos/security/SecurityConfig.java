@@ -64,9 +64,36 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/v1/auth/perfil").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/v1/auth/perfil/usuario", "/api/v1/auth/perfil/clave").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/*/restablecer-clave").access(exige("PERMISOS_ASIGNAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").access(exige("USUARIOS_CREAR"))
-                .requestMatchers(HttpMethod.GET, "/api/v1/usuarios").access(exigeAlguno("USUARIOS_CREAR", "PERMISOS_ASIGNAR"))
+                .requestMatchers(HttpMethod.PUT, "/api/v1/usuarios/*/tienda")
+                    .access(exige("COMPANIA_CONSULTAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/modos/compania")
+                    .access(exige("COMPANIA_CONSULTAR"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/modos/tienda/ventas")
+                    .access(exigeTodos("TIENDA_CONSULTAR","VENTAS_REGISTRAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/reportes/**").access(exige("REPORTES_CONSULTAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/disponibilidad", "/api/v1/disponibilidad/estados",
+                    "/api/v1/motocicletas/*/disponibilidad",
+                    "/api/v1/motocicletas/*/disponibilidad/historial")
+                    .access(exige("DISPONIBILIDAD_CONSULTAR"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/motocicletas/*/disponibilidad")
+                    .access(exige("DISPONIBILIDAD_CAMBIAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/diferencias")
+                    .access(exige("DIFERENCIAS_CONSULTAR"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/diferencias")
+                    .access(exige("DIFERENCIAS_REPORTAR"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/diferencias/*/resolucion")
+                    .access(exigeTodos("DIFERENCIAS_RESOLVER","FICHAS_EDITAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/modos/tienda", "/api/v1/modos/tienda/**")
+                    .access(exige("TIENDA_CONSULTAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/usuarios")
+                    .access(exigeAlguno("USUARIOS_CREAR", "PERMISOS_ASIGNAR", "USUARIOS_CONSULTAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/usuarios/*", "/api/v1/usuarios/*/estado/historial")
+                    .access(exige("USUARIOS_CONSULTAR"))
+                .requestMatchers(HttpMethod.PUT, "/api/v1/usuarios/*/estado").access(exige("USUARIOS_DESACTIVAR"))
                 .requestMatchers("/api/v1/usuarios/*/rol", "/api/v1/usuarios/*/permisos",
                     "/api/v1/usuarios/*/permisos/*")
                     .access(exige("PERMISOS_ASIGNAR"))
@@ -85,16 +112,27 @@ public class SecurityConfig {
                     .access(exigeAlguno("CATALOGO_GESTIONAR", "FICHAS_REGISTRAR", "FICHAS_EDITAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/catalogo-motocicletas")
                     .access(exige("CATALOGO_GESTIONAR"))
+                .requestMatchers(HttpMethod.PUT, "/api/v1/catalogo-motocicletas/*/estado")
+                    .access(exige("CATALOGO_GESTIONAR"))
                 .requestMatchers(HttpMethod.PUT, "/api/v1/motocicletas/*").access(exige("FICHAS_EDITAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/ubicaciones").access(exige("UBICACIONES_CONSULTAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/ubicaciones").access(exige("PERMISOS_ASIGNAR"))
+                .requestMatchers(HttpMethod.PUT, "/api/v1/ubicaciones/*", "/api/v1/ubicaciones/*/estado")
+                    .access(exige("PERMISOS_ASIGNAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes").access(exige("SOLICITUDES_CREAR"))
+                .requestMatchers(HttpMethod.PUT, "/api/v1/solicitudes/*").access(exige("SOLICITUDES_CREAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/solicitudes/opciones-motocicleta")
                     .access(exige("SOLICITUDES_CREAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes/*/anulacion")
                     .access(exige("SOLICITUDES_ANULAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes/*/seguimiento")
                     .access(exige("SOLICITUDES_AVANZAR"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes/*/envios/despacho")
+                    .access(exige("TRASLADOS_REGISTRAR"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes/*/envios/recepcion")
+                    .access(exige("RECEPCIONES_CONFIRMAR"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/solicitudes/*/envios")
+                    .access(exige("SOLICITUDES_CONSULTAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/motocicletas/elegibles")
                     .access(exige("UNIDADES_ASIGNAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes/*/lineas/*/unidades")
@@ -108,7 +146,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/motocicletas/*/traslados")
                     .access(exige("TRASLADOS_REGISTRAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/motocicletas/*/ubicacion",
-                    "/api/v1/motocicletas/*/ubicacion/historial")
+                    "/api/v1/motocicletas/*/ubicacion/historial",
+                    "/api/v1/motocicletas/*/envio-activo", "/api/v1/motocicletas/*/recorrido")
                     .access(exige("UBICACIONES_CONSULTAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/motocicletas/**").access(exige("INVENTARIO_CONSULTAR"))
                 .anyRequest().denyAll())
@@ -150,8 +189,13 @@ public class SecurityConfig {
             throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Cuenta no disponible");
         }
         if (!user.isEnabled()) throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Cuenta inactiva");
+        Long versionActual = jdbc.queryForObject("SELECT sesion_version FROM usuario WHERE nombre_usuario=?",
+            Long.class, jwt.getSubject());
+        Object versionToken = jwt.getClaim("cv");
+        if (!(versionToken instanceof Number numero) || versionActual == null
+            || versionActual.longValue() != numero.longValue())
+            throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Sesión cerrada por cambio de credenciales o estado");
         if(!CredentialStamp.matches(jwt.getClaimAsString("credential"),user.getPassword()))throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("La contraseña cambió; inicia sesión nuevamente");
         return new JwtAuthenticationToken(jwt, user.getAuthorities(), user.getUsername());
     }
 }
-

@@ -16,12 +16,12 @@ public class JdbcSolicitudRepository implements SolicitudRepository {
     @Override
     public boolean destinoActivo(long id) {
         return Boolean.TRUE.equals(jdbc.queryForObject(
-            "SELECT EXISTS(SELECT 1 FROM ubicacion WHERE id_ubicacion = ? AND activo)", Boolean.class, id));
+            "SELECT EXISTS(SELECT 1 FROM ubicacion WHERE id_ubicacion = ? AND activo AND tipo='TIENDA')", Boolean.class, id));
     }
 
     @Override
     public List<OpcionMotocicleta> opcionesMotocicleta() {
-        return jdbc.query("SELECT marca,modelo,color FROM catalogo_motocicleta " +
+        return jdbc.query("SELECT marca,modelo,color FROM catalogo_motocicleta WHERE activo " +
             "ORDER BY marca,modelo,color", (rs,n) -> new OpcionMotocicleta(
                 rs.getString(1),rs.getString(2),rs.getString(3)));
     }
@@ -30,7 +30,7 @@ public class JdbcSolicitudRepository implements SolicitudRepository {
     public boolean combinacionRegistrada(String marca, String modelo, String color) {
         return Boolean.TRUE.equals(jdbc.queryForObject(
             "SELECT EXISTS(SELECT 1 FROM catalogo_motocicleta WHERE lower(btrim(marca))=lower(?) " +
-            "AND lower(btrim(modelo))=lower(?) AND lower(btrim(color))=lower(?))",
+            "AND lower(btrim(modelo))=lower(?) AND lower(btrim(color))=lower(?) AND activo)",
             Boolean.class, marca, modelo, color));
     }
 
@@ -63,6 +63,94 @@ public class JdbcSolicitudRepository implements SolicitudRepository {
             "JOIN ubicacion d ON d.id_ubicacion=s.id_destino " +
             "JOIN solicitud_ensamblaje_estado_actual e ON e.id_solicitud=s.id_solicitud " +
             "ORDER BY s.id_solicitud DESC LIMIT ? OFFSET ?", (rs,n) -> mapear(rs), limite, desplazamiento);
+    }
+
+    private static final String FILTRO = " WHERE (?::text IS NULL OR e.estado=?) AND (?::text IS NULL " +
+        "OR CAST(s.id_solicitud AS TEXT)=? OR d.nombre ILIKE ? OR u.nombre_usuario ILIKE ? " +
+        "OR EXISTS(SELECT 1 FROM solicitud_ensamblaje_detalle x WHERE x.id_solicitud=s.id_solicitud " +
+        "AND (x.marca ILIKE ? OR x.modelo ILIKE ? OR x.color ILIKE ?)))";
+    private static final String BASE = "FROM solicitud_ensamblaje s JOIN usuario u ON u.id_usuario=s.id_solicitante " +
+        "JOIN ubicacion d ON d.id_ubicacion=s.id_destino " +
+        "JOIN solicitud_ensamblaje_estado_actual e ON e.id_solicitud=s.id_solicitud";
+
+    private Object[] parametros(String texto, String estado) {
+        String limpio = texto == null || texto.isBlank() ? null : texto.trim();
+        String patron = limpio == null ? null : "%" + limpio.replace("\\", "\\\\").replace("%", "\\%")
+            .replace("_", "\\_") + "%";
+        return new Object[]{estado, estado, limpio, limpio, patron, patron, patron, patron, patron};
+    }
+
+    @Override
+    public List<Solicitud> filtrar(String texto, String estado, int limite, int desplazamiento) {
+        Object[] filtro = parametros(texto, estado);
+        Object[] todos = java.util.Arrays.copyOf(filtro, filtro.length + 2);
+        todos[filtro.length] = limite;
+        todos[filtro.length + 1] = desplazamiento;
+        return jdbc.query("SELECT s.id_solicitud,u.nombre_usuario,s.id_destino,d.nombre AS destino_nombre," +
+            "s.creada_en,s.observacion,e.estado " + BASE + FILTRO +
+            " ORDER BY s.id_solicitud DESC LIMIT ? OFFSET ?", (rs,n) -> mapear(rs), todos);
+    }
+
+    @Override
+    public long contar(String texto, String estado) {
+        Long total = jdbc.queryForObject("SELECT count(*) " + BASE + FILTRO, Long.class, parametros(texto, estado));
+        return total == null ? 0 : total;
+    }
+
+    @Override
+    public Bloqueada bloquear(long id) {
+        return jdbc.query("SELECT e.estado,u.nombre_usuario,s.id_destino FROM solicitud_ensamblaje s " +
+            "JOIN usuario u ON u.id_usuario=s.id_solicitante " +
+            "JOIN solicitud_ensamblaje_estado_actual e ON e.id_solicitud=s.id_solicitud " +
+            "WHERE s.id_solicitud=? FOR UPDATE OF s",
+            (rs,n) -> new Bloqueada(rs.getString(1), rs.getString(2), rs.getLong(3)), id)
+            .stream().findFirst().orElse(null);
+    }
+
+    @Override
+    public boolean esAdministrador(String usuario) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM usuario u JOIN rol r " +
+            "ON r.id_rol=u.id_rol WHERE u.nombre_usuario=? AND u.estado='ACTIVO' AND r.codigo='ADMIN')",
+            Boolean.class, usuario));
+    }
+
+    @Override
+    public boolean tieneUnidadesAsignadas(long id) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM solicitud_ensamblaje_unidad a " +
+            "JOIN solicitud_ensamblaje_detalle d ON d.id_detalle=a.id_detalle WHERE d.id_solicitud=?)",
+            Boolean.class, id));
+    }
+
+    @Override
+    public void registrarEdicion(long id, String usuario) {
+        jdbc.update("INSERT INTO solicitud_ensamblaje_edicion(id_solicitud,id_editor,id_destino_anterior," +
+            "observacion_anterior,lineas_anteriores) " +
+            "SELECT s.id_solicitud,u.id_usuario,s.id_destino,s.observacion," +
+            "(SELECT string_agg(x.marca || ' ' || x.modelo || ' · ' || x.color || ' · ' || x.cantidad || ' unidad(es)', " +
+            "'; ' ORDER BY x.id_detalle) FROM solicitud_ensamblaje_detalle x WHERE x.id_solicitud=s.id_solicitud) " +
+            "FROM solicitud_ensamblaje s JOIN usuario u ON u.nombre_usuario=? AND u.estado='ACTIVO' " +
+            "WHERE s.id_solicitud=?", usuario, id);
+    }
+
+    @Override
+    public Solicitud reemplazar(long id, long destinoId, String observacion, List<NuevaLinea> lineas) {
+        jdbc.update("UPDATE solicitud_ensamblaje SET id_destino=?, observacion=?, version=version+1 " +
+            "WHERE id_solicitud=?", destinoId, observacion, id);
+        jdbc.update("DELETE FROM solicitud_ensamblaje_detalle WHERE id_solicitud=?", id);
+        for (var linea : lineas)
+            jdbc.update("INSERT INTO solicitud_ensamblaje_detalle(id_solicitud,marca,modelo,color,cantidad) " +
+                "VALUES(?,?,?,?,?)", id, linea.marca(), linea.modelo(), linea.color(), linea.cantidad());
+        return buscar(id);
+    }
+
+    @Override
+    public List<Edicion> ediciones(long id) {
+        return jdbc.query("SELECT x.id_edicion,u.nombre_usuario,x.editada_en,d.nombre,x.observacion_anterior," +
+            "x.lineas_anteriores FROM solicitud_ensamblaje_edicion x JOIN usuario u ON u.id_usuario=x.id_editor " +
+            "JOIN ubicacion d ON d.id_ubicacion=x.id_destino_anterior WHERE x.id_solicitud=? " +
+            "ORDER BY x.id_edicion DESC",
+            (rs,n) -> new Edicion(rs.getLong(1), rs.getString(2), rs.getObject(3, OffsetDateTime.class),
+                rs.getString(4), rs.getString(5), rs.getString(6)), id);
     }
 
     private Solicitud mapear(ResultSet rs) throws SQLException {

@@ -1,21 +1,48 @@
 # Backend Indumotos
 
-API compartida por la web de Indumotos. Implementa los incrementos existentes de Sprint 1 y Sprint 2 en la rama `sprint-2` con Java 21, Spring Boot, PostgreSQL, Flyway y Docker.
+Esta es la API y la base de datos del sistema Indumotos. El trabajo está en la rama `sprint-2` de Roberto Samuel Valencia Saavedra. Usa Java 21, Spring Boot, PostgreSQL, Flyway y Docker. La web y el gateway están en [SISTEMA-WEB-INDUMOTOS](https://github.com/Akatosh4019/SISTEMA-WEB-INDUMOTOS/tree/sprint-2).
 
-**Rama de trabajo de Roberto Samuel Valencia Saavedra:** `sprint-2`. Los cambios de backend y base de datos de este incremento se integran y revisan desde esa rama antes de publicarlos en la rama principal.
+## ¿Qué hace?
 
-**Empieza por [la guía del sistema implementado](docs/SISTEMA_IMPLEMENTADO.md).** Explica arquitectura, roles, permisos, llegada → borradores → fichas, solicitudes, ubicaciones, API, pruebas y trabajo pendiente. El [expediente original de Sprint 2](docs/SPRINT%202/README.md) y las carpetas de evidencias conservan el contexto de cada historia; algunas notas históricas tienen estados de prueba anteriores.
+1. **Administración** crea cuentas y permisos, define marcas, modelos y colores, y registra sedes.
+2. **Almacén** registra una llegada con los datos y fotos de su guía. La guía queda pendiente.
+3. **Inventarios** revisa las sugerencias de lectura de las fotos, corrige los datos, guarda borradores de cada moto y finaliza la guía. Entonces las motos entran al inventario y la guía queda confirmada.
+4. **Comercial** solicita motos del catálogo para una tienda. **Almacén** prepara chasis concretos y registra su salida. Comercial confirma la recepción; así cambia la ubicación confirmada de cada moto.
+5. **Facturación** consulta la disponibilidad y puede reportar diferencias. **Inventarios** investiga y corrige esas diferencias con una fuente registrada.
 
-## Iniciar con Docker
+La API comprueba el JWT, los permisos y las reglas de cada operación. Las fotos de guías y los borradores quedan en PostgreSQL, por lo que sobreviven a reinicios de contenedores. El OCR de Tesseract solo propone datos: una persona debe verificarlos. La base incluye migraciones Flyway **V1–V31**. Las tablas y API internas de ventas se conservan por compatibilidad, aunque **Modo tienda** y el registro de ventas se retiraron de la interfaz web de esta entrega. No hay cobro en línea.
 
-1. Copia `.env.example` a `.env` y configura credenciales propias y `JWT_SECRET_BASE64`. Nunca subas `.env` al repositorio.
-2. Desde esta carpeta ejecuta `docker compose up -d --build api`. Docker inicia PostgreSQL, aplica las migraciones Flyway y levanta la API.
-3. Comprueba `http://127.0.0.1:8080/api/health`; si falla, revisa `docker compose logs --tail=100 api`.
+Al iniciar Docker con el perfil `demo` se cargan automáticamente 20 motocicletas de prueba, un catálogo utilizable y dos guías **completamente ficticias** con imágenes para practicar el registro y el OCR. No son documentos comerciales. [Detalles de los datos de demostración](src/main/resources/db/demo/README.md).
 
-PostgreSQL usa el volumen `indumotos_pgdata`; no ejecutes `docker compose down -v` si necesitas conservar los datos. El puerto de la API y el de la base se publican solo en `127.0.0.1`.
+**Aporte incorporado de Luciana Gutiérrez:** Administración puede consultar el detalle, permisos e historial de una cuenta, y desactivarla o reactivarla con motivo. El cambio de estado conserva los registros e invalida sesiones anteriores. La consulta de disponibilidad indica quién registró el estado, por qué una moto no se puede ofrecer y si tiene una diferencia pendiente.
 
-## Pruebas
+## Iniciar en Docker
 
-Con Java 21 y Maven: `mvn test`. La última suite observada en esta rama completó **81 pruebas** sin fallos y Flyway llegó a **V23** en la base local. La revisión visual por rol y la finalización de una guía real siguen pendientes de validación humana.
+Desde la raíz de este repositorio:
 
-La web Angular y el gateway están en el repositorio `SISTEMA-WEB-INDUMOTOS` y se inician después del backend.
+```powershell
+Copy-Item .env.example .env
+# Configura las credenciales y JWT_SECRET_BASE64 en .env
+docker compose up -d --build api
+docker compose ps
+```
+
+Comprueba `http://127.0.0.1:8080/api/health`. Si hay un problema, ejecuta `docker compose logs --tail=100 api`. `compose.yaml` usa el perfil `demo` por defecto; establece `SPRING_PROFILES_ACTIVE=default` en `.env` para iniciar sin datos de ejemplo. PostgreSQL usa el volumen `indumotos_pgdata`; `docker compose down -v` lo eliminaría.
+
+## Pruebas y alcance
+
+Con Java 21 y Maven: `mvn test`. La última ejecución backend pasó **101 pruebas** y aplicó Flyway hasta **V31** en PostgreSQL local. La revisión visual por rol y una finalización de guía real autorizada siguen pendientes. Esto describe lo implementado; no declara terminado todo el producto.
+
+Lee [cómo funciona el sistema](docs/SISTEMA_IMPLEMENTADO.md) para arquitectura, rutas, permisos y límites, y [el expediente de Sprint 2](docs/SPRINT%202/README.md) para las tareas y evidencias de ese sprint.
+
+## Perfil personal
+
+Cualquier cuenta activa puede consultar GET /api/v1/auth/perfil con su token. PUT /api/v1/auth/perfil/usuario y PUT /api/v1/auth/perfil/clave exigen la contraseña actual. Al cambiar credenciales se incrementa sesion_version: los tokens anteriores dejan de servir y hay que iniciar sesión de nuevo. El nombre de usuario es único y usa de 3 a 80 letras, números, puntos, guiones o guiones bajos. La contraseña nueva exige de 12 a 100 caracteres. Flyway V31 agrega la versión de sesión sin borrar cuentas existentes.
+
+## Sede del personal
+
+Al crear una cuenta de Comercial o Facturación, Administración puede enviar tiendaId junto con los datos del usuario. La API valida que sea una tienda activa y guarda cuenta y asignación en una sola transacción. Las cuentas existentes mantienen su asignación; Administración también puede cambiarla con PUT /api/v1/usuarios/{id}/tienda. El panel Modo compañía se retiró de la web, pero las API y tablas previas permanecen para compatibilidad.
+
+## Mejoras de la revisión del 23/11
+
+Flyway V32 agrega catálogo activo/inactivo, historial de ediciones de solicitudes y el permiso `REPORTES_CONSULTAR`. La sesión dura una hora. Hay nuevas rutas para editar y desactivar ubicaciones, editar solicitudes pendientes, ver el recorrido completo de una moto y consultar reportes de ventas y stock. El detalle está en [docs/SISTEMA_IMPLEMENTADO.md](docs/SISTEMA_IMPLEMENTADO.md).

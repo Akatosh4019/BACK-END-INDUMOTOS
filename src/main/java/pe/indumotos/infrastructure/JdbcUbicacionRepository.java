@@ -20,12 +20,73 @@ public class JdbcUbicacionRepository implements UbicacionRepository {
             (rs, n) -> new Sede(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4)));
     }
 
+    private static final String DETALLE = "id_ubicacion, codigo, nombre, tipo, referencia, activo";
+
+    private SedeDetalle detalle(ResultSet rs, int n) throws SQLException {
+        return new SedeDetalle(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4),
+            rs.getString(5), rs.getBoolean(6));
+    }
+
     @Override
-    public Sede crearSede(String codigo, String nombre, String tipo) {
-        return jdbc.queryForObject("INSERT INTO ubicacion(codigo, nombre, tipo) VALUES(?, ?, ?) " +
+    public List<SedeDetalle> todasLasSedes() {
+        return jdbc.query("SELECT " + DETALLE + " FROM ubicacion ORDER BY activo DESC, nombre", this::detalle);
+    }
+
+    @Override
+    public SedeDetalle bloquearSede(long id) {
+        return jdbc.query("SELECT " + DETALLE + " FROM ubicacion WHERE id_ubicacion=? FOR UPDATE", this::detalle, id)
+            .stream().findFirst().orElse(null);
+    }
+
+    @Override
+    public Sede crearSede(String codigo, String nombre, String tipo, String referencia) {
+        return jdbc.queryForObject("INSERT INTO ubicacion(codigo, nombre, tipo, referencia) VALUES(?, ?, ?, ?) " +
             "RETURNING id_ubicacion, codigo, nombre, tipo",
             (rs, n) -> new Sede(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4)),
-            codigo, nombre, tipo);
+            codigo, nombre, tipo, referencia);
+    }
+
+    @Override
+    public SedeDetalle actualizarSede(long id, String nombre, String tipo, String referencia) {
+        return jdbc.queryForObject("UPDATE ubicacion SET nombre=?, tipo=?, referencia=? WHERE id_ubicacion=? " +
+            "RETURNING " + DETALLE, this::detalle, nombre, tipo, referencia, id);
+    }
+
+    @Override
+    public SedeDetalle cambiarEstadoSede(long id, boolean activo) {
+        return jdbc.queryForObject("UPDATE ubicacion SET activo=? WHERE id_ubicacion=? RETURNING " + DETALLE,
+            this::detalle, activo, id);
+    }
+
+    @Override
+    public String usoVigente(long id) {
+        Integer motos = jdbc.queryForObject("SELECT count(*) FROM motocicleta_ubicacion_actual a " +
+            "WHERE a.id_ubicacion=? AND NOT EXISTS(SELECT 1 FROM venta_motocicleta v " +
+            "WHERE v.id_motocicleta=a.id_motocicleta)", Integer.class, id);
+        if (motos != null && motos > 0)
+            return "Hay " + motos + " moto(s) ubicadas en esta sede; trasládalas antes de desactivarla";
+        if (Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM envio_solicitud_motocicleta " +
+            "WHERE recibido_en IS NULL AND (id_origen=? OR id_destino=?))", Boolean.class, id, id)))
+            return "Hay motos en camino desde o hacia esta sede";
+        if (Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM solicitud_ensamblaje s " +
+            "JOIN solicitud_ensamblaje_estado_actual e ON e.id_solicitud=s.id_solicitud WHERE s.id_destino=? " +
+            "AND e.estado IN ('PENDIENTE','EN_PREPARACION','ATENDIDA'))", Boolean.class, id)))
+            return "Hay solicitudes abiertas con destino a esta sede";
+        if (Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM usuario_tienda t JOIN usuario u " +
+            "ON u.id_usuario=t.id_usuario WHERE t.id_tienda=? AND u.estado='ACTIVO')", Boolean.class, id)))
+            return "Hay cuentas activas asignadas a esta tienda; cámbialas de sede antes de desactivarla";
+        return null;
+    }
+
+    @Override
+    public boolean tieneHistorial(long id) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM movimiento_motocicleta " +
+            "WHERE id_origen=? OR id_destino=?) OR EXISTS(SELECT 1 FROM solicitud_ensamblaje WHERE id_destino=?) " +
+            "OR EXISTS(SELECT 1 FROM envio_solicitud_motocicleta WHERE id_origen=? OR id_destino=?) " +
+            "OR EXISTS(SELECT 1 FROM usuario_tienda WHERE id_tienda=?) " +
+            "OR EXISTS(SELECT 1 FROM venta_motocicleta WHERE id_tienda=?) " +
+            "OR EXISTS(SELECT 1 FROM llegada WHERE id_almacen_recepcion=?)",
+            Boolean.class, id, id, id, id, id, id, id, id));
     }
 
     @Override
@@ -45,6 +106,32 @@ public class JdbcUbicacionRepository implements UbicacionRepository {
     public void bloquearMotocicleta(long id) {
         jdbc.query("SELECT id_motocicleta FROM motocicleta WHERE id_motocicleta = ? FOR UPDATE",
             rs -> { }, id);
+    }
+
+    @Override
+    public boolean enTransito(long id) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM " +
+            "envio_solicitud_motocicleta WHERE id_motocicleta=? AND recibido_en IS NULL)",
+            Boolean.class,id));
+    }
+
+    @Override
+    public boolean vendida(long id) {
+        return Boolean.TRUE.equals(jdbc.queryForObject(
+            "SELECT EXISTS(SELECT 1 FROM venta_motocicleta WHERE id_motocicleta=?)",
+            Boolean.class,id));
+    }
+
+    @Override
+    public boolean reservadaSinEntrega(long id) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM " +
+            "solicitud_ensamblaje_unidad a JOIN solicitud_ensamblaje_detalle d " +
+            "ON d.id_detalle=a.id_detalle JOIN solicitud_ensamblaje_estado_actual e " +
+            "ON e.id_solicitud=d.id_solicitud WHERE a.id_motocicleta=? AND a.retirada_en IS NULL " +
+            "AND e.estado IN ('EN_PREPARACION','ATENDIDA') AND NOT EXISTS " +
+            "(SELECT 1 FROM envio_solicitud_motocicleta t WHERE t.id_solicitud=d.id_solicitud " +
+            "AND t.id_motocicleta=a.id_motocicleta AND t.recibido_en IS NOT NULL))",
+            Boolean.class,id));
     }
 
     @Override

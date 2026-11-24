@@ -29,6 +29,8 @@ docker compose ps
 
 Comprueba `http://127.0.0.1:8080/api/health`. Si hay un problema, ejecuta `docker compose logs --tail=100 api`. `compose.yaml` usa el perfil `demo` por defecto; establece `SPRING_PROFILES_ACTIVE=default` en `.env` para iniciar sin datos de ejemplo. PostgreSQL usa el volumen `indumotos_pgdata`; `docker compose down -v` lo eliminaría.
 
+La API y PostgreSQL se publican solo en `127.0.0.1` del equipo. Al ejecutar Spring directamente, también escucha solo en `127.0.0.1`; Docker usa `SERVER_ADDRESS=0.0.0.0` dentro de su red privada. Las operaciones de negocio requieren JWT y permisos; login y salud están abiertos para iniciar sesión y comprobar el servicio. No subas `.env` ni credenciales al repositorio.
+
 ## Pruebas y alcance
 
 Con Java 21 y Maven: `mvn test`. La última ejecución backend pasó **101 pruebas** y aplicó Flyway hasta **V31** en PostgreSQL local. La revisión visual por rol y una finalización de guía real autorizada siguen pendientes. Esto describe lo implementado; no declara terminado todo el producto.

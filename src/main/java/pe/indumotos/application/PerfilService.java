@@ -43,6 +43,7 @@ public class PerfilService {
     @Transactional
     public Perfil cambiarUsuario(String actor, String nuevoNombre, String claveActual) {
         Cuenta cuenta = verificarClave(actor, claveActual);
+        jdbc.queryForObject("SELECT set_config('indumotos.actor', ?, true)", String.class, actor);
         String nombre = nuevoNombre == null ? "" : nuevoNombre.trim().toLowerCase(Locale.ROOT);
         if (!nombre.matches("[a-z0-9._-]{3,80}"))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usa de 3 a 80 letras, números, puntos, guiones o guiones bajos");
@@ -76,6 +77,7 @@ public class PerfilService {
     @Transactional
     public Perfil cambiarTelefono(String actor, String claveActual, String telefono) {
         Cuenta cuenta = verificarClave(actor, claveActual);
+        jdbc.queryForObject("SELECT set_config('indumotos.actor', ?, true)", String.class, actor);
         String valor = telefono == null ? "" : telefono.trim();
         if (!valor.isEmpty() && !valor.matches("[+0-9 -]{6,30}"))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El teléfono debe tener entre 6 y 30 caracteres válidos");

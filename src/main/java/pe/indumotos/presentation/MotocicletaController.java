@@ -10,8 +10,10 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,13 +41,15 @@ public class MotocicletaController {
     private final PermisoService permisos;
     private final ConsultarMotocicletasFiltradas consultarFiltradas;
     private final EditarMotocicleta editar;
+    private final JdbcTemplate jdbc;
 
     public MotocicletaController(RegistrarMotocicleta registrar, PermisoService permisos,
-        ConsultarMotocicletasFiltradas consultarFiltradas, EditarMotocicleta editar) {
+        ConsultarMotocicletasFiltradas consultarFiltradas, EditarMotocicleta editar, JdbcTemplate jdbc) {
         this.registrar = registrar;
         this.permisos = permisos;
         this.consultarFiltradas = consultarFiltradas;
         this.editar = editar;
+        this.jdbc = jdbc;
     }
 
     public record NuevaFicha(@NotNull @Positive Long llegadaId,
@@ -66,9 +70,17 @@ public class MotocicletaController {
         @NotBlank @Size(max = 120) String itemDua) {}
 
     @PutMapping("/{id}")
-    public Motocicleta actualizar(@PathVariable long id, @Valid @RequestBody CambiosFicha cambios) {
+    @Transactional
+    public Motocicleta actualizar(@PathVariable long id, @Valid @RequestBody CambiosFicha cambios,
+        Authentication actor) {
+        registrarActor(actor.getName());
         return editar.ejecutar(id, cambios.marca(), cambios.modelo(), cambios.color(),
             cambios.chasisCompleto(), cambios.numeroMotor(), cambios.dua(), cambios.itemDua());
+    }
+
+    private void registrarActor(String nombre) {
+        // El contexto dura solo esta transacción; el disparador lo añade a la bitácora.
+        jdbc.queryForObject("SELECT set_config('indumotos.actor', ?, true)", String.class, nombre);
     }
 
     @PostMapping

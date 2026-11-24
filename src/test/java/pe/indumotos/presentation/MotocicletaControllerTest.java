@@ -21,7 +21,8 @@ class MotocicletaControllerTest {
             "MOTOR-0001", "000123", "004", "admin")).thenReturn(moto);
         var controller = new MotocicletaController(registrar,
             mock(pe.indumotos.application.PermisoService.class),
-            mock(ConsultarMotocicletasFiltradas.class), mock(pe.indumotos.application.EditarMotocicleta.class));
+            mock(ConsultarMotocicletasFiltradas.class), mock(pe.indumotos.application.EditarMotocicleta.class),
+            mock(org.springframework.jdbc.core.JdbcTemplate.class));
         var auth = UsernamePasswordAuthenticationToken.authenticated(
             "admin", null, java.util.List.of());
 
@@ -45,7 +46,8 @@ class MotocicletaControllerTest {
         when(consulta.consultar("RONCO", null, "ROJO", null, 0, 20)).thenReturn(esperado);
         var controller = new MotocicletaController(registrar,
             mock(pe.indumotos.application.PermisoService.class), consulta,
-            mock(pe.indumotos.application.EditarMotocicleta.class));
+            mock(pe.indumotos.application.EditarMotocicleta.class),
+            mock(org.springframework.jdbc.core.JdbcTemplate.class));
 
         var respuesta = controller.listar("RONCO", null, "ROJO", null, 0, 20);
 

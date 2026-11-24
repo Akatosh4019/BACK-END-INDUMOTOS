@@ -10,6 +10,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -43,7 +44,8 @@ public class TrabajadorController {
 
     @PutMapping
     @Transactional
-    public Datos actualizar(@PathVariable long id,@Valid @RequestBody Cambio cambio) {
+    public Datos actualizar(@PathVariable long id,@Valid @RequestBody Cambio cambio, Authentication actor) {
+        jdbc.queryForObject("SELECT set_config('indumotos.actor', ?, true)", String.class, actor.getName());
         String anterior=jdbc.query("SELECT nombre_usuario FROM usuario WHERE id_usuario=? FOR UPDATE",
             rs -> rs.next() ? rs.getString(1) : null,id);
         if(anterior==null) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Trabajador no encontrado");

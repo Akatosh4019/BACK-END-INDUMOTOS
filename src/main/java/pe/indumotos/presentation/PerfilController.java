@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +32,7 @@ public class PerfilController {
         @NotBlank @Size(min = 12, max = 100) String claveNueva) {}
     public record CambiarTelefono(@NotBlank String claveActual,
         @Pattern(regexp = "|[+0-9 -]{6,30}") String telefono) {}
+    public record ConfirmarClave(@NotBlank String claveActual) {}
 
     @GetMapping
     public PerfilService.Perfil consultar(Authentication actor) {
@@ -41,6 +43,13 @@ public class PerfilController {
     public PerfilService.Perfil cambiarUsuario(@Valid @RequestBody CambiarUsuario cambio,
         Authentication actor) {
         return perfiles.cambiarUsuario(actor.getName(), cambio.nombreUsuario(), cambio.claveActual());
+    }
+
+    @PostMapping("/confirmar-clave")
+    public ResponseEntity<Void> confirmarClave(@Valid @RequestBody ConfirmarClave confirmacion,
+        Authentication actor) {
+        perfiles.confirmarClaveActual(actor.getName(), confirmacion.claveActual());
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/clave")

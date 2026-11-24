@@ -58,6 +58,11 @@ public class PerfilService {
     }
 
     @Transactional
+    public void confirmarClaveActual(String actor, String claveActual) {
+        verificarClave(actor, claveActual);
+    }
+
+    @Transactional
     public void cambiarClave(String actor, String claveActual, String claveNueva) {
         Cuenta cuenta = verificarClave(actor, claveActual);
         if (claveNueva == null || claveNueva.length() < 12 || claveNueva.length() > 100)

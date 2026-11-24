@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping("/api/v1/usuarios")
@@ -36,7 +37,8 @@ public class UsuarioController {
     public record CrearUsuario(@NotBlank @Size(max=180) String nombreCompleto,
         @NotBlank @Size(min=3, max=80) @Pattern(regexp="[A-Za-z0-9._-]+") String nombreUsuario,
         @NotBlank @Size(min=12, max=100) String clave,
-        @NotBlank @Size(max=50) @Pattern(regexp="[A-Za-z_]+") String rolCodigo) {}
+        @NotBlank @Size(max=50) @Pattern(regexp="[A-Za-z_]+") String rolCodigo,
+        Long tiendaId) {}
     public record UsuarioCreado(Long id, String nombreCompleto, String nombreUsuario, String rolCodigo) {}
     public record UsuarioListado(Long id, String nombreCompleto, String nombreUsuario,
         String rolCodigo, String estado, Long tiendaId, String tiendaNombre) {}
@@ -77,15 +79,29 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<UsuarioCreado> crear(@Valid @RequestBody CrearUsuario request) {
+    @Transactional
+    public ResponseEntity<UsuarioCreado> crear(@Valid @RequestBody CrearUsuario request,
+        org.springframework.security.core.Authentication actor) {
         String rol = request.rolCodigo().trim().toUpperCase(Locale.ROOT);
         Long rolId = jdbc.query("SELECT id_rol FROM rol WHERE codigo = ? AND estado = 'ACTIVO'",
             rs -> rs.next() ? rs.getLong(1) : null, rol);
         if (rolId == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rol no válido o inactivo");
+        if (request.tiendaId() != null) {
+            if (!rol.equals("COMERCIAL") && !rol.equals("FACTURACION"))
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La sede solo corresponde a Comercial o Facturación");
+            Boolean tiendaValida = jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM ubicacion " +
+                "WHERE id_ubicacion=? AND tipo='TIENDA' AND activo)", Boolean.class, request.tiendaId());
+            if (!Boolean.TRUE.equals(tiendaValida))
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tienda no válida");
+        }
         String username = request.nombreUsuario().trim().toLowerCase(Locale.ROOT);
         Long id = jdbc.queryForObject("INSERT INTO usuario (id_rol, nombre_completo, nombre_usuario, clave_hash) " +
             "VALUES (?, ?, ?, ?) RETURNING id_usuario", Long.class, rolId,
             request.nombreCompleto().trim(), username, encoder.encode(request.clave()));
+        if (request.tiendaId() != null)
+            jdbc.update("INSERT INTO usuario_tienda(id_usuario,id_tienda,id_asignador) " +
+                "SELECT ?,?,id_usuario FROM usuario WHERE nombre_usuario=?", id, request.tiendaId(),
+                actor.getName());
         return ResponseEntity.created(URI.create("/api/v1/usuarios/" + id))
             .body(new UsuarioCreado(id, request.nombreCompleto().trim(), username, rol));
     }

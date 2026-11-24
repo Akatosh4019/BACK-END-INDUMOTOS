@@ -38,3 +38,7 @@ Lee [cómo funciona el sistema](docs/SISTEMA_IMPLEMENTADO.md) para arquitectura,
 ## Perfil personal
 
 Cualquier cuenta activa puede consultar GET /api/v1/auth/perfil con su token. PUT /api/v1/auth/perfil/usuario y PUT /api/v1/auth/perfil/clave exigen la contraseña actual. Al cambiar credenciales se incrementa sesion_version: los tokens anteriores dejan de servir y hay que iniciar sesión de nuevo. El nombre de usuario es único y usa de 3 a 80 letras, números, puntos, guiones o guiones bajos. La contraseña nueva exige de 12 a 100 caracteres. Flyway V31 agrega la versión de sesión sin borrar cuentas existentes.
+
+## Sede del personal
+
+Al crear una cuenta de Comercial o Facturación, Administración puede enviar tiendaId junto con los datos del usuario. La API valida que sea una tienda activa y guarda cuenta y asignación en una sola transacción. Las cuentas existentes mantienen su asignación; Administración también puede cambiarla con PUT /api/v1/usuarios/{id}/tienda. El panel Modo compañía se retiró de la web, pero las API y tablas previas permanecen para compatibilidad.

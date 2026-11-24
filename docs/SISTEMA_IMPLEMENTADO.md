@@ -89,6 +89,20 @@ Estas historias no pertenecen al Sprint 3 oficial (HU-10 a HU-13); estaban en el
 - **HU-22 Motivo de no disponibilidad.** La disponibilidad se decide con una función pura probada (`DisponibilidadService.derivar`) con prioridad VENDIDA, EN_TRANSITO, BLOQUEADA, EN_REVISION, ASIGNADA, SIN_UBICACION, DISPONIBLE. Cada unidad informa motivo, fecha, `registradoPor` y `puedeOfrecerse`. Una diferencia de datos pendiente pone la moto EN_REVISION, la retira del stock de tienda e impide venderla o habilitarla hasta resolver el caso.
 - **Corrección de seguridad.** Un token de una cuenta inactiva o con sesión cerrada respondía 500; ahora responde 401 para que la web cierre la sesión.
 
+#### Mejoras de la revisión del 23/11 (aporte de Luciana Gutiérrez)
+
+Atienden las observaciones de la revisión con el equipo. Flyway **V32** agrega columnas y tablas nuevas sin borrar datos.
+
+- **Sesión de una hora.** El token dura 3600 segundos (antes 900). Se puede cambiar con `INDUMOTOS_SESION_SEGUNDOS` (entre 300 y 43200).
+- **Catálogo activo/inactivo.** `catalogo_motocicleta.activo`; `PUT /api/v1/catalogo-motocicletas/{id}/estado` con `{activo}` (requiere `CATALOGO_GESTIONAR`). Una combinación inactiva deja de ofrecerse y de aceptarse en nuevas solicitudes; las motos ya registradas y el registro de guías no cambian.
+- **Ubicaciones.** `GET /api/v1/ubicaciones?todas=true` incluye las inactivas; `PUT /api/v1/ubicaciones/{id}` edita nombre, tipo y referencia; `PUT /api/v1/ubicaciones/{id}/estado` activa o desactiva (ambas con `PERMISOS_ASIGNAR`). El código no cambia. No se desactiva una sede con motos, envíos, solicitudes abiertas o cuentas activas, y su tipo no cambia si ya tiene historial.
+- **Solicitudes.** `GET /api/v1/solicitudes` acepta `buscar` (número, tienda, solicitante, marca, modelo o color) y `estado`, y devuelve el total en la cabecera `X-Total-Count`; la respuesta sigue siendo una lista. `PUT /api/v1/solicitudes/{id}` edita una solicitud **pendiente** de quien la registró o de Administración; lo anterior se guarda en `solicitud_ensamblaje_edicion` (inmutable) y se consulta en `GET /api/v1/solicitudes/{id}/ediciones`. "Eliminar" sigue siendo **anular con motivo** para no perder el historial.
+- **Recorrido de una moto.** `GET /api/v1/motocicletas/{id}/recorrido` (requiere `UBICACIONES_CONSULTAR`) une llegada, registro de ficha, ubicaciones, asignaciones, salida (en camino), recepción, bloqueos y venta con origen, destino, responsable y fecha. Solo lee tablas existentes.
+- **Estado en el inventario.** `GET /api/v1/disponibilidad/estados?ids=1,2` devuelve el estado de hasta 50 motos (requiere `DISPONIBILIDAD_CONSULTAR`).
+- **Reportes.** `GET /api/v1/reportes/ventas?periodo=SEMANA|MES|ANIO` con el permiso nuevo `REPORTES_CONSULTAR` (Administración): unidades e importe, modelos más y menos vendidos, ventas por tienda, serie por día o mes (hora de Lima) y stock por modelo (almacén, tienda, en camino).
+- **Mensajes de error.** Catálogo, ubicaciones y solicitudes devuelven `{"error": "motivo"}` en lugar de textos genéricos como "Conflict".
+- **Datos demo.** El perfil `demo` agrega ocho ventas ficticias (`GR-DEMO-VENTAS`, motos `IND-DEMO-V-*`) en la tienda de prueba para que Reportes muestre datos. No usan las 20 motos de prueba anteriores.
+
 
 - Probar visualmente cada rol y guardar capturas reales en las carpetas de evidencia correspondientes.
 - Medir OCR con varias guías reales: Tesseract puede confundir caracteres de chasis y DUA. Mantener confirmación humana.

@@ -42,3 +42,7 @@ Cualquier cuenta activa puede consultar GET /api/v1/auth/perfil con su token. PU
 ## Sede del personal
 
 Al crear una cuenta de Comercial o Facturación, Administración puede enviar tiendaId junto con los datos del usuario. La API valida que sea una tienda activa y guarda cuenta y asignación en una sola transacción. Las cuentas existentes mantienen su asignación; Administración también puede cambiarla con PUT /api/v1/usuarios/{id}/tienda. El panel Modo compañía se retiró de la web, pero las API y tablas previas permanecen para compatibilidad.
+
+## Mejoras de la revisión del 23/11
+
+Flyway V32 agrega catálogo activo/inactivo, historial de ediciones de solicitudes y el permiso `REPORTES_CONSULTAR`. La sesión dura una hora. Hay nuevas rutas para editar y desactivar ubicaciones, editar solicitudes pendientes, ver el recorrido completo de una moto y consultar reportes de ventas y stock. El detalle está en [docs/SISTEMA_IMPLEMENTADO.md](docs/SISTEMA_IMPLEMENTADO.md).

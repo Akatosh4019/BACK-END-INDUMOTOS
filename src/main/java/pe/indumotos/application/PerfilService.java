@@ -14,7 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class PerfilService {
     public record Perfil(String nombreCompleto, String nombreUsuario, String rolCodigo,
         String rolNombre, String estado, String tiendaNombre, OffsetDateTime creadoEn,
-        OffsetDateTime actualizadoEn) {}
+        OffsetDateTime actualizadoEn, String nombres, String apellidos, String correo, String telefono, String dni) {}
     private record Cuenta(long id, String nombreUsuario, String claveHash) {}
 
     private final JdbcTemplate jdbc;
@@ -28,15 +28,30 @@ public class PerfilService {
     @Transactional(readOnly = true)
     public Perfil consultar(String actor) {
         var perfiles = jdbc.query("SELECT u.nombre_completo,u.nombre_usuario,r.codigo,r.nombre,u.estado," +
-            "t.nombre,u.creado_en,u.actualizado_en FROM usuario u JOIN rol r ON r.id_rol=u.id_rol " +
+            "t.nombre,u.creado_en,u.actualizado_en,u.nombres,u.apellidos,u.correo,u.telefono,u.dni FROM usuario u JOIN rol r ON r.id_rol=u.id_rol " +
             "LEFT JOIN usuario_tienda ut ON ut.id_usuario=u.id_usuario " +
             "LEFT JOIN ubicacion t ON t.id_ubicacion=ut.id_tienda " +
             "WHERE u.nombre_usuario=? AND u.estado='ACTIVO'",
             (rs, n) -> new Perfil(rs.getString(1), rs.getString(2), rs.getString(3),
                 rs.getString(4), rs.getString(5), rs.getString(6),
-                rs.getObject(7, OffsetDateTime.class), rs.getObject(8, OffsetDateTime.class)), actor);
+                rs.getObject(7, OffsetDateTime.class), rs.getObject(8, OffsetDateTime.class),
+                rs.getString(9), rs.getString(10), rs.getString(11), rs.getString(12), rs.getString(13)), actor);
         if (perfiles.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cuenta no disponible");
         return perfiles.getFirst();
+    }
+
+    @Transactional
+    public Perfil actualizarDatos(String actor, DatosPersonales solicitud) {
+        DatosPersonales datos = solicitud.normalizados();
+        try {
+            int filas = jdbc.update("UPDATE usuario SET nombres=?,apellidos=?,correo=?,telefono=?,dni=?," +
+                "nombre_completo=?,actualizado_en=CURRENT_TIMESTAMP WHERE nombre_usuario=? AND estado='ACTIVO'",
+                datos.nombres(), datos.apellidos(), datos.correo(), datos.telefono(), datos.dni(), datos.nombreCompleto(), actor);
+            if (filas == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cuenta no disponible");
+        } catch (DuplicateKeyException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ese DNI ya está registrado en otra cuenta");
+        }
+        return consultar(actor);
     }
 
     @Transactional

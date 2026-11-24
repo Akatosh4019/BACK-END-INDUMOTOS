@@ -21,7 +21,8 @@ public class GestionarCuentas {
     public record Detalle(long id, String nombreCompleto, String nombreUsuario, String rolCodigo,
         String rolNombre, String estado, String tiendaNombre, OffsetDateTime creadoEn,
         OffsetDateTime actualizadoEn, List<String> permisosEfectivos,
-        List<PermisoService.PermisoEfectivo> excepciones, CuentaRepository.EventoEstado ultimoCambioEstado) {}
+        List<PermisoService.PermisoEfectivo> excepciones, CuentaRepository.EventoEstado ultimoCambioEstado,
+        String nombres, String apellidos, String correo, String telefono, String dni) {}
 
     private final CuentaRepository cuentas;
     private final PermisoService permisos;
@@ -41,7 +42,8 @@ public class GestionarCuentas {
             accesos.stream().filter(PermisoService.PermisoEfectivo::permitido)
                 .map(PermisoService.PermisoEfectivo::codigo).toList(),
             accesos.stream().filter(p -> p.excepcion() != null).toList(),
-            historial.isEmpty() ? null : historial.getFirst());
+            historial.isEmpty() ? null : historial.getFirst(), cuenta.nombres(), cuenta.apellidos(),
+            cuenta.correo(), cuenta.telefono(), cuenta.dni());
     }
 
     public List<CuentaRepository.EventoEstado> historial(long id) {

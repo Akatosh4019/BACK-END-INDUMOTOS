@@ -11,7 +11,7 @@ import pe.indumotos.application.CuentaRepository;
 @Repository
 public class JdbcCuentaRepository implements CuentaRepository {
     private static final String CUENTA = "SELECT u.id_usuario,u.nombre_completo,u.nombre_usuario,r.codigo,r.nombre," +
-        "u.estado,ti.nombre,u.creado_en,u.actualizado_en FROM usuario u JOIN rol r ON r.id_rol=u.id_rol " +
+        "u.estado,ti.nombre,u.creado_en,u.actualizado_en,u.nombres,u.apellidos,u.correo,u.telefono,u.dni FROM usuario u JOIN rol r ON r.id_rol=u.id_rol " +
         "LEFT JOIN usuario_tienda ut ON ut.id_usuario=u.id_usuario " +
         "LEFT JOIN ubicacion ti ON ti.id_ubicacion=ut.id_tienda WHERE u.id_usuario=?";
     private final JdbcTemplate jdbc;
@@ -67,6 +67,7 @@ public class JdbcCuentaRepository implements CuentaRepository {
     private static Cuenta cuenta(ResultSet rs) throws SQLException {
         return new Cuenta(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getString(5),
             rs.getString(6), rs.getString(7), rs.getObject(8, OffsetDateTime.class),
-            rs.getObject(9, OffsetDateTime.class));
+            rs.getObject(9, OffsetDateTime.class), rs.getString(10), rs.getString(11), rs.getString(12),
+            rs.getString(13), rs.getString(14));
     }
 }

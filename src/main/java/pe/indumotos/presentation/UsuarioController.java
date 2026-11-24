@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
+import pe.indumotos.application.DatosPersonales;
 
 @RestController
 @RequestMapping("/api/v1/usuarios")
@@ -38,7 +39,11 @@ public class UsuarioController {
         @NotBlank @Size(min=3, max=80) @Pattern(regexp="[A-Za-z0-9._-]+") String nombreUsuario,
         @NotBlank @Size(min=12, max=100) String clave,
         @NotBlank @Size(max=50) @Pattern(regexp="[A-Za-z_]+") String rolCodigo,
-        Long tiendaId) {}
+        Long tiendaId, String nombres, String apellidos, String correo, String telefono, String dni) {
+        public CrearUsuario(String nombreCompleto, String nombreUsuario, String clave, String rolCodigo, Long tiendaId) {
+            this(nombreCompleto, nombreUsuario, clave, rolCodigo, tiendaId, null, null, null, null, null);
+        }
+    }
     public record UsuarioCreado(Long id, String nombreCompleto, String nombreUsuario, String rolCodigo) {}
     public record UsuarioListado(Long id, String nombreCompleto, String nombreUsuario,
         String rolCodigo, String estado, Long tiendaId, String tiendaNombre) {}
@@ -82,6 +87,11 @@ public class UsuarioController {
     @Transactional
     public ResponseEntity<UsuarioCreado> crear(@Valid @RequestBody CrearUsuario request,
         org.springframework.security.core.Authentication actor) {
+        boolean personales = request.nombres() != null || request.apellidos() != null || request.correo() != null
+            || request.telefono() != null || request.dni() != null;
+        DatosPersonales datos = personales ? new DatosPersonales(request.nombres(), request.apellidos(),
+            request.correo(), request.telefono(), request.dni()).normalizados() : null;
+        String nombreCompleto = datos == null ? request.nombreCompleto().trim() : datos.nombreCompleto();
         String rol = request.rolCodigo().trim().toUpperCase(Locale.ROOT);
         Long rolId = jdbc.query("SELECT id_rol FROM rol WHERE codigo = ? AND estado = 'ACTIVO'",
             rs -> rs.next() ? rs.getLong(1) : null, rol);
@@ -95,21 +105,23 @@ public class UsuarioController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tienda no válida");
         }
         String username = request.nombreUsuario().trim().toLowerCase(Locale.ROOT);
-        Long id = jdbc.queryForObject("INSERT INTO usuario (id_rol, nombre_completo, nombre_usuario, clave_hash) " +
-            "VALUES (?, ?, ?, ?) RETURNING id_usuario", Long.class, rolId,
-            request.nombreCompleto().trim(), username, encoder.encode(request.clave()));
+        Long id = jdbc.queryForObject("INSERT INTO usuario (id_rol, nombre_completo, nombre_usuario, clave_hash," +
+            "nombres,apellidos,correo,telefono,dni) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id_usuario", Long.class, rolId,
+            nombreCompleto, username, encoder.encode(request.clave()), datos == null ? null : datos.nombres(),
+            datos == null ? null : datos.apellidos(), datos == null ? null : datos.correo(),
+            datos == null ? null : datos.telefono(), datos == null ? null : datos.dni());
         if (request.tiendaId() != null)
             jdbc.update("INSERT INTO usuario_tienda(id_usuario,id_tienda,id_asignador) " +
                 "SELECT ?,?,id_usuario FROM usuario WHERE nombre_usuario=?", id, request.tiendaId(),
                 actor.getName());
         return ResponseEntity.created(URI.create("/api/v1/usuarios/" + id))
-            .body(new UsuarioCreado(id, request.nombreCompleto().trim(), username, rol));
+            .body(new UsuarioCreado(id, nombreCompleto, username, rol));
     }
 
     @ExceptionHandler(DuplicateKeyException.class)
     public ResponseEntity<java.util.Map<String, String>> duplicado() {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(java.util.Map.of("error", "El nombre de usuario ya existe"));
+            .body(java.util.Map.of("error", "El nombre de usuario o DNI ya está registrado"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

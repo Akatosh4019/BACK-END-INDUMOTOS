@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import pe.indumotos.application.PerfilService;
+import pe.indumotos.application.DatosPersonales;
 
 @RestController
 @RequestMapping("/api/v1/auth/perfil")
@@ -39,6 +40,11 @@ public class PerfilController {
     public PerfilService.Perfil cambiarUsuario(@Valid @RequestBody CambiarUsuario cambio,
         Authentication actor) {
         return perfiles.cambiarUsuario(actor.getName(), cambio.nombreUsuario(), cambio.claveActual());
+    }
+
+    @PutMapping("/datos")
+    public PerfilService.Perfil actualizarDatos(@Valid @RequestBody DatosPersonales datos, Authentication actor) {
+        return perfiles.actualizarDatos(actor.getName(), datos);
     }
 
     @PutMapping("/clave")

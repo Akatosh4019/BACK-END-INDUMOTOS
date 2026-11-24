@@ -6,7 +6,14 @@ import java.util.List;
 /** Puerto de persistencia para consultar cuentas y registrar sus cambios de estado (HU-16 y HU-17). */
 public interface CuentaRepository {
     record Cuenta(long id, String nombreCompleto, String nombreUsuario, String rolCodigo, String rolNombre,
-        String estado, String tiendaNombre, OffsetDateTime creadoEn, OffsetDateTime actualizadoEn) {}
+        String estado, String tiendaNombre, OffsetDateTime creadoEn, OffsetDateTime actualizadoEn,
+        String nombres, String apellidos, String correo, String telefono, String dni) {
+        public Cuenta(long id, String nombreCompleto, String nombreUsuario, String rolCodigo, String rolNombre,
+            String estado, String tiendaNombre, OffsetDateTime creadoEn, OffsetDateTime actualizadoEn) {
+            this(id, nombreCompleto, nombreUsuario, rolCodigo, rolNombre, estado, tiendaNombre, creadoEn,
+                actualizadoEn, null, null, null, null, null);
+        }
+    }
 
     record EventoEstado(String estadoAnterior, String estadoNuevo, String motivo, String actor,
         OffsetDateTime fecha) {}

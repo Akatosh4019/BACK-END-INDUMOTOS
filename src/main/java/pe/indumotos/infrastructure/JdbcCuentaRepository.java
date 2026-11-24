@@ -45,7 +45,8 @@ public class JdbcCuentaRepository implements CuentaRepository {
     @Override
     public void cambiarEstado(long id, String estado) {
         jdbc.update("UPDATE usuario SET estado=?, actualizado_en=CURRENT_TIMESTAMP, " +
-            "sesiones_validas_desde=date_trunc('second', CURRENT_TIMESTAMP) WHERE id_usuario=?", estado, id);
+            "sesiones_validas_desde=date_trunc('second', CURRENT_TIMESTAMP), " +
+            "sesion_version=sesion_version+1 WHERE id_usuario=?", estado, id);
     }
 
     @Override

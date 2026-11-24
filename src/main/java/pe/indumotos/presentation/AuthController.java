@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -29,14 +30,16 @@ public class AuthController {
     private final JwtEncoder encoder;
     private final pe.indumotos.application.PermisoService permisos;
     private final JdbcTokenRevocationRepository revocados;
+    private final JdbcTemplate jdbc;
 
     public AuthController(AuthenticationManager authentication, JwtEncoder encoder,
         pe.indumotos.application.PermisoService permisos,
-        JdbcTokenRevocationRepository revocados) {
+        JdbcTokenRevocationRepository revocados, JdbcTemplate jdbc) {
         this.authentication = authentication;
         this.encoder = encoder;
         this.permisos = permisos;
         this.revocados = revocados;
+        this.jdbc = jdbc;
     }
 
     public record LoginRequest(@NotBlank String nombreUsuario, @NotBlank String clave) {}
@@ -61,8 +64,11 @@ public class AuthController {
             request.nombreUsuario().trim().toLowerCase(java.util.Locale.ROOT), request.clave()));
         Instant now = Instant.now();
         long seconds = 900;
+        Long version = jdbc.queryForObject("SELECT sesion_version FROM usuario WHERE nombre_usuario=?",
+            Long.class, result.getName());
+        if (version == null) throw new org.springframework.security.authentication.BadCredentialsException("Cuenta no disponible");
         var claims = JwtClaimsSet.builder().issuer("https://indumotos.local").subject(result.getName())
-            .issuedAt(now).expiresAt(now.plus(seconds, ChronoUnit.SECONDS)).build();
+            .issuedAt(now).expiresAt(now.plus(seconds, ChronoUnit.SECONDS)).claim("cv", version).build();
         String token = encoder.encode(JwtEncoderParameters.from(
             JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
         return new LoginResponse(token, "Bearer", seconds);

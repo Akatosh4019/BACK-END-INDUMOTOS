@@ -10,7 +10,7 @@ Esta es la API y la base de datos del sistema Indumotos. El trabajo está en la 
 4. **Comercial** solicita motos del catálogo para una tienda. **Almacén** prepara chasis concretos y registra su salida. Comercial confirma la recepción; así cambia la ubicación confirmada de cada moto.
 5. **Facturación** consulta la disponibilidad y puede reportar diferencias. **Inventarios** investiga y corrige esas diferencias con una fuente registrada.
 
-La API comprueba el JWT, los permisos y las reglas de cada operación. Las fotos de guías y los borradores quedan en PostgreSQL, por lo que sobreviven a reinicios de contenedores. El OCR de Tesseract solo propone datos: una persona debe verificarlos. La base incluye migraciones Flyway **V1–V30**. Las tablas y API internas de ventas se conservan por compatibilidad, aunque **Modo tienda** y el registro de ventas se retiraron de la interfaz web de esta entrega. No hay cobro en línea.
+La API comprueba el JWT, los permisos y las reglas de cada operación. Las fotos de guías y los borradores quedan en PostgreSQL, por lo que sobreviven a reinicios de contenedores. El OCR de Tesseract solo propone datos: una persona debe verificarlos. La base incluye migraciones Flyway **V1–V31**. Las tablas y API internas de ventas se conservan por compatibilidad, aunque **Modo tienda** y el registro de ventas se retiraron de la interfaz web de esta entrega. No hay cobro en línea.
 
 Al iniciar Docker con el perfil `demo` se cargan automáticamente 20 motocicletas de prueba, un catálogo utilizable y dos guías **completamente ficticias** con imágenes para practicar el registro y el OCR. No son documentos comerciales. [Detalles de los datos de demostración](src/main/resources/db/demo/README.md).
 
@@ -31,6 +31,10 @@ Comprueba `http://127.0.0.1:8080/api/health`. Si hay un problema, ejecuta `docke
 
 ## Pruebas y alcance
 
-Con Java 21 y Maven: `mvn test`. La última ejecución backend pasó **101 pruebas** y aplicó Flyway hasta **V30** en PostgreSQL local. La revisión visual por rol y una finalización de guía real autorizada siguen pendientes. Esto describe lo implementado; no declara terminado todo el producto.
+Con Java 21 y Maven: `mvn test`. La última ejecución backend pasó **101 pruebas** y aplicó Flyway hasta **V31** en PostgreSQL local. La revisión visual por rol y una finalización de guía real autorizada siguen pendientes. Esto describe lo implementado; no declara terminado todo el producto.
 
 Lee [cómo funciona el sistema](docs/SISTEMA_IMPLEMENTADO.md) para arquitectura, rutas, permisos y límites, y [el expediente de Sprint 2](docs/SPRINT%202/README.md) para las tareas y evidencias de ese sprint.
+
+## Perfil personal
+
+Cualquier cuenta activa puede consultar GET /api/v1/auth/perfil con su token. PUT /api/v1/auth/perfil/usuario y PUT /api/v1/auth/perfil/clave exigen la contraseña actual. Al cambiar credenciales se incrementa sesion_version: los tokens anteriores dejan de servir y hay que iniciar sesión de nuevo. El nombre de usuario es único y usa de 3 a 80 letras, números, puntos, guiones o guiones bajos. La contraseña nueva exige de 12 a 100 caracteres. Flyway V31 agrega la versión de sesión sin borrar cuentas existentes.

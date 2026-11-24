@@ -29,7 +29,9 @@ public class AdminBootstrap implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         if (username.isBlank() || password.length() < 12)
             throw new IllegalStateException("Configurar ADMIN_USERNAME y ADMIN_PASSWORD (mínimo 12 caracteres)");
-        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM usuario WHERE nombre_usuario = ?", Integer.class, username);
+        // No recrear al administrador inicial si luego cambia su nombre de usuario.
+        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM usuario u JOIN rol r ON r.id_rol=u.id_rol " +
+            "WHERE r.codigo='ADMIN'", Integer.class);
         if (count != null && count > 0) return;
         jdbc.update("INSERT INTO usuario (id_rol, nombre_completo, nombre_usuario, clave_hash) " +
             "SELECT id_rol, 'Administrador inicial', ?, ? FROM rol WHERE codigo = 'ADMIN'",

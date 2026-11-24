@@ -64,6 +64,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/v1/auth/perfil").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/v1/auth/perfil/usuario", "/api/v1/auth/perfil/clave").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").access(exige("USUARIOS_CREAR"))
                 .requestMatchers(HttpMethod.PUT, "/api/v1/usuarios/*/tienda")
                     .access(exige("COMPANIA_CONSULTAR"))
@@ -179,13 +181,12 @@ public class SecurityConfig {
             throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Cuenta no disponible");
         }
         if (!user.isEnabled()) throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Cuenta inactiva");
-        // HU-16: un cambio de estado cierra las sesiones abiertas antes de ese momento.
-        java.time.OffsetDateTime validasDesde = jdbc.query(
-            "SELECT sesiones_validas_desde FROM usuario WHERE nombre_usuario = ?",
-            rs -> rs.next() ? rs.getObject(1, java.time.OffsetDateTime.class) : null, jwt.getSubject());
-        // JWT codifica iat en segundos: los tokens del mismo segundo del cambio también son anteriores.
-        if (validasDesde != null && (jwt.getIssuedAt() == null || !jwt.getIssuedAt().isAfter(validasDesde.toInstant())))
-            throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Sesión cerrada por cambio de estado");
+        Long versionActual = jdbc.queryForObject("SELECT sesion_version FROM usuario WHERE nombre_usuario=?",
+            Long.class, jwt.getSubject());
+        Object versionToken = jwt.getClaim("cv");
+        if (!(versionToken instanceof Number numero) || versionActual == null
+            || versionActual.longValue() != numero.longValue())
+            throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Sesión cerrada por cambio de credenciales o estado");
         return new JwtAuthenticationToken(jwt, user.getAuthorities(), user.getUsername());
     }
 }

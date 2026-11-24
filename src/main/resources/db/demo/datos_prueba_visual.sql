@@ -94,6 +94,61 @@ SELECT v.marca,v.modelo,v.color,u.id_usuario FROM (VALUES
 WHERE u.nombre_usuario=current_setting('indumotos.demo_admin')
 ON CONFLICT DO NOTHING;
 
+-- Ventas ficticias para que el módulo de Reportes muestre datos en la demostración.
+-- Usan motos propias (IND-DEMO-V-*) para no tocar las 20 motos de prueba anteriores.
+INSERT INTO llegada (numero_guia,fecha_llegada,id_receptor,cantidad_declarada,cantidad_recibida,observacion,estado_registro)
+SELECT 'GR-DEMO-VENTAS', CURRENT_TIMESTAMP - interval '410 days', u.id_usuario, 8, 8, 'Guía ficticia con motos ya vendidas para el reporte de ventas', 'CONFIRMADA'
+FROM usuario u WHERE u.nombre_usuario=current_setting('indumotos.demo_admin')
+AND NOT EXISTS (SELECT 1 FROM llegada l WHERE l.numero_guia='GR-DEMO-VENTAS');
+
+INSERT INTO motocicleta (id_llegada,marca,modelo,color,chasis_completo,numero_motor,dua,item_dua,id_creador,creado_en)
+SELECT l.id_llegada,v.marca,v.modelo,v.color,v.chasis,v.motor,'DUA-DEMO-2026',v.item,u.id_usuario,
+    CURRENT_TIMESTAMP - interval '405 days'
+FROM (VALUES
+ ('Honda','CB 190R','Rojo','IND-DEMO-V-0001','M-DEMO-V-0001','V1'),
+ ('Honda','CB 190R','Negro','IND-DEMO-V-0002','M-DEMO-V-0002','V2'),
+ ('Honda','CB 190R','Azul','IND-DEMO-V-0003','M-DEMO-V-0003','V3'),
+ ('Yamaha','FZ 25','Negro','IND-DEMO-V-0004','M-DEMO-V-0004','V4'),
+ ('Yamaha','FZ 25','Azul','IND-DEMO-V-0005','M-DEMO-V-0005','V5'),
+ ('Bajaj','Pulsar NS 200','Rojo','IND-DEMO-V-0006','M-DEMO-V-0006','V6'),
+ ('Suzuki','Gixxer 150','Gris','IND-DEMO-V-0007','M-DEMO-V-0007','V7'),
+ ('Honda','CB 190R','Rojo','IND-DEMO-V-0008','M-DEMO-V-0008','V8')
+) AS v(marca,modelo,color,chasis,motor,item)
+CROSS JOIN usuario u CROSS JOIN llegada l
+WHERE u.nombre_usuario=current_setting('indumotos.demo_admin') AND l.numero_guia='GR-DEMO-VENTAS'
+AND NOT EXISTS (SELECT 1 FROM motocicleta m WHERE upper(btrim(m.chasis_completo))=upper(btrim(v.chasis)));
+
+INSERT INTO registro_guia(id_llegada,terminado_en,terminado_por)
+SELECT l.id_llegada,CURRENT_TIMESTAMP,u.id_usuario FROM llegada l CROSS JOIN usuario u
+WHERE l.numero_guia='GR-DEMO-VENTAS' AND u.nombre_usuario=current_setting('indumotos.demo_admin')
+ON CONFLICT (id_llegada) DO NOTHING;
+
+INSERT INTO movimiento_motocicleta (id_motocicleta,tipo,id_destino,id_registrador,ocurrido_en,observacion)
+SELECT m.id_motocicleta,'UBICACION',d.id_ubicacion,u.id_usuario,CURRENT_TIMESTAMP - interval '400 days',
+    'Ubicación de prueba en tienda antes de la venta'
+FROM motocicleta m CROSS JOIN ubicacion d CROSS JOIN usuario u
+WHERE m.chasis_completo LIKE 'IND-DEMO-V-%' AND d.codigo='DEMO_TIENDA_NORTE'
+AND u.nombre_usuario=current_setting('indumotos.demo_admin')
+AND NOT EXISTS (SELECT 1 FROM movimiento_motocicleta mm WHERE mm.id_motocicleta=m.id_motocicleta);
+
+INSERT INTO venta_motocicleta (id_motocicleta,id_tienda,id_registrador,referencia_comprobante,importe,vendida_en)
+SELECT m.id_motocicleta,d.id_ubicacion,u.id_usuario,'DEMO-B001-' || right(m.chasis_completo,4),v.importe,
+    CURRENT_TIMESTAMP - v.hace
+FROM (VALUES
+ ('IND-DEMO-V-0001', 9800.00, interval '1 day'),
+ ('IND-DEMO-V-0002', 9800.00, interval '3 days'),
+ ('IND-DEMO-V-0003', 9650.00, interval '12 days'),
+ ('IND-DEMO-V-0004', 14500.00, interval '5 days'),
+ ('IND-DEMO-V-0005', 14500.00, interval '45 days'),
+ ('IND-DEMO-V-0006', 11200.00, interval '20 days'),
+ ('IND-DEMO-V-0007', 7900.00, interval '150 days'),
+ ('IND-DEMO-V-0008', 9800.00, interval '240 days')
+) AS v(chasis,importe,hace)
+JOIN motocicleta m ON m.chasis_completo=v.chasis
+CROSS JOIN ubicacion d CROSS JOIN usuario u
+WHERE d.codigo='DEMO_TIENDA_NORTE' AND u.nombre_usuario=current_setting('indumotos.demo_admin')
+AND NOT EXISTS (SELECT 1 FROM venta_motocicleta x WHERE x.id_motocicleta=m.id_motocicleta);
+
 COMMIT;
 
 SELECT count(*) AS motocicletas_demo FROM motocicleta WHERE chasis_completo LIKE 'IND-DEMO-S2-%';

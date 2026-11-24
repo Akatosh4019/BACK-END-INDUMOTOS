@@ -1,0 +1,90 @@
+{
+  "fecha": "2026-11-23T23:58:53-05:00",
+  "casos": [
+    {
+      "ruta": "auth/login",
+      "metodo": "POST",
+      "esperado": 200,
+      "http": 200
+    },
+    {
+      "ruta": "usuarios",
+      "metodo": "POST",
+      "esperado": 201,
+      "http": 201
+    },
+    {
+      "ruta": "auth/login",
+      "metodo": "POST",
+      "esperado": 200,
+      "http": 200
+    },
+    {
+      "ruta": "usuarios/10/restablecer-clave",
+      "metodo": "POST",
+      "esperado": 401,
+      "http": 401
+    },
+    {
+      "ruta": "auth/login",
+      "metodo": "POST",
+      "esperado": 200,
+      "http": 200
+    },
+    {
+      "ruta": "usuarios/10/restablecer-clave",
+      "metodo": "POST",
+      "esperado": 403,
+      "http": 403
+    },
+    {
+      "ruta": "usuarios/10/restablecer-clave",
+      "metodo": "POST",
+      "esperado": 403,
+      "http": 403
+    },
+    {
+      "ruta": "usuarios/10/restablecer-clave",
+      "metodo": "POST",
+      "esperado": 400,
+      "http": 400
+    },
+    {
+      "ruta": "usuarios/10/restablecer-clave",
+      "metodo": "POST",
+      "esperado": 400,
+      "http": 400
+    },
+    {
+      "ruta": "usuarios/10/restablecer-clave",
+      "metodo": "POST",
+      "esperado": 204,
+      "http": 204
+    },
+    {
+      "ruta": "auth/me",
+      "metodo": "GET",
+      "esperado": 401,
+      "http": 401
+    },
+    {
+      "ruta": "auth/login",
+      "metodo": "POST",
+      "esperado": 401,
+      "http": 401
+    },
+    {
+      "ruta": "auth/login",
+      "metodo": "POST",
+      "esperado": 200,
+      "http": 200
+    },
+    {
+      "ruta": "auth/me",
+      "metodo": "GET",
+      "esperado": 200,
+      "http": 200
+    }
+  ],
+  "limpieza": "Solo cuenta transitoria creada por esta prueba; cuentas operativas intactas"
+}

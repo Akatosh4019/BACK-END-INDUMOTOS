@@ -31,6 +31,8 @@ public class AuthController {
     private final pe.indumotos.application.PermisoService permisos;
     private final JdbcTokenRevocationRepository revocados;
     private final JdbcTemplate jdbc;
+    // Duración de la sesión: una hora por defecto, configurable con INDUMOTOS_SESION_SEGUNDOS.
+    private long sesionSegundos = 3600;
 
     public AuthController(AuthenticationManager authentication, JwtEncoder encoder,
         pe.indumotos.application.PermisoService permisos,
@@ -40,6 +42,13 @@ public class AuthController {
         this.permisos = permisos;
         this.revocados = revocados;
         this.jdbc = jdbc;
+    }
+
+    @org.springframework.beans.factory.annotation.Value("${indumotos.sesion.segundos:3600}")
+    void setSesionSegundos(long segundos) {
+        if (segundos < 300 || segundos > 43200)
+            throw new IllegalStateException("La sesión debe durar entre 5 minutos y 12 horas");
+        this.sesionSegundos = segundos;
     }
 
     public record LoginRequest(@NotBlank String nombreUsuario, @NotBlank String clave) {}
@@ -63,7 +72,7 @@ public class AuthController {
         var result = authentication.authenticate(UsernamePasswordAuthenticationToken.unauthenticated(
             request.nombreUsuario().trim().toLowerCase(java.util.Locale.ROOT), request.clave()));
         Instant now = Instant.now();
-        long seconds = 900;
+        long seconds = sesionSegundos;
         Long version = jdbc.queryForObject("SELECT sesion_version FROM usuario WHERE nombre_usuario=?",
             Long.class, result.getName());
         if (version == null) throw new org.springframework.security.authentication.BadCredentialsException("Cuenta no disponible");

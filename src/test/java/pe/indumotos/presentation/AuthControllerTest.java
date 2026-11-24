@@ -21,7 +21,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void loginEmiteTokenFirmadoYExpiraEnQuinceMinutos() {
+    void loginEmiteTokenFirmadoYExpiraEnUnaHora() {
         AuthenticationManager manager = mock(AuthenticationManager.class);
         when(manager.authenticate(any())).thenReturn(
             UsernamePasswordAuthenticationToken.authenticated("admin", null, java.util.List.of()));
@@ -32,11 +32,11 @@ class AuthControllerTest {
         var jwt = new JwtConfig().jwtDecoder(key,
             mock(JdbcTokenRevocationRepository.class)).decode(response.accessToken());
         assertEquals("Bearer", response.tokenType());
-        assertEquals(900, response.expiresIn());
+        assertEquals(3600, response.expiresIn());
         assertEquals("admin", jwt.getSubject());
         assertEquals(0L, ((Number) jwt.getClaim("cv")).longValue());
         assertEquals("https://indumotos.local", jwt.getIssuer().toString());
-        assertEquals(900, jwt.getExpiresAt().getEpochSecond() - jwt.getIssuedAt().getEpochSecond());
+        assertEquals(3600, jwt.getExpiresAt().getEpochSecond() - jwt.getIssuedAt().getEpochSecond());
         verify(manager).authenticate(any(UsernamePasswordAuthenticationToken.class));
     }
 

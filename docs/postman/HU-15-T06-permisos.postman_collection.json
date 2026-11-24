@@ -75,7 +75,7 @@
               "if (pm.response.code === 200) {",
               "const data = pm.response.json();",
               "pm.collectionVariables.set('adminToken', data.accessToken);",
-              "pm.test('Bearer y caducidad', () => { pm.expect(data.tokenType).to.eql('Bearer'); pm.expect(data.expiresIn).to.eql(900); });",
+              "pm.test('Bearer y caducidad', () => { pm.expect(data.tokenType).to.eql('Bearer'); pm.expect(data.expiresIn).to.eql(3600); });",
               "}"
             ]
           }
@@ -195,7 +195,7 @@
               "if (pm.response.code === 200) {",
               "const data = pm.response.json();",
               "pm.collectionVariables.set('almacenToken', data.accessToken);",
-              "pm.test('Bearer y caducidad', () => { pm.expect(data.tokenType).to.eql('Bearer'); pm.expect(data.expiresIn).to.eql(900); });",
+              "pm.test('Bearer y caducidad', () => { pm.expect(data.tokenType).to.eql('Bearer'); pm.expect(data.expiresIn).to.eql(3600); });",
               "}"
             ]
           }
@@ -231,7 +231,7 @@
               "if (pm.response.code === 200) {",
               "const data = pm.response.json();",
               "pm.collectionVariables.set('inventoryToken', data.accessToken);",
-              "pm.test('Bearer y caducidad', () => { pm.expect(data.tokenType).to.eql('Bearer'); pm.expect(data.expiresIn).to.eql(900); });",
+              "pm.test('Bearer y caducidad', () => { pm.expect(data.tokenType).to.eql('Bearer'); pm.expect(data.expiresIn).to.eql(3600); });",
               "}"
             ]
           }
@@ -713,7 +713,7 @@
               "if (pm.response.code === 200) {",
               "const data = pm.response.json();",
               "pm.collectionVariables.set('inventoryTokenNew', data.accessToken);",
-              "pm.test('Bearer y caducidad', () => { pm.expect(data.tokenType).to.eql('Bearer'); pm.expect(data.expiresIn).to.eql(900); });",
+              "pm.test('Bearer y caducidad', () => { pm.expect(data.tokenType).to.eql('Bearer'); pm.expect(data.expiresIn).to.eql(3600); });",
               "}"
             ]
           }

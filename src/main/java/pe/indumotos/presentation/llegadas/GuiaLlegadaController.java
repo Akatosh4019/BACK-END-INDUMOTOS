@@ -5,6 +5,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -83,5 +84,11 @@ public class GuiaLlegadaController {
     public ResponseEntity<Map<String, String>> archivoInvalido(ResponseStatusException ex) {
         return ResponseEntity.status(ex.getStatusCode()).body(Map.of("error",
             ex.getReason() == null ? "Archivo inválido" : ex.getReason()));
+    }
+
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ResponseEntity<Map<String, String>> duplicada() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+            .body(Map.of("error", "Ya existe una guía activa con ese número."));
     }
 }

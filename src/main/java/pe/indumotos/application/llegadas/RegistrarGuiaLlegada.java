@@ -59,7 +59,7 @@ public class RegistrarGuiaLlegada {
         return imagenes.buscar(llegadaId, imagenId);
     }
 
-    private void validar(ImagenNueva archivo) {
+    void validar(ImagenNueva archivo) {
         if (archivo == null || archivo.contenido() == null || archivo.contenido().length == 0
             || archivo.contenido().length > MAX_BYTES)
             throw invalido("Cada foto debe pesar entre 1 byte y 5 MB.");
@@ -128,7 +128,7 @@ public class RegistrarGuiaLlegada {
         return (double) sumaCuadrados / muestras - media * media >= 100;
     }
 
-    private String nombreSeguro(ImagenNueva archivo, int orden) {
+    String nombreSeguro(ImagenNueva archivo, int orden) {
         String nombre = archivo.nombreArchivo() == null ? "" : archivo.nombreArchivo();
         nombre = nombre.substring(Math.max(nombre.lastIndexOf('/'), nombre.lastIndexOf('\\')) + 1)
             .replaceAll("[\\p{Cntrl}]", "").trim();

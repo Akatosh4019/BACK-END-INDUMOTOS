@@ -104,7 +104,8 @@ public class RegistroGuia {
     }
 
     private int bloquear(long id) {
-        Integer cantidad = jdbc.query("SELECT cantidad_recibida FROM llegada WHERE id_llegada=? FOR UPDATE",
+        Integer cantidad = jdbc.query("SELECT cantidad_recibida FROM llegada WHERE id_llegada=? " +
+            "AND visible_en_listado AND eliminado_en IS NULL FOR UPDATE",
             rs -> rs.next() ? rs.getInt(1) : null,id);
         if (cantidad == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Guía no encontrada.");
         return cantidad;

@@ -35,7 +35,8 @@ public class JdbcMotocicletaRepository implements MotocicletaRepository {
     @Override
     public boolean existeLlegada(long llegadaId) {
         return Boolean.TRUE.equals(jdbc.queryForObject(
-            "SELECT EXISTS(SELECT 1 FROM llegada WHERE id_llegada = ?)", Boolean.class, llegadaId));
+            "SELECT EXISTS(SELECT 1 FROM llegada WHERE id_llegada = ? " +
+                "AND visible_en_listado AND eliminado_en IS NULL)", Boolean.class, llegadaId));
     }
 
     @Override

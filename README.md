@@ -1,6 +1,6 @@
 # Backend Indumotos
 
-Esta es la API y la base de datos del sistema Indumotos. El trabajo está en la rama `sprint-2` de Roberto Samuel Valencia Saavedra. Usa Java 21, Spring Boot, PostgreSQL, Flyway y Docker. La web y el gateway están en [SISTEMA-WEB-INDUMOTOS](https://github.com/Akatosh4019/SISTEMA-WEB-INDUMOTOS/tree/sprint-2).
+Esta es la API y la base de datos del sistema Indumotos. Las actualizaciones de Roberto Samuel Valencia Saavedra están en la rama `feature/roberto-indumotos`. Usa Java 21, Spring Boot, PostgreSQL, Flyway y Docker. La web y el gateway están en [SISTEMA-WEB-INDUMOTOS](https://github.com/Akatosh4019/SISTEMA-WEB-INDUMOTOS/tree/feature/roberto-indumotos).
 
 ## ¿Qué hace?
 
@@ -10,7 +10,7 @@ Esta es la API y la base de datos del sistema Indumotos. El trabajo está en la 
 4. **Comercial** solicita motos del catálogo para una tienda. **Almacén** prepara chasis concretos y registra su salida. Comercial confirma la recepción; así cambia la ubicación confirmada de cada moto.
 5. **Facturación** consulta la disponibilidad y puede reportar diferencias. **Inventarios** investiga y corrige esas diferencias con una fuente registrada.
 
-La API comprueba el JWT, los permisos y las reglas de cada operación. Las fotos de guías y los borradores quedan en PostgreSQL, por lo que sobreviven a reinicios de contenedores. El OCR de Tesseract solo propone datos: una persona debe verificarlos. La base incluye migraciones Flyway **V1–V31**. Las tablas y API internas de ventas se conservan por compatibilidad, aunque **Modo tienda** y el registro de ventas se retiraron de la interfaz web de esta entrega. No hay cobro en línea.
+La API comprueba el JWT, los permisos y las reglas de cada operación. Las fotos de guías y los borradores quedan en PostgreSQL, por lo que sobreviven a reinicios de contenedores. El OCR de Tesseract solo propone datos: una persona debe verificarlos. La base incluye migraciones Flyway **V1–V39**. Las tablas y API internas de ventas se conservan por compatibilidad, aunque **Modo tienda** y el registro de ventas se retiraron de la interfaz web de esta entrega. No hay cobro en línea.
 
 Al iniciar Docker con el perfil `demo` se cargan automáticamente 20 motocicletas de prueba, un catálogo utilizable y dos guías **completamente ficticias** con imágenes para practicar el registro y el OCR. No son documentos comerciales. [Detalles de los datos de demostración](src/main/resources/db/demo/README.md).
 
@@ -33,9 +33,13 @@ La API y PostgreSQL se publican solo en `127.0.0.1` del equipo. Al ejecutar Spri
 
 ## Pruebas y alcance
 
-Con Java 21 y Maven: `mvn test`. La última ejecución backend pasó **101 pruebas** y aplicó Flyway hasta **V31** en PostgreSQL local. La revisión visual por rol y una finalización de guía real autorizada siguen pendientes. Esto describe lo implementado; no declara terminado todo el producto.
+Con Java 21 y Maven: `mvn test`. La última ejecución backend pasó **105 pruebas** y aplicó Flyway hasta **V39** en PostgreSQL local. La revisión visual por rol y una finalización de guía real autorizada siguen pendientes. Esto describe lo implementado; no declara terminado todo el producto.
 
 Lee [cómo funciona el sistema](docs/SISTEMA_IMPLEMENTADO.md) para arquitectura, rutas, permisos y límites, y [el expediente de Sprint 2](docs/SPRINT%202/README.md) para las tareas y evidencias de ese sprint.
+
+## Renovación de sesión
+
+El JWT de acceso dura 15 minutos. `POST /api/v1/auth/login` también crea una cookie `indumotos_refresh` con `HttpOnly` y `SameSite=Strict`; en Docker local HTTP, `AUTH_COOKIE_SECURE=false`, mientras que en HTTPS debe usarse `AUTH_COOKIE_SECURE=true`. `POST /api/v1/auth/refresh` exige la cookie y la cabecera `X-Indumotos-Refresh: 1`, emite un JWT nuevo y rota la cookie. PostgreSQL guarda solo el hash del token renovable. La renovación termina tras 30 minutos sin usarla o a las 8 horas desde el login. Reutilizar una cookie ya rotada invalida esa familia de sesión. `POST /api/v1/auth/logout` revoca el JWT y toda la familia, por lo que sus JWT anteriores dejan de autorizar peticiones. Cambiar credenciales o desactivar la cuenta también invalida la sesión por `sesion_version`.
 
 ## Perfil personal
 

@@ -21,15 +21,19 @@ import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import pe.indumotos.application.seguridad.PermisoService;
+import pe.indumotos.infrastructure.seguridad.SesionRenovableRepository;
+import java.util.UUID;
 
 @Configuration
 public class SecurityConfig {
     private final JdbcTemplate jdbc;
     private final PermisoService permisos;
+    private final SesionRenovableRepository sesiones;
 
-    public SecurityConfig(JdbcTemplate jdbc, PermisoService permisos) {
+    public SecurityConfig(JdbcTemplate jdbc, PermisoService permisos, SesionRenovableRepository sesiones) {
         this.jdbc = jdbc;
         this.permisos = permisos;
+        this.sesiones = sesiones;
     }
     @Bean
     PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(12); }
@@ -62,6 +66,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/perfil").authenticated()
@@ -199,6 +204,15 @@ public class SecurityConfig {
         if (!(versionToken instanceof Number numero) || versionActual == null
             || versionActual.longValue() != numero.longValue())
             throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Sesión cerrada por cambio de credenciales o estado");
+        var sid = jwt.getClaimAsString("sid");
+        if (sid != null) {
+            try {
+                if (!sesiones.activa(UUID.fromString(sid)))
+                    throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Sesión cerrada");
+            } catch (IllegalArgumentException ex) {
+                throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Sesión inválida");
+            }
+        }
         return new JwtAuthenticationToken(jwt, user.getAuthorities(), user.getUsername());
     }
 }

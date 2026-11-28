@@ -35,6 +35,16 @@ class RegistrarLlegadaTest {
     }
 
     @Test
+    void rechazaUnaGuiaYaRegistradaConConflicto() {
+        when(repository.guardar("T001-00000001", "almacen", 1, 1, null))
+            .thenThrow(new org.springframework.dao.DuplicateKeyException("ux_llegada_numero_guia"));
+        var error = assertThrows(org.springframework.web.server.ResponseStatusException.class,
+            () -> servicio.ejecutar(" T001-00000001 ", "almacen", 1, 1, null));
+        assertEquals(409, error.getStatusCode().value());
+        assertTrue(error.getReason().contains("T001-00000001 ya está registrada"));
+    }
+
+    @Test
     void buscaLlegadasPorNumeroDeGuiaNormalizado() {
         servicio.buscarPorGuia(" GR-PRUEBA ");
         verify(repository).buscarPorGuia("GR-PRUEBA");

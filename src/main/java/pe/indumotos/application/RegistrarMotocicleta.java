@@ -69,9 +69,15 @@ public class RegistrarMotocicleta {
             return repository.guardar(llegadaId, marca.trim(), modelo.trim(), color.trim(),
                 chasis, numeroMotor.trim(), dua.trim(), itemDua.trim(), creadorUsuario);
         } catch (DuplicateKeyException ex) {
-            long id = repository.buscarIdPorChasis(chasis).orElseThrow(() -> ex);
-            throw new ChasisDuplicado(id);
+            var id = repository.buscarIdPorChasis(chasis);
+            if (id.isPresent()) throw new ChasisDuplicado(id.get());
+            throw motorDuplicado();
         }
+    }
+
+    static ResponseStatusException motorDuplicado() {
+        return new ResponseStatusException(HttpStatus.CONFLICT,
+            "El número de motor ya está registrado en otra ficha.");
     }
 
     private void campoObligatorio(Map<String, String> errores, String codigo, String valor,

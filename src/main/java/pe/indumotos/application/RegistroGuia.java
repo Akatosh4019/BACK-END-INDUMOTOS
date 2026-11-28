@@ -74,6 +74,11 @@ public class RegistroGuia {
             "SELECT EXISTS(SELECT 1 FROM borrador_motocicleta WHERE id_llegada=? AND posicion<>? " +
                 "AND upper(btrim(chasis_completo))=upper(btrim(?)))",Boolean.class,id,posicion,b.chasisCompleto().trim())))
             throw conflicto("El chasis ya figura en otra ficha o borrador.");
+        if (Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM motocicleta WHERE upper(btrim(numero_motor))=upper(btrim(?)))",
+            Boolean.class,b.numeroMotor().trim())) || Boolean.TRUE.equals(jdbc.queryForObject(
+            "SELECT EXISTS(SELECT 1 FROM borrador_motocicleta WHERE id_llegada=? AND posicion<>? " +
+                "AND upper(btrim(numero_motor))=upper(btrim(?)))",Boolean.class,id,posicion,b.numeroMotor().trim())))
+            throw conflicto("El número de motor ya figura en otra ficha o borrador.");
         jdbc.update("INSERT INTO borrador_motocicleta(id_llegada,posicion,marca,modelo,color,chasis_completo,numero_motor,dua,item_dua,guardado_por) " +
             "SELECT ?,?,?,?,?,?,?,?,?,id_usuario FROM usuario WHERE nombre_usuario=? " +
             "ON CONFLICT(id_llegada,posicion) DO UPDATE SET marca=excluded.marca,modelo=excluded.modelo,color=excluded.color," +

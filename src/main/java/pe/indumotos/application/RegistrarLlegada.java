@@ -3,6 +3,7 @@ package pe.indumotos.application;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -39,8 +40,13 @@ public class RegistrarLlegada {
         if (cantidadRecibida <= 0)
             errores.put("cantidadRecibida", "Ingresa una cantidad recibida mayor que cero.");
         if (!errores.isEmpty()) throw new DatosInvalidos(errores);
-        return repository.guardar(numeroGuia.trim(), receptorUsuario, cantidadDeclarada,
-            cantidadRecibida, observacion == null || observacion.isBlank() ? null : observacion.trim());
+        try {
+            return repository.guardar(numeroGuia.trim(), receptorUsuario, cantidadDeclarada,
+                cantidadRecibida, observacion == null || observacion.isBlank() ? null : observacion.trim());
+        } catch (DuplicateKeyException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "La guía " + numeroGuia.trim() + " ya está registrada.");
+        }
     }
 
     public Llegada consultar(long id) {

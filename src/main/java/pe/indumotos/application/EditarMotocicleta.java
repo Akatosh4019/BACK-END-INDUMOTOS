@@ -36,8 +36,9 @@ public class EditarMotocicleta {
             return repository.actualizar(id, marca.trim(), modelo.trim(), color.trim(),
                 chasis, numeroMotor.trim(), dua.trim(), itemDua.trim());
         } catch (DuplicateKeyException ex) {
-            long otroId = repository.buscarIdPorChasis(chasis).orElseThrow(() -> ex);
-            throw new RegistrarMotocicleta.ChasisDuplicado(otroId);
+            var otroId = repository.buscarIdPorChasis(chasis).filter(otro -> otro != id);
+            if (otroId.isPresent()) throw new RegistrarMotocicleta.ChasisDuplicado(otroId.get());
+            throw RegistrarMotocicleta.motorDuplicado();
         }
     }
 

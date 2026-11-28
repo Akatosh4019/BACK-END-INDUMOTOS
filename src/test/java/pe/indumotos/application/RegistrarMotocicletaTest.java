@@ -50,6 +50,22 @@ class RegistrarMotocicletaTest {
                 "MOTOR-0001", "000123", "004", "inventarios"));
         assertEquals(8L, error.fichaExistenteId());
     }
+    @Test
+    void rechazaMotorRepetidoConChasisDistinto() {
+        var repository = mock(MotocicletaRepository.class);
+        when(repository.existeLlegada(2L)).thenReturn(true);
+        when(repository.combinacionRegistrada("RONCO", "RZ 250", "ROJO")).thenReturn(true);
+        when(repository.buscarIdPorChasis("DEMO-A-0043")).thenReturn(java.util.Optional.empty());
+        when(repository.guardar(anyLong(), any(), any(), any(), any(), any(), any(), any(), any()))
+            .thenThrow(new DuplicateKeyException("ux_motocicleta_numero_motor"));
+        var registrar = new RegistrarMotocicleta(repository);
+        var error = assertThrows(ResponseStatusException.class,
+            () -> registrar.ejecutar(2L, "RONCO", "RZ 250", "ROJO", "DEMO-A-0043",
+                "MOTOR-0001", "000123", "004", "inventarios"));
+        assertEquals(409, error.getStatusCode().value());
+        assertTrue(error.getReason().contains("número de motor"));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"marca", "modelo", "color", "chasisCompleto",
         "numeroMotor", "dua", "itemDua"})

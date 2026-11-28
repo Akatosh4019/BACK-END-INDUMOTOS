@@ -95,7 +95,7 @@ public class DiferenciasService {
     private boolean puedeVerTodos(String actor){
         String rol=jdbc.queryForObject("SELECT r.codigo FROM usuario u JOIN rol r ON r.id_rol=u.id_rol " +
             "WHERE u.nombre_usuario=?",String.class,actor);
-        return Set.of("ADMIN","INVENTARIOS").contains(rol);
+        return Set.of("GERENTE","INVENTARIOS").contains(rol);
     }
     private String valor(Motocicleta m,String campo){return switch(campo){
         case "marca"->m.marca();case "modelo"->m.modelo();case "color"->m.color();

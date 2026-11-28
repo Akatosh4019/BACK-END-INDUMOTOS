@@ -40,13 +40,13 @@ public class VentasService {
             "WHERE u.nombre_usuario=? AND u.estado='ACTIVO'",
             (rs,n)->new Object[]{rs.getString(1),rs.getObject(2,Long.class)},usuario);
         if(cuenta.isEmpty()) throw error(HttpStatus.FORBIDDEN,"Cuenta inactiva");
-        boolean admin="ADMIN".equals(cuenta.getFirst()[0]);
+        boolean gerencia="GERENTE".equals(cuenta.getFirst()[0]);
         Long asignada=(Long)cuenta.getFirst()[1];
-        if(!admin && asignada==null) throw error(HttpStatus.CONFLICT,"Administración debe asignarte una tienda");
-        if(admin && elegida==null) throw error(HttpStatus.BAD_REQUEST,"Elige una tienda");
-        if(!admin && elegida!=null && !elegida.equals(asignada))
+        if(!gerencia && asignada==null) throw error(HttpStatus.CONFLICT,"Administración debe asignarte una tienda");
+        if(gerencia && elegida==null) throw error(HttpStatus.BAD_REQUEST,"Elige una tienda");
+        if(!gerencia && elegida!=null && !elegida.equals(asignada))
             throw error(HttpStatus.FORBIDDEN,"No tienes acceso a esa tienda");
-        long id=admin?elegida:asignada;
+        long id=gerencia?elegida:asignada;
         if(!Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM ubicacion " +
             "WHERE id_ubicacion=? AND tipo='TIENDA' AND activo)",Boolean.class,id)))
             throw error(HttpStatus.BAD_REQUEST,"Tienda no válida");

@@ -42,11 +42,23 @@ class PermisoServiceTest {
     }
 
     @Test
-    void soloAdministracionPuedeGestionarCatalogoAunqueSeIntenteAsignarExcepcion() {
-        assertTrue(service.permitido("admin", "CATALOGO_GESTIONAR"));
+    void soloGerenciaGestionaCatalogoAunqueSeIntenteAsignarExcepcion() {
+        assertTrue(service.permitido("gerente", "CATALOGO_GESTIONAR"));
         assertFalse(service.permitido("miguel", "CATALOGO_GESTIONAR"));
         assertThrows(ResponseStatusException.class,
             () -> service.guardarExcepcion(2, "CATALOGO_GESTIONAR", "PERMITIR"));
+        assertThrows(ResponseStatusException.class,
+            () -> service.guardarExcepcion(1, "CATALOGO_GESTIONAR", "PERMITIR"));
+    }
+
+    @Test
+    void administracionNoOperaElNegocioAunqueSuRolLoTuvieraAsignado() {
+        // El rol ADMIN de la memoria aún conserva CATALOGO_GESTIONAR, como antes de V35.
+        assertFalse(service.permitido("admin", "CATALOGO_GESTIONAR"));
+        assertTrue(service.permitido("admin", "USUARIOS_CREAR"));
+        assertFalse(service.permitido("gerente", "USUARIOS_CREAR"));
+        assertThrows(ResponseStatusException.class,
+            () -> service.guardarExcepcion(3, "PERMISOS_ASIGNAR", "PERMITIR"));
     }
 
     @Test
@@ -60,7 +72,7 @@ class PermisoServiceTest {
     }
 
     private static class Memoria implements PermisoRepository {
-        private final Map<Long, String> roles = new HashMap<>(Map.of(1L, "ADMIN", 2L, "INVENTARIOS"));
+        private final Map<Long, String> roles = new HashMap<>(Map.of(1L, "ADMIN", 2L, "INVENTARIOS", 3L, "GERENTE"));
         private final Map<String, String> excepciones = new HashMap<>();
         private boolean activo = true;
         private final List<String> codigos = List.of("USUARIOS_CREAR", "PERMISOS_ASIGNAR",
@@ -70,16 +82,17 @@ class PermisoServiceTest {
             return switch (nombre) {
                 case "admin" -> buscarPorId(1);
                 case "miguel" -> buscarPorId(2);
+                case "gerente" -> buscarPorId(3);
                 default -> null;
             };
         }
         @Override public Cuenta buscarPorId(long id) {
             if (!roles.containsKey(id)) return null;
-            return new Cuenta(id, id == 1 ? "admin" : "miguel", roles.get(id),
+            return new Cuenta(id, id == 1 ? "admin" : id == 2 ? "miguel" : "gerente", roles.get(id),
                 activo ? "ACTIVO" : "INACTIVO", "ACTIVO");
         }
         @Override public boolean existeRolActivo(String codigo) {
-            return List.of("ADMIN", "ALMACEN", "INVENTARIOS").contains(codigo);
+            return List.of("ADMIN", "ALMACEN", "INVENTARIOS", "GERENTE").contains(codigo);
         }
         @Override public boolean existePermiso(String codigo) { return codigos.contains(codigo); }
         @Override public List<Asignacion> asignaciones(long usuarioId) {
@@ -87,6 +100,7 @@ class PermisoServiceTest {
                 switch (roles.get(usuarioId)) {
                     case "ADMIN" -> List.of("USUARIOS_CREAR", "PERMISOS_ASIGNAR", "INVENTARIO_CONSULTAR", "CATALOGO_GESTIONAR").contains(c);
                     case "ALMACEN" -> List.of("LLEGADAS_REGISTRAR", "INVENTARIO_CONSULTAR").contains(c);
+                    case "GERENTE" -> List.of("INVENTARIO_CONSULTAR", "CATALOGO_GESTIONAR").contains(c);
                     default -> List.of("FICHAS_REGISTRAR", "INVENTARIO_CONSULTAR").contains(c);
                 }, excepciones.get(usuarioId + ":" + c))).toList();
         }

@@ -56,13 +56,16 @@ public class PermisoService {
         String valor = codigo(decision);
         if (!valor.equals("PERMITIR") && !valor.equals("DENEGAR"))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Decisión no válida");
-        if (valor.equals("PERMITIR") && sensible(codigo) && !cuenta.rolCodigo().equals("ADMIN"))
+        if (valor.equals("PERMITIR") && personal(codigo) && !cuenta.rolCodigo().equals("ADMIN"))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                "Este permiso está reservado al rol administrador");
+                "Este permiso está reservado a Administración");
+        if (valor.equals("PERMITIR") && gerencia(codigo) && !cuenta.rolCodigo().equals("GERENTE"))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                "Este permiso está reservado a Gerencia");
         if (valor.equals("PERMITIR") && codigo.equals("VENTAS_REGISTRAR")
-            && !java.util.Set.of("ADMIN", "FACTURACION").contains(cuenta.rolCodigo()))
+            && !java.util.Set.of("GERENTE", "FACTURACION").contains(cuenta.rolCodigo()))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                "Solo Facturación o Administración puede registrar ventas");
+                "Solo Facturación o Gerencia puede registrar ventas");
         repository.guardarExcepcion(usuarioId, codigo, valor);
         return consultar(usuarioId);
     }
@@ -96,9 +99,10 @@ public class PermisoService {
     private boolean efectivo(PermisoRepository.Cuenta cuenta, PermisoRepository.Asignacion p) {
         if (!activa(cuenta)) return false;
         if ("DENEGAR".equals(p.excepcion())) return false;
-        if (sensible(p.codigo()) && !"ADMIN".equals(cuenta.rolCodigo())) return false;
+        if (personal(p.codigo()) && !"ADMIN".equals(cuenta.rolCodigo())) return false;
+        if (gerencia(p.codigo()) && !"GERENTE".equals(cuenta.rolCodigo())) return false;
         if ("VENTAS_REGISTRAR".equals(p.codigo())
-            && !java.util.Set.of("ADMIN", "FACTURACION").contains(cuenta.rolCodigo())) return false;
+            && !java.util.Set.of("GERENTE", "FACTURACION").contains(cuenta.rolCodigo())) return false;
         return "PERMITIR".equals(p.excepcion()) || p.porRol();
     }
 
@@ -106,10 +110,14 @@ public class PermisoService {
         return "ACTIVO".equals(cuenta.estado()) && "ACTIVO".equals(cuenta.rolEstado());
     }
 
-    private boolean sensible(String codigo) {
-        return "USUARIOS_CREAR".equals(codigo) || "PERMISOS_ASIGNAR".equals(codigo)
-            || "CATALOGO_GESTIONAR".equals(codigo)
-            || "COMPANIA_CONSULTAR".equals(codigo)
-            || "USUARIOS_CONSULTAR".equals(codigo) || "USUARIOS_DESACTIVAR".equals(codigo);
+    // Administración gestiona personal y accesos; no opera el negocio.
+    private boolean personal(String codigo) {
+        return java.util.Set.of("USUARIOS_CREAR", "USUARIOS_CONSULTAR", "USUARIOS_DESACTIVAR",
+            "PERMISOS_ASIGNAR").contains(codigo);
+    }
+
+    // Gerencia decide sobre el catálogo y consulta toda la compañía.
+    private boolean gerencia(String codigo) {
+        return java.util.Set.of("CATALOGO_GESTIONAR", "COMPANIA_CONSULTAR").contains(codigo);
     }
 }

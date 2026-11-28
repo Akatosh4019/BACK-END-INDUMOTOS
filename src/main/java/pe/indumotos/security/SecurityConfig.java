@@ -20,7 +20,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
-import pe.indumotos.application.PermisoService;
+import pe.indumotos.application.seguridad.PermisoService;
 
 @Configuration
 public class SecurityConfig {
@@ -112,11 +112,13 @@ public class SecurityConfig {
                     .access(exigeAlguno("CATALOGO_GESTIONAR", "FICHAS_REGISTRAR", "FICHAS_EDITAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/catalogo-motocicletas")
                     .access(exige("CATALOGO_GESTIONAR"))
+                .requestMatchers("/api/v1/catalogo-modelos/**").access(exige("CATALOGO_GESTIONAR"))
                 .requestMatchers(HttpMethod.PUT, "/api/v1/motocicletas/*").access(exige("FICHAS_EDITAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/ubicaciones").access(exige("UBICACIONES_CONSULTAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/ubicaciones").access(exige("PERMISOS_ASIGNAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes").access(exige("SOLICITUDES_CREAR"))
                 .requestMatchers("/api/v1/roles", "/api/v1/roles/**").access(exige("PERMISOS_ASIGNAR"))
+                .requestMatchers("/api/v1/solicitudes/borrador").access(exige("SOLICITUDES_CREAR"))
                 .requestMatchers(HttpMethod.GET, "/api/v1/solicitudes/opciones-motocicleta")
                     .access(exige("SOLICITUDES_CREAR"))
                 .requestMatchers(HttpMethod.POST, "/api/v1/solicitudes/*/anulacion")

@@ -13,7 +13,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import pe.indumotos.infrastructure.JdbcTokenRevocationRepository;
+import pe.indumotos.infrastructure.seguridad.JdbcTokenRevocationRepository;
 
 @Configuration
 public class JwtConfig {
